@@ -1,7 +1,6 @@
 #!/bin/bash
 
-SRC=${BASH_SOURCE[0]}
-REALPATH=$(readlink -f "$SRC")
+REALPATH=$(realpath "${BASH_SOURCE[0]}")
 MYPATH=$(dirname "$REALPATH")
 
 (

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REALPATH=$(realpath "$0")
+REALPATH=$(realpath "${BASH_SOURCE[0]}")
 MYPATH=$(dirname "$REALPATH")
 
 PROJECT="$1"
