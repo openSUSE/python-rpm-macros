@@ -1,0 +1,78 @@
+%have_python  1
+%have_python3 1
+
+%pythons %{?have_python:python} %{?have_python3:python3}
+
+%flavor_python3 Python 3
+%flavor_python Python 2
+
+%python_buildrequires BuildRequires: %{expand: %{?have_python:python-devel} %{?have_python3:python3-devel}}
+
+# specify unused flag to avoid recursive expansion bug
+%_unrecurse_python_module(x:) %{expand: %{?have_python:python-%{-x*}} %{?have_python3:python3-%{-x*}}}
+
+%python_buildrequire() BuildRequires: %{_unrecurse_python_module -x %1}
+%python_module() %{expand: %{_unrecurse_python_module -x %1}}
+
+%if_python_kind() %if %{_scan_spec} %{lua: if modprefix == rpm.expand("%1") then print("1") else print("0") end}
+
+%ifpython3 %{if_python_kind python3}
+%ifpython2 %{if_python_kind python}
+%ifpypy %{if_python_kind pypy}
+
+%py3_only() %ifpython3 \
+%** \
+%endif
+
+%py2_only() %ifpython2 \
+%** \
+%endif
+
+%pypy_only() %ifpypy \
+%** \
+%endif
+
+%python_exec() for flavor in %pythons; do \
+    $flavor %** \
+done
+
+### LUA-MACROS ###
+
+
+# %1 - flavor; %2 - modname (subpackage name)
+%_subpackage_for() \
+%package -n %1-%2 \
+Summary: %summary - package for %{lua: print(rpm.expand("%flavor_" .. rpm.expand("%1")))} \
+Version: %version \
+%_output_requires \
+%description -n %1-%2 \
+%{_copy_description} \
+%files -n %1-%2 \
+%{expand:%{_output_filelist}}
+
+
+%_modname_from_name %{lua: print(modname)}
+%_specpath %{lua: print(specpath)}
+
+
+%python_subpackages \
+%{_scan_spec} \
+%{expand:%( for flavor in %pythons; do \
+    [ "$flavor-%_modname_from_name" == "%name" ] && continue \
+    echo "%%{_subpackage_for $flavor %_modname_from_name}" \
+done )}
+
+
+%python_build %python_exec setup.py build
+
+%python_install %python_exec setup.py install --root=%{buildroot}
+
+
+%_copy_description(n:) %{expand:%( \
+    if [ -z "%{-n*}" ]; then
+        descname=""
+    else
+        descname=" %{-n*}"
+    fi
+    sed -nr -e '/^%description'"$descname"'$/,/^%%/ { /^%%/b; p }' %{_specpath} || true \
+)}
