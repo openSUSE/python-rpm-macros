@@ -1,6 +1,7 @@
 #!/bin/bash
 
-REALPATH=$(realpath "$0")
+SRC=${BASH_SOURCE[0]}
+REALPATH=$(readlink -f "$SRC")
 MYPATH=$(dirname "$REALPATH")
 
 (
@@ -8,5 +9,6 @@ MYPATH=$(dirname "$REALPATH")
     perl embed-macros.pl > macros
 )
 
-rpmspec -v --macros=$MYPATH/macros:/usr/lib/rpm/macros:/etc/rpm/macros.python:/etc/rpm/macros.python3 \
+rpmspec -v \
+    --macros=$MYPATH/macros:/usr/lib/rpm/macros:/etc/rpm/macros.python:/etc/rpm/macros.python3 \
     -P "$1"
