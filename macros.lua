@@ -134,6 +134,8 @@ function _scan_spec()
             section_name = param
             section_content = ""
             enter_section(section, param)
+        elseif line == "%python_subpackages" or line == "%{python_subpackages}" then
+            -- nothing
         else
             section_content = section_content .. line .. "\n"
             if property == "Requires" then
@@ -197,4 +199,9 @@ function _output_scriptlets()
         print("%" .. k .. " -n " .. mymodprefix .. "-" .. packagename .. "\n")
         print(replace_macros(v, mymodprefix) .. "\n")
     end
+end
+
+function _output_description()
+    local packagename = rpm.expand("%2")
+    print(descriptions[packagename] .. "\n")
 end

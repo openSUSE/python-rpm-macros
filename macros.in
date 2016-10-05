@@ -46,7 +46,7 @@ Summary: %summary - package for %{lua: print(rpm.expand("%flavor_" .. rpm.expand
 Version: %version \
 %_output_requires \
 %description -n %1-%2 \
-%{_copy_description} \
+%{_output_description} \
 %files -n %1-%2 \
 %{expand:%{_output_filelist}} \
 %{expand:%{_output_scriptlets}}
@@ -67,13 +67,3 @@ done )}
 %python_build %python_exec setup.py build
 
 %python_install %python_exec setup.py install --root=%{buildroot}
-
-
-%_copy_description(n:) %{expand:%( \
-    if [ -z "%{-n*}" ]; then
-        descname=""
-    else
-        descname=" %{-n*}"
-    fi
-    sed -nr -e '/^%description'"$descname"'$/,/^%%/ { /^%%/b; p }' %{_specpath} || true \
-)}
