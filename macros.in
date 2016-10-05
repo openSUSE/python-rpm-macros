@@ -48,7 +48,8 @@ Version: %version \
 %description -n %1-%2 \
 %{_copy_description} \
 %files -n %1-%2 \
-%{expand:%{_output_filelist}}
+%{expand:%{_output_filelist}} \
+%{expand:%{_output_scriptlets}}
 
 
 %_modname_from_name %{lua: print(modname)}

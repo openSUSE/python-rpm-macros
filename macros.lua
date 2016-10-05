@@ -3,6 +3,39 @@ function _scan_spec()
     if _spec_is_scanned ~= nil then return end
     _spec_is_scanned = true
 
+    -- declare common functions
+    function string.startswith(str, prefix)
+        return str:find(prefix) == 1
+    end
+
+    function string.endswith(str, suffix)
+        return suffix == str:sub(-suffix:len())
+    end
+
+    SHORT_MODNAMES = {
+        python = "py",
+        python3 = "py3",
+        pypy = "pypy",
+    }
+
+    function replace_macros(str, targetmodprefix)
+        local LONG_MACROS = { "sitelib", "sitearch" }
+        local SHORT_MACROS = { "ver" }
+        for _, macro in ipairs(LONG_MACROS) do
+            local from = string.format("%s_%s", modprefix, macro)
+            local to = string.format("%s_%s", targetmodprefix, macro)
+            str = str:gsub("%%" .. from, "%%" .. to)
+            str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
+        end
+        for _, macro in ipairs(SHORT_MACROS) do
+            local from = string.format("%s_%s", SHORT_MODNAMES[modprefix], macro)
+            local to = string.format("%s_%s", SHORT_MODNAMES[targetmodprefix], macro)
+            str = str:gsub("%%" .. from, "%%" .. to)
+            str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
+        end
+        return str
+    end
+
     pythons = {}
     for str in string.gmatch(rpm.expand("%pythons"), "%S+") do
         table.insert(pythons, str)
@@ -39,6 +72,7 @@ function _scan_spec()
     filelists = {}
     requires_common = {}
     requires_subpackage = {}
+    scriptlets = {}
 
     spec, err = io.open(specpath, "r")
     local section = nil
@@ -49,10 +83,13 @@ function _scan_spec()
     local KNOWN_SECTIONS = {"package", "description", "files", "prep",
         "build", "install", "check", "clean", "pre", "post", "preun", "postun",
         "pretrans", "posttrans", "changelog"}
+    local SCRIPTLET_SECTIONS = { "pre", "post", "preun", "postun", "pretrans", "posttrans" }
     local section_table = {}
+    local scriptlet_table = {}
     for _,v in ipairs(KNOWN_SECTIONS) do section_table[v] = true end
+    for _,v in ipairs(SCRIPTLET_SECTIONS) do scriptlet_table[v] = true end
 
-    function enter_section(name, param)
+    local function enter_section(name, param)
         if name == "package" then
             -- TODO "%package -n ahoj"
             table.insert(subpackages, param)
@@ -65,9 +102,12 @@ function _scan_spec()
     -- create entry for main package
     enter_section("package", modname)
 
-    function leave_section(name, param, content)
+    local function leave_section(name, param, content)
         if name == "description" then
             descriptions[param] = content
+        elseif scriptlet_table[name] then
+            if not scriptlets[param] then scriptlets[param] = {} end
+            scriptlets[param][name] = content
         end
     end
 
@@ -95,7 +135,7 @@ function _scan_spec()
             section_content = ""
             enter_section(section, param)
         else
-            section_content = section_content .. "\n" .. line
+            section_content = section_content .. line .. "\n"
             if property == "Requires" then
                 -- TODO filter out version requirements
                 for s in value:gmatch("%S+") do
@@ -123,28 +163,11 @@ function _output_requires()
 end
 
 function _output_filelist()
-
-    function string.startswith(str, prefix)
-        return str:find(prefix) == 1
-    end
-
-    function string.endswith(str, suffix)
-        return suffix == str:sub(-suffix:len())
-    end
-
     local mymodprefix = rpm.expand("%1")
     local packagename = rpm.expand("%2")
     local only = nil
     for _,file in ipairs(filelists[packagename]) do
-        if mymodprefix == "python3" then
-            file = file:gsub("python_sitelib", "python3_sitelib")
-            file = file:gsub("python_sitearch", "python3_sitearch")
-            file = file:gsub("py_ver", "py3_ver")
-        elseif mymodprefix == "pypy" then
-            file = file:gsub("python_sitelib", "pypy_sitelib")
-            file = file:gsub("python_sitearch", "pypy_sitearch")
-            file = file:gsub("py_ver", "pypy_ver")
-        end
+        file = replace_macros(file, mymodprefix)
 
         if file == "%ifpython3" then
             only = "python3"
@@ -156,13 +179,22 @@ function _output_filelist()
             only = nil
         -- for some reason, rpm seems to do something bad with the following %strings
         elseif file:startswith("%%py3_only ") and mymodprefix == "python3" then
-            print(file:sub(11) .. "\n")
+            print(file:sub(string.len("%%py3_only ")) .. "\n")
         elseif file:startswith("%%py2_only ") and mymodprefix == "python" then
-            print(file:sub(11) .. "\n")
+            print(file:sub(string.len("%%py2_only ")) .. "\n")
         elseif file:startswith("%%pypy_only ") and mymodprefix == "pypy" then
-            print(file:sub(12) .. "\n")
+            print(file:sub(string.len("%%pypy_only ")) .. "\n")
         else
             if only == nil or only == mymodprefix then print(file .. "\n") end
         end
+    end
+end
+
+function _output_scriptlets()
+    local mymodprefix = rpm.expand("%1")
+    local packagename = rpm.expand("%2")
+    for k, v in pairs(scriptlets[packagename]) do
+        print("%" .. k .. " -n " .. mymodprefix .. "-" .. packagename .. "\n")
+        print(replace_macros(v, mymodprefix) .. "\n")
     end
 end
