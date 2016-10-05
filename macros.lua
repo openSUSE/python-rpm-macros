@@ -116,8 +116,8 @@ function _scan_spec()
         local line = spec:read()
         if line == nil then break end
         -- match section delimiter
-        local section_noparam = line:match("^%%(%S+)$")
-        local section_withparam, param = line:match("^%%(%S+) (.*)$")
+        local section_noparam = line:match("^%%(%S+)(%s*)$")
+        local section_withparam, param = line:match("^%%(%S+) (.+)$")
         local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
 
         -- TODO convert parameter to modname-like
