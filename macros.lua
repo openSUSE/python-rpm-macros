@@ -19,7 +19,8 @@ function _scan_spec()
     }
 
     function replace_macros(str, targetmodprefix)
-        local LONG_MACROS = { "sitelib", "sitearch" }
+        local LONG_MACROS = { "sitelib", "sitearch",
+            "alternative", "install_alternative", "uninstall_alternative" }
         local SHORT_MACROS = { "ver" }
         for _, macro in ipairs(LONG_MACROS) do
             local from = string.format("%s_%s", modprefix, macro)
