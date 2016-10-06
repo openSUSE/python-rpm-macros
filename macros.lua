@@ -85,10 +85,13 @@ function _scan_spec()
         "build", "install", "check", "clean", "pre", "post", "preun", "postun",
         "pretrans", "posttrans", "changelog"}
     local SCRIPTLET_SECTIONS = { "pre", "post", "preun", "postun", "pretrans", "posttrans" }
+    local OPERATORS = { "<", "<=", ">=", ">", "=" }
     local section_table = {}
     local scriptlet_table = {}
+    local operator_table = {}
     for _,v in ipairs(KNOWN_SECTIONS) do section_table[v] = true end
     for _,v in ipairs(SCRIPTLET_SECTIONS) do scriptlet_table[v] = true end
+    for _,v in ipairs(OPERATORS) do operator_table[v] = true end
 
     local function enter_section(name, param)
         if name == "package" then
@@ -141,11 +144,24 @@ function _scan_spec()
             section_content = section_content .. line .. "\n"
             if property == "Requires" then
                 -- TODO filter out version requirements
+                local target_table = requires_common
+                if SECTION == "package" and SECTIONNAME ~= nil then
+                    target_table = requires_subpackage[SECTIONNAME]
+                end
+
+                local req_operator = ""
+                local req_name = nil
                 for s in value:gmatch("%S+") do
-                    if SECTION == "package" and SECTIONNAME ~= nil then
-                        table.insert(requires_subpackage[SECTIONNAME], s)
+                    if operator_table[s] then
+                        req_operator = s
+                    elseif s:find("[0-9]") == 1 then
+                        local full_req = string.format("%s %s %s", req_name, req_operator, s)
+                        for k,v in ipairs(target_table) do
+                            if v == req_name then target_table[k] = full_req end
+                        end
                     else
-                        table.insert(requires_common, s)
+                        req_name = s
+                        table.insert(target_table, s)
                     end
                 end
             elseif section == "files" then
@@ -196,6 +212,7 @@ end
 function _output_scriptlets()
     local mymodprefix = rpm.expand("%1")
     local packagename = rpm.expand("%2")
+    if not scriptlets[packagename] then return end
     for k, v in pairs(scriptlets[packagename]) do
         print("%" .. k .. " -n " .. mymodprefix .. "-" .. packagename .. "\n")
         print(replace_macros(v, mymodprefix) .. "\n")
