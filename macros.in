@@ -12,11 +12,10 @@
 # specify unused flag to avoid recursive expansion bug
 %_unrecurse_python_module(x:) %{expand: %{?have_python:python-%{-x*}} %{?have_python3:python3-%{-x*}} %{?have_pypy:pypy-%{-x*}}}
 
-%python_buildrequire() BuildRequires: %{_unrecurse_python_module -x %1} \
+%python_buildrequire() BuildRequires: %{_unrecurse_python_module -x %1}
+%python_module() %{expand: %{_unrecurse_python_module -x %1}}
 
-%python_module() %{expand: %{_unrecurse_python_module -x %1}} \
-
-%if_python_kind() %if %{_scan_spec} %{lua: if modprefix == rpm.expand("%1") then print("1") else print("0") end} \
+%if_python_kind() %if %{_scan_spec} %{lua: if modprefix == rpm.expand("%1") then print("1") else print("0") end}
 
 %ifpython3 %{if_python_kind python3}
 %ifpython2 %{if_python_kind python}
@@ -24,15 +23,15 @@
 
 %py3_only() %ifpython3 \
 %** \
-%endif \
+%endif
 
 %py2_only() %ifpython2 \
 %** \
-%endif \
+%endif
 
 %pypy_only() %ifpypy \
 %** \
-%endif \
+%endif
 
 %python_exec() for flavor in %pythons; do \
     if [ -d build ]; then mv build _build.tmp; fi \
@@ -40,7 +39,7 @@
     $flavor %** \
     if [ -d build ]; then mv build _build.$flavor; fi \
     if [ -d _build.tmp ]; then mv _build.tmp build; fi \
-done \
+done
 
 ### LUA-MACROS ###
 
@@ -55,7 +54,7 @@ Version: %version \
 %{_output_description} \
 %files -n %1-%2 \
 %{expand:%{_output_filelist}} \
-%{expand:%{_output_scriptlets}} \
+%{expand:%{_output_scriptlets}}
 
 
 %_modname_from_name %{lua: print(modname)}
@@ -67,7 +66,7 @@ Version: %version \
 %{expand:%( for flavor in %pythons; do \
     [ "$flavor-%_modname_from_name" == "%name" ] && continue \
     echo "%%{_subpackage_for $flavor %_modname_from_name}" \
-done )} \
+done )}
 
 
 %python_build %python_exec setup.py build
@@ -88,7 +87,7 @@ done )} \
 rm -f %{buildroot}%{alternative_target} \
 mkdir -p %{buildroot}%{_sysconfdir}/alternatives \
 touch %{buildroot}%{_sysconfdir}/alternatives/%1 \
-ln -sf %{_sysconfdir}/alternatives/%1 %{buildroot}%{alternative_target} \
+ln -sf %{_sysconfdir}/alternatives/%1 %{buildroot}%{alternative_target}
 
 %install_alternative(s:t:p:n:) \
 %define alternative_name %{-n:%{-n*}}%{!-n:%1} \
@@ -99,35 +98,35 @@ update-alternatives --install \\\
     %{alternative_source} \\\
     %{alternative_name} \\\
     %{alternative_target} \\\
-    %{alternative_priority} \
+    %{alternative_priority}
 
 %uninstall_alternative(n:t:) \
 %define alternative_name %{-n:%{-n*}}%{!-n:%1} \
 %define alternative_target %{-t:%{-t*}}%{!-t:%2} \
 if [ $1 -eq 0 ]; then \
     update-alternatives --remove %{alternative_name} %{alternative_target} \
-fi \
+fi
 
 ######
 
 %python_alternative() \
 %{_bindir}/%1 \
 %{_bindir}/%1-%{py_ver} \
-%ghost %{_sysconfdir}/alternatives/%1 \
+%ghost %{_sysconfdir}/alternatives/%1
 
 %python3_alternative() \
 %{_bindir}/%1 \
 %{_bindir}/%1-%{py3_ver} \
-%ghost %{_sysconfdir}/alternatives/%1 \
+%ghost %{_sysconfdir}/alternatives/%1
 
 %python_install_alternative() \
 %define prio %{expand:%(echo %{py_ver} | tr -d .)} \
-%install_alternative -n %1 -t %{_bindir}/%1-%{py_ver} -p %{prio} \
+%install_alternative -n %1 -t %{_bindir}/%1-%{py_ver} -p %{prio}
 
 %python3_install_alternative() \
 %define prio %{expand:%(echo %{py3_ver} | tr -d .)} \
-%install_alternative -n %1 -t %{_bindir}/%1-%{py3_ver} -p %{prio} \
+%install_alternative -n %1 -t %{_bindir}/%1-%{py3_ver} -p %{prio}
 
-%python_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py_ver} \
+%python_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py_ver}
 
-%python3_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py3_ver} \
+%python3_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py3_ver}
