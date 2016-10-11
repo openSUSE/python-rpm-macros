@@ -36,7 +36,7 @@
 
 %python_exec() for flavor in %pythons; do \
     if [ -d build ]; then mv build _build.tmp; fi \
-    if [ -d _build.$flavor]; then mv _build.$flavor build; fi \
+    if [ -d _build.$flavor ]; then mv _build.$flavor build; fi \
     $flavor %** \
     if [ -d build ]; then mv build _build.$flavor; fi \
     if [ -d _build.tmp ]; then mv _build.tmp build; fi \
