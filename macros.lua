@@ -184,27 +184,46 @@ end
 function _output_filelist()
     local mymodprefix = rpm.expand("%1")
     local packagename = rpm.expand("%2")
+
+    if mymodprefix == "python" then mymodprefix = "python2" end
+
+    local IFS_LIST = { python3=true, python2=true, pypy=true }
+    local ONLY_LIST = { py3="python3", py2="python2", pypy="pypy" }
+
     local only = nil
     for _,file in ipairs(filelists[packagename]) do
         file = replace_macros(file, mymodprefix)
+        local continue = false
 
-        if file == "%ifpython3" then
-            only = "python3"
-        elseif file == "%ifpython2" then
-            only = "python"
-        elseif file == "%ifpypy" then
-            only = "pypy"
-        elseif file == "%endif" then
+        -- test %ifpython2 etc
+        for k, _ in pairs(IFS_LIST) do
+            if file == "%if" .. k then
+                only = k
+                continue = true
+            end
+        end
+        if file == "%endif" then
             only = nil
-        -- for some reason, rpm seems to do something bad with the following %strings
-        elseif file:startswith("%%py3_only ") and mymodprefix == "python3" then
-            print(file:sub(string.len("%%py3_only ")) .. "\n")
-        elseif file:startswith("%%py2_only ") and mymodprefix == "python" then
-            print(file:sub(string.len("%%py2_only ")) .. "\n")
-        elseif file:startswith("%%pypy_only ") and mymodprefix == "pypy" then
-            print(file:sub(string.len("%%pypy_only ")) .. "\n")
-        else
-            if only == nil or only == mymodprefix then print(file .. "\n") end
+            continue = true
+        end
+
+        -- test %py2_only etc
+        -- for find, gsub etc., '%' is a special character and must be doubled
+        for k,v in pairs(ONLY_LIST) do
+            local only_expr = "%%" .. k .. "_only "
+            if file:startswith(only_expr) then
+                -- only_expr is 1 longer because of double %
+                -- but string.sub counts 1-based
+                -- so only_expr:len() is actually the right number
+                local justfile = file:sub(only_expr:len())
+                if mymodprefix == v then print(justfile) .. "\n") end
+                continue = true
+            end
+        end
+
+        if not continue
+           and (only == nil or only == mymodprefix) then
+                print(file .. "\n")
         end
     end
 end
