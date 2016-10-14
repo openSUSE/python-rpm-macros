@@ -48,7 +48,7 @@ done \
 # %1 - flavor; %2 - modname (subpackage name)
 %_subpackage_for() \
 %package -n %1-%2 \
-Summary: %summary - package for %{lua: print(rpm.expand("%flavor_" .. rpm.expand("%1")))} \
+Summary: %summary \
 Version: %version \
 %_output_requires \
 %description -n %1-%2 \
