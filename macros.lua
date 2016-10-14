@@ -142,8 +142,7 @@ function _scan_spec()
             -- nothing
         else
             section_content = section_content .. line .. "\n"
-            if property == "Requires" then
-                -- TODO filter out version requirements
+            if property == "Requires" or property == "Recommends" or property == "Suggests" then
                 local target_table = requires_common
                 if SECTION == "package" and SECTIONNAME ~= nil then
                     target_table = requires_subpackage[SECTIONNAME]
@@ -157,11 +156,11 @@ function _scan_spec()
                     elseif s:find("[0-9]") == 1 then
                         local full_req = string.format("%s %s %s", req_name, req_operator, s)
                         for k,v in ipairs(target_table) do
-                            if v == req_name then target_table[k] = full_req end
+                            if v[2] == req_name then target_table[k][2] = full_req end
                         end
                     else
                         req_name = s
-                        table.insert(target_table, s)
+                        table.insert(target_table, {property, req_name})
                     end
                 end
             elseif section == "files" then
@@ -174,10 +173,12 @@ end
 function _output_requires()
     local mymodprefix = rpm.expand("%1")
     for _,req in ipairs(requires_common) do
-        if req:match("^"..modprefix) then
-            req = req:gsub("^"..modprefix, mymodprefix)
+        local prop = req[1]
+        local val = req[2]
+        if val:match("^"..modprefix) then
+            val = val:gsub("^"..modprefix, mymodprefix)
         end
-        print("Requires: " .. req .. "\n")
+        print(prop .. ": " .. val .. "\n")
     end
 end
 
