@@ -15,7 +15,7 @@
 %python_buildrequire() BuildRequires: %{_unrecurse_python_module -x %1}
 %python_module() %{expand: %{_unrecurse_python_module -x %1}}
 
-%if_python_kind() %if %{_scan_spec} %{lua: if modprefix == rpm.expand("%1") then print("1") else print("0") end}
+%if_python_kind() %if %{_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("1") else print("0") end}
 
 %ifpython3 %{if_python_kind python3}
 %ifpython2 %{if_python_kind python}
@@ -59,15 +59,17 @@ Version: %version \
 %{nil}
 
 
-%_modname_from_name %{lua: print(modname)}
 %_specpath %{lua: print(specpath)}
 
 
 %python_subpackages \
 %{_scan_spec} \
+%{expand:%{_output_subpackages}}
+
+%python_sub_orig \
 %{expand:%( for flavor in %pythons; do \
-    [ "$flavor-%_modname_from_name" == "%name" ] && continue \
-    echo "%%{_subpackage_for $flavor %_modname_from_name}" \
+    [ "$flavor-%_modname" == "%name" ] && continue \
+    echo "%%{_subpackage_for $flavor %_modname}" \
 done )}
 
 
