@@ -37,6 +37,16 @@ function _scan_spec()
         return str
     end
 
+    function packagename_from_modname(packagename)
+        if packagename == modname then
+            return ""
+        elseif packagename:startswith(modname .. "-") then
+            return packagename:sub(modname:len() + 2)
+        else
+            return "-n " .. packagename
+        end
+    end
+
     pythons = {}
     for str in string.gmatch(rpm.expand("%pythons"), "%S+") do
         table.insert(pythons, str)
@@ -71,13 +81,12 @@ function _scan_spec()
     subpackages = {}
     descriptions = {}
     filelists = {}
-    requires_common = {}
-    requires_subpackage = {}
+    requires = {}
     scriptlets = {}
 
     spec, err = io.open(specpath, "r")
     local section = nil
-    local section_name = nil
+    local section_name = ""
     local section_content = ""
 
     -- build section lookup structure
@@ -99,12 +108,12 @@ function _scan_spec()
             table.insert(subpackages, param)
             descriptions[param] = ""
             filelists[param] = {}
-            requires_subpackage[param] = {}
+            requires[param] = {}
         end
     end
 
     -- create entry for main package
-    enter_section("package", modname)
+    enter_section("package", "")
 
     local function leave_section(name, param, content)
         if name == "description" then
@@ -129,9 +138,9 @@ function _scan_spec()
         if section_table[section_noparam] then
             if section ~= nil then leave_section(section, section_name, section_content) end
             section = section_noparam
-            section_name = modname
+            section_name = ""
             section_content = ""
-            enter_section(section, nil)
+            enter_section(section, "")
         elseif section_table[section_withparam] then
             if section ~= nil then leave_section(section, section_name, section_content) end
             section = section_withparam
@@ -143,10 +152,7 @@ function _scan_spec()
         else
             section_content = section_content .. line .. "\n"
             if property == "Requires" or property == "Recommends" or property == "Suggests" then
-                local target_table = requires_common
-                if section == "package" and section_name ~= nil then
-                    target_table = requires_subpackage[section_name]
-                end
+                local target_table = requires[section_name]
 
                 local req_operator = ""
                 local req_name = nil
@@ -170,9 +176,27 @@ function _scan_spec()
     end
 end
 
+function _output_subpackages()
+    for _,python in ipairs(pythons) do
+        if python == modprefix then
+            -- this is already *it*
+        else
+            print(string.format("%%{_subpackage_for %s %s}\n", python, modname))
+            for _,subpkg in ipairs(subpackages) do
+                if subpkg:startswith("-n ") then
+                    subpkg = subpkg:sub(4)
+                    print(string.format("%%{_subpackage_for %s %s}\n", python, subpkg))
+                elseif subpkg ~= "" then
+                    print(string.format("%%{_subpackage_for %s %s-%s}\n", python, modname, subpkg))
+                end
+            end
+        end
+    end
+end
+
 function _output_requires()
     local mymodprefix = rpm.expand("%1")
-    for _,req in ipairs(requires_common) do
+    for _,req in ipairs(requires[""]) do
         local prop = req[1]
         local val = req[2]
         if val:match("^"..modprefix) then
@@ -184,7 +208,7 @@ end
 
 function _output_filelist()
     local mymodprefix = rpm.expand("%1")
-    local packagename = rpm.expand("%2")
+    local packagename = packagename_from_modname(rpm.expand("%2"))
 
     if mymodprefix == "python" then mymodprefix = "python2" end
 
@@ -231,7 +255,7 @@ end
 
 function _output_scriptlets()
     local mymodprefix = rpm.expand("%1")
-    local packagename = rpm.expand("%2")
+    local packagename = packagename_from_modname(rpm.expand("%2"))
     if not scriptlets[packagename] then return end
     for k, v in pairs(scriptlets[packagename]) do
         print("%" .. k .. " -n " .. mymodprefix .. "-" .. packagename .. "\n")
@@ -240,6 +264,6 @@ function _output_scriptlets()
 end
 
 function _output_description()
-    local packagename = rpm.expand("%2")
+    local packagename = packagename_from_modname(rpm.expand("%2"))
     print(descriptions[packagename] .. "\n")
 end
