@@ -94,13 +94,10 @@ function _scan_spec()
         "build", "install", "check", "clean", "pre", "post", "preun", "postun",
         "pretrans", "posttrans", "changelog"}
     local SCRIPTLET_SECTIONS = { "pre", "post", "preun", "postun", "pretrans", "posttrans" }
-    local OPERATORS = { "<", "<=", ">=", ">", "=" }
     local section_table = {}
     local scriptlet_table = {}
-    local operator_table = {}
     for _,v in ipairs(KNOWN_SECTIONS) do section_table[v] = true end
     for _,v in ipairs(SCRIPTLET_SECTIONS) do scriptlet_table[v] = true end
-    for _,v in ipairs(OPERATORS) do operator_table[v] = true end
 
     local function enter_section(name, param)
         if name == "package" then
@@ -154,23 +151,7 @@ function _scan_spec()
             section_content = section_content .. line .. "\n"
             local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
             if property == "Requires" or property == "Recommends" or property == "Suggests" then
-                local target_table = requires[section_name]
-
-                local req_operator = ""
-                local req_name = nil
-                for s in value:gmatch("%S+") do
-                    if operator_table[s] then
-                        req_operator = s
-                    elseif s:find("[0-9]") == 1 then
-                        local full_req = string.format("%s %s %s", req_name, req_operator, s)
-                        for k,v in ipairs(target_table) do
-                            if v[2] == req_name then target_table[k][2] = full_req end
-                        end
-                    else
-                        req_name = s
-                        table.insert(target_table, {property, req_name})
-                    end
-                end
+                table.insert(requires[section_name], {property, value})
             elseif section == "files" then
                 table.insert(filelists[section_name], line)
             end
@@ -198,9 +179,10 @@ end
 
 function _output_requires()
     local myflavor = rpm.expand("%1")
-    for _,req in ipairs(requires[""]) do
+    local pkgname = pkgname_from_param(rpm.expand("%2"))
+    for _,req in ipairs(requires[pkgname]) do
         local prop = req[1]
-        local val = req[2]
+        local val = rpm.expand(req[2])
         if val:match("^"..flavor) then
             val = val:gsub("^"..flavor, myflavor)
         end
