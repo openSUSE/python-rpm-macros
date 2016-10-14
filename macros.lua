@@ -37,13 +37,13 @@ function _scan_spec()
         return str
     end
 
-    function packagename_from_modname(packagename)
-        if packagename == modname then
+    function pkgname_from_param(param)
+        if param == modname then
             return ""
-        elseif packagename:startswith(modname .. "-") then
-            return packagename:sub(modname:len() + 2)
+        elseif param:startswith(modname .. "-") then
+            return param:sub(modname:len() + 2)
         else
-            return "-n " .. packagename
+            return "-n " .. param
         end
     end
 
@@ -131,26 +131,28 @@ function _scan_spec()
         -- match section delimiter
         local section_noparam = line:match("^%%(%S+)(%s*)$")
         local section_withparam, param = line:match("^%%(%S+) (.+)$")
-        local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
+        local newsection = nil
+        local newsection_name = ""
+        if section_noparam then
+            newsection = section_noparam
+        elseif section_withparam then
+            newsection = section_withparam
+            newsection_name = param
+        end
 
         -- TODO convert parameter to modname-like
 
-        if section_table[section_noparam] then
-            if section ~= nil then leave_section(section, section_name, section_content) end
-            section = section_noparam
-            section_name = ""
+        if section_table[newsection] then
+            leave_section(section, section_name, section_content)
+            enter_section(newsection, newsection_name)
+            section = newsection
+            section_name = newsection_name
             section_content = ""
-            enter_section(section, "")
-        elseif section_table[section_withparam] then
-            if section ~= nil then leave_section(section, section_name, section_content) end
-            section = section_withparam
-            section_name = param
-            section_content = ""
-            enter_section(section, param)
         elseif line == "%python_subpackages" or line == "%{python_subpackages}" then
             -- nothing
         else
             section_content = section_content .. line .. "\n"
+            local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
             if property == "Requires" or property == "Recommends" or property == "Suggests" then
                 local target_table = requires[section_name]
 
@@ -208,7 +210,7 @@ end
 
 function _output_filelist()
     local myflavor = rpm.expand("%1")
-    local packagename = packagename_from_modname(rpm.expand("%2"))
+    local pkgname = pkgname_from_param(rpm.expand("%2"))
 
     if myflavor == "python" then myflavor = "python2" end
 
@@ -216,7 +218,7 @@ function _output_filelist()
     local ONLY_LIST = { py3="python3", py2="python2", pypy="pypy" }
 
     local only = nil
-    for _,file in ipairs(filelists[packagename]) do
+    for _,file in ipairs(filelists[pkgname]) do
         file = replace_macros(file, myflavor)
         local continue = false
 
@@ -255,15 +257,15 @@ end
 
 function _output_scriptlets()
     local myflavor = rpm.expand("%1")
-    local packagename = packagename_from_modname(rpm.expand("%2"))
-    if not scriptlets[packagename] then return end
-    for k, v in pairs(scriptlets[packagename]) do
-        print("%" .. k .. " -n " .. myflavor .. "-" .. packagename .. "\n")
+    local pkgname = pkgname_from_param(rpm.expand("%2"))
+    if not scriptlets[pkgname] then return end
+    for k, v in pairs(scriptlets[pkgname]) do
+        print("%" .. k .. " -n " .. myflavor .. "-" .. pkgname .. "\n")
         print(replace_macros(v, myflavor) .. "\n")
     end
 end
 
 function _output_description()
-    local packagename = packagename_from_modname(rpm.expand("%2"))
-    print(descriptions[packagename] .. "\n")
+    local pkgname = pkgname_from_param(rpm.expand("%2"))
+    print(descriptions[pkgname] .. "\n")
 end
