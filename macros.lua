@@ -144,8 +144,8 @@ function _scan_spec()
             section_content = section_content .. line .. "\n"
             if property == "Requires" or property == "Recommends" or property == "Suggests" then
                 local target_table = requires_common
-                if SECTION == "package" and SECTIONNAME ~= nil then
-                    target_table = requires_subpackage[SECTIONNAME]
+                if section == "package" and section_name ~= nil then
+                    target_table = requires_subpackage[section_name]
                 end
 
                 local req_operator = ""
@@ -217,7 +217,7 @@ function _output_filelist()
                 -- but string.sub counts 1-based
                 -- so only_expr:len() is actually the right number
                 local justfile = file:sub(only_expr:len())
-                if mymodprefix == v then print(justfile) .. "\n") end
+                if mymodprefix == v then print(justfile .. "\n") end
                 continue = true
             end
         end
