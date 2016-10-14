@@ -12,25 +12,25 @@ function _scan_spec()
         return suffix == str:sub(-suffix:len())
     end
 
-    SHORT_MODNAMES = {
+    SHORT_FLAVORS = {
         python = "py",
         python3 = "py3",
         pypy = "pypy",
     }
 
-    function replace_macros(str, targetmodprefix)
+    function replace_macros(str, targetflavor)
         local LONG_MACROS = { "sitelib", "sitearch",
             "alternative", "install_alternative", "uninstall_alternative" }
         local SHORT_MACROS = { "ver" }
         for _, macro in ipairs(LONG_MACROS) do
-            local from = string.format("%s_%s", modprefix, macro)
-            local to = string.format("%s_%s", targetmodprefix, macro)
+            local from = string.format("%s_%s", flavor, macro)
+            local to = string.format("%s_%s", targetflavor, macro)
             str = str:gsub("%%" .. from, "%%" .. to)
             str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
         end
         for _, macro in ipairs(SHORT_MACROS) do
-            local from = string.format("%s_%s", SHORT_MODNAMES[modprefix], macro)
-            local to = string.format("%s_%s", SHORT_MODNAMES[targetmodprefix], macro)
+            local from = string.format("%s_%s", SHORT_FLAVORS[flavor], macro)
+            local to = string.format("%s_%s", SHORT_FLAVORS[targetflavor], macro)
             str = str:gsub("%%" .. from, "%%" .. to)
             str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
         end
@@ -53,19 +53,19 @@ function _scan_spec()
     end
 
     modname = rpm.expand("%name")
-    modprefix = "python"
+    flavor = "python"
     -- modname from name
     local name = modname
     for _,py in ipairs(pythons) do
         if name:find(py .. "-") == 1 then
-            modprefix = py
+            flavor = py
             modname = name:sub(py:len() + 2)
             break
         end
     end
-    -- if not found, modname == %name, modprefix == "python"
+    -- if not found, modname == %name, flavor == "python"
     rpm.define("_modname " .. modname)
-    rpm.define("_modprefix " .. modprefix)
+    rpm.define("_flavor " .. flavor)
 
     -- find the spec file
     specpath = name .. ".spec"
@@ -178,7 +178,7 @@ end
 
 function _output_subpackages()
     for _,python in ipairs(pythons) do
-        if python == modprefix then
+        if python == flavor then
             -- this is already *it*
         else
             print(string.format("%%{_subpackage_for %s %s}\n", python, modname))
@@ -195,29 +195,29 @@ function _output_subpackages()
 end
 
 function _output_requires()
-    local mymodprefix = rpm.expand("%1")
+    local myflavor = rpm.expand("%1")
     for _,req in ipairs(requires[""]) do
         local prop = req[1]
         local val = req[2]
-        if val:match("^"..modprefix) then
-            val = val:gsub("^"..modprefix, mymodprefix)
+        if val:match("^"..flavor) then
+            val = val:gsub("^"..flavor, myflavor)
         end
         print(prop .. ": " .. val .. "\n")
     end
 end
 
 function _output_filelist()
-    local mymodprefix = rpm.expand("%1")
+    local myflavor = rpm.expand("%1")
     local packagename = packagename_from_modname(rpm.expand("%2"))
 
-    if mymodprefix == "python" then mymodprefix = "python2" end
+    if myflavor == "python" then myflavor = "python2" end
 
     local IFS_LIST = { python3=true, python2=true, pypy=true }
     local ONLY_LIST = { py3="python3", py2="python2", pypy="pypy" }
 
     local only = nil
     for _,file in ipairs(filelists[packagename]) do
-        file = replace_macros(file, mymodprefix)
+        file = replace_macros(file, myflavor)
         local continue = false
 
         -- test %ifpython2 etc
@@ -241,25 +241,25 @@ function _output_filelist()
                 -- but string.sub counts 1-based
                 -- so only_expr:len() is actually the right number
                 local justfile = file:sub(only_expr:len())
-                if mymodprefix == v then print(justfile .. "\n") end
+                if myflavor == v then print(justfile .. "\n") end
                 continue = true
             end
         end
 
         if not continue
-           and (only == nil or only == mymodprefix) then
+           and (only == nil or only == myflavor) then
                 print(file .. "\n")
         end
     end
 end
 
 function _output_scriptlets()
-    local mymodprefix = rpm.expand("%1")
+    local myflavor = rpm.expand("%1")
     local packagename = packagename_from_modname(rpm.expand("%2"))
     if not scriptlets[packagename] then return end
     for k, v in pairs(scriptlets[packagename]) do
-        print("%" .. k .. " -n " .. mymodprefix .. "-" .. packagename .. "\n")
-        print(replace_macros(v, mymodprefix) .. "\n")
+        print("%" .. k .. " -n " .. myflavor .. "-" .. packagename .. "\n")
+        print(replace_macros(v, myflavor) .. "\n")
     end
 end
 
