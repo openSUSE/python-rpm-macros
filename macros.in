@@ -1,78 +1,69 @@
-%have_python  1
+%have_python2 1
 %have_python3 1
+%have_pypy3   1
 
-%pythons %{?have_python:python} %{?have_python3:python3}
+%pythons %{?have_python2:python2} %{?have_python3:python3} %{?have_pypy3:pypy3}
 
-%flavor_python3 Python 3
-%flavor_python Python 2
-%flavor_pypy PyPy
+%python_buildrequires BuildRequires: %{expand: %{?have_python2:python-devel} %{?have_python3:python3-devel} %{?have_pypy3:pypy3-devel}}
 
-%python_buildrequires BuildRequires: %{expand: %{?have_python:python-devel} %{?have_python3:python3-devel} %{?have_pypy:pypy-devel}}
-
-# specify unused flag to avoid recursive expansion bug
-%_unrecurse_python_module(x:) %{expand: %{?have_python:python-%{-x*}} %{?have_python3:python3-%{-x*}} %{?have_pypy:pypy-%{-x*}}}
-
-%python_buildrequire() BuildRequires: %{_unrecurse_python_module -x %1}
-%python_module() %{expand: %{_unrecurse_python_module -x %1}}
+%python_module() %{expand: %{?have_python2:python-%1} %{?have_python3:python3-%1} %{?have_pypy3:pypy3-%1}}
 
 %if_python_kind() %if %{_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("1") else print("0") end}
+%if_not_python_kind() %if %{_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("0") else print("1") end}
 
 %ifpython3 %{if_python_kind python3}
-%ifpython2 %{if_python_kind python}
-%ifpypy %{if_python_kind pypy}
+%ifpython2 %{if_python_kind python2}
+%ifpypy3 %{if_python_kind pypy3}
 
-%py3_only() %ifpython3 \
+%python3_only() %ifpython3 \
 %** \
 %endif
 
-%py2_only() %ifpython2 \
+%python2_only() %ifpython2 \
 %** \
 %endif
 
-%pypy_only() %ifpypy \
+%pypy3_only() %ifpypy3 \
 %** \
 %endif
 
-%python_exec() for flavor in %pythons; do \
-    if [ -d build ]; then mv build _build.tmp; fi \
-    if [ -d _build.$flavor ]; then mv _build.$flavor build; fi \
-    $flavor %** \
-    if [ -d build ]; then mv build _build.$flavor; fi \
-    if [ -d _build.tmp ]; then mv _build.tmp build; fi \
-done \
+%pycache_only() %{if_not_python_kind python2} \
+%** \
+%endif
+
+%_python_pop_flavor() \
+if [ -d build ]; then mv build _build.tmp; fi \
+if [ -d _build.%1 ]; then mv _build.%1 build; fi \
 %{nil}
+
+%_python_push_flavor() \
+if [ -d build ]; then mv build _build.%1; fi \
+if [ -d _build.tmp ]; then mv _build.tmp build; fi \
+%{nil}
+
 
 ### LUA-MACROS ###
 
 
 # %1 - flavor; %2 - modname (subpackage name)
-%_subpackage_for() \
+%_python_subpackage_for() \
 %package -n %1-%2 \
 Summary: %summary \
 Version: %version \
-%_output_requires \
+%_python_output_requires \
 %description -n %1-%2 \
-%{_output_description} \
+%_python_output_description \
 %files -n %1-%2 \
-%{expand:%{_output_filelist}} \
-%{expand:%{_output_scriptlets}} \
+%{expand:%_python_output_filelist} \
+%{expand:%_python_output_scriptlets} \
 %{nil}
 
 
-%_specpath %{lua: print(specpath)}
-
-
 %python_subpackages \
-%{_scan_spec} \
-%{expand:%{_output_subpackages}}
+%{_python_scan_spec} \
+%{expand:%{_python_output_subpackages}}
 
-%python_sub_orig \
-%{expand:%( for flavor in %pythons; do \
-    [ "$flavor-%_modname" == "%name" ] && continue \
-    echo "%%{_subpackage_for $flavor %_modname}" \
-done )}
-
-
+## TODO convert to fedora-like
 %python_build %python_exec setup.py build
 
 %python_install %python_exec setup.py install --root=%{buildroot}
@@ -115,7 +106,7 @@ fi \
 
 ######
 
-%python_alternative() \
+%python2_alternative() \
 %{_bindir}/%1 \
 %{_bindir}/%1-%{py_ver} \
 %ghost %{_sysconfdir}/alternatives/%1 \
@@ -127,7 +118,7 @@ fi \
 %ghost %{_sysconfdir}/alternatives/%1 \
 %{nil}
 
-%python_install_alternative() \
+%python2_install_alternative() \
 %define prio %{expand:%(echo %{py_ver} | tr -d .)} \
 %install_alternative -n %1 -t %{_bindir}/%1-%{py_ver} -p %{prio}
 
@@ -135,7 +126,7 @@ fi \
 %define prio %{expand:%(echo %{py3_ver} | tr -d .)} \
 %install_alternative -n %1 -t %{_bindir}/%1-%{py3_ver} -p %{prio}
 
-%python_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py_ver}
+%python2_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py_ver}
 #### TODO je potřeba tohle nilovat???
 
 %python3_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py3_ver}

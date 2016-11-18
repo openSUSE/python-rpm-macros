@@ -1,4 +1,4 @@
-function _scan_spec()
+function _python_scan_spec()
     -- get us a list of pythons
     if _spec_is_scanned ~= nil then return end
     _spec_is_scanned = true
@@ -13,14 +13,18 @@ function _scan_spec()
     end
 
     SHORT_FLAVORS = {
+        -- ??
         python = "py",
+        -- ??
+        python2 = "py2",
         python3 = "py3",
         pypy = "pypy",
     }
 
     function replace_macros(str, targetflavor)
         local LONG_MACROS = { "sitelib", "sitearch",
-            "alternative", "install_alternative", "uninstall_alternative" }
+            "alternative", "install_alternative", "uninstall_alternative",
+            "version", "version_nodots"}
         local SHORT_MACROS = { "ver" }
         for _, macro in ipairs(LONG_MACROS) do
             local from = string.format("%s_%s", flavor, macro)
@@ -159,7 +163,7 @@ function _scan_spec()
     end
 end
 
-function _output_subpackages()
+function _python_output_subpackages()
     for _,python in ipairs(pythons) do
         if python == flavor then
             -- this is already *it*
@@ -177,7 +181,7 @@ function _output_subpackages()
     end
 end
 
-function _output_requires()
+function _python_output_requires()
     local myflavor = rpm.expand("%1")
     local pkgname = pkgname_from_param(rpm.expand("%2"))
     for _,req in ipairs(requires[pkgname]) do
@@ -190,7 +194,7 @@ function _output_requires()
     end
 end
 
-function _output_filelist()
+function _python_output_filelist()
     local myflavor = rpm.expand("%1")
     local pkgname = pkgname_from_param(rpm.expand("%2"))
 
@@ -216,16 +220,16 @@ function _output_filelist()
             continue = true
         end
 
-        -- test %py2_only etc
+        -- test %python2_only etc
         -- for find, gsub etc., '%' is a special character and must be doubled
-        for k,v in pairs(ONLY_LIST) do
+        for k, _ in pairs(IFS_LIST) do
             local only_expr = "%%" .. k .. "_only "
             if file:startswith(only_expr) then
                 -- only_expr is 1 longer because of double %
                 -- but string.sub counts 1-based
                 -- so only_expr:len() is actually the right number
                 local justfile = file:sub(only_expr:len())
-                if myflavor == v then print(justfile .. "\n") end
+                if myflavor == k then print(justfile .. "\n") end
                 continue = true
             end
         end
@@ -237,7 +241,7 @@ function _output_filelist()
     end
 end
 
-function _output_scriptlets()
+function _python_output_scriptlets()
     local myflavor = rpm.expand("%1")
     local pkgname = pkgname_from_param(rpm.expand("%2"))
     if not scriptlets[pkgname] then return end
@@ -247,7 +251,15 @@ function _output_scriptlets()
     end
 end
 
-function _output_description()
+function _python_output_description()
     local pkgname = pkgname_from_param(rpm.expand("%2"))
     print(descriptions[pkgname] .. "\n")
+end
+
+function python_exec()
+    for _, flavor in pythons do
+        print(rpm.expand("%{_python_push_flavor " .. flavor .. "}\n"));
+        print(rpm.expand("%__" .. flavor .. " %**\n"));
+        print(rpm.expand("%{_python_pop_flavor " .. flavor .. "}\n"));
+    end
 end
