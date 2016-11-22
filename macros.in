@@ -1,11 +1,11 @@
+# TODO this should not be here
 %have_python2 1
 %have_python3 1
 %have_pypy3   1
 
 %pythons %{?have_python2:python2} %{?have_python3:python3} %{?have_pypy3:pypy3}
 
-%python_buildrequires BuildRequires: %{expand: %{?have_python2:python-devel} %{?have_python3:python3-devel} %{?have_pypy3:pypy3-devel}}
-
+# TODO for now the requirement is on "python-" not "python2-" because aliases in python do not exist
 %python_module() %{expand: %{?have_python2:python-%1} %{?have_python3:python3-%1} %{?have_pypy3:pypy3-%1}}
 
 %if_python_kind() %if %{_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("1") else print("0") end}
@@ -62,71 +62,3 @@ Version: %version \
 %python_subpackages \
 %{_python_scan_spec} \
 %{expand:%{_python_output_subpackages}}
-
-## TODO convert to fedora-like
-%python_build %python_exec setup.py build
-
-%python_install %python_exec setup.py install --root=%{buildroot}
-
-%py2_build    python2 setup.py build
-%py2_install  python2 setup.py install --root=%{buildroot}
-%py3_build    python3 setup.py build
-%py3_install  python3 setup.py install --root=%{buildroot}
-%pypy_build   pypy setup.py build
-%pypy_install pypy setup.py install --root=%{buildroot}
-
-#####
-
-%prepare_alternative(t:) \
-%define alternative_target %{-t:%{-t*}}%{!-t:%{_bindir}/%1} \
-rm -f %{buildroot}%{alternative_target} \
-mkdir -p %{buildroot}%{_sysconfdir}/alternatives \
-touch %{buildroot}%{_sysconfdir}/alternatives/%1 \
-ln -sf %{_sysconfdir}/alternatives/%1 %{buildroot}%{alternative_target} \
-%{nil}
-
-%install_alternative(s:t:p:n:) \
-%define alternative_name %{-n:%{-n*}}%{!-n:%1} \
-%define alternative_source %{-s:%{-s*}}%{!-s:%{_bindir}/%{alternative_name}} \
-%define alternative_target %{-t:%{-t*}}%{!-t:%2} \
-%define alternative_priority %{-p:%{-p*}}%{!-p:%3} \
-update-alternatives --install \\\
-    %{alternative_source} \\\
-    %{alternative_name} \\\
-    %{alternative_target} \\\
-    %{alternative_priority}
-
-%uninstall_alternative(n:t:) \
-%define alternative_name %{-n:%{-n*}}%{!-n:%1} \
-%define alternative_target %{-t:%{-t*}}%{!-t:%2} \
-if [ $1 -eq 0 ]; then \
-    update-alternatives --remove %{alternative_name} %{alternative_target} \
-fi \
-%{nil}
-
-######
-
-%python2_alternative() \
-%{_bindir}/%1 \
-%{_bindir}/%1-%{py_ver} \
-%ghost %{_sysconfdir}/alternatives/%1 \
-%{nil}
-
-%python3_alternative() \
-%{_bindir}/%1 \
-%{_bindir}/%1-%{py3_ver} \
-%ghost %{_sysconfdir}/alternatives/%1 \
-%{nil}
-
-%python2_install_alternative() \
-%define prio %{expand:%(echo %{py_ver} | tr -d .)} \
-%install_alternative -n %1 -t %{_bindir}/%1-%{py_ver} -p %{prio}
-
-%python3_install_alternative() \
-%define prio %{expand:%(echo %{py3_ver} | tr -d .)} \
-%install_alternative -n %1 -t %{_bindir}/%1-%{py3_ver} -p %{prio}
-
-%python2_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py_ver}
-#### TODO je potřeba tohle nilovat???
-
-%python3_uninstall_alternative() %uninstall_alternative -n %1 -t %{_bindir}/%1-%{py3_ver}

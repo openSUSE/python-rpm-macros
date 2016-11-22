@@ -16,13 +16,16 @@
 #
 
 Name:           python-rpm-macros
-Version:        1.0.0
+Version:        1.0git.1479486726.e6001db
 Release:        0
 License:        WTFPL
 Summary:        RPM macros for building of Python modules
 Url:            https://github.com/opensuse/multipython-macros
-Source:         multipython-macros-%{version}.tar.bz2
+Source:         multipython-macros-%{version}.tar
 BuildRequires:  perl
+# Fedora compatibility
+Provides:       python2-rpm-macros
+Provides:       python3-rpm-macros
 
 %description
 This package contains SUSE RPM macros for Python build automation.
@@ -30,15 +33,16 @@ You should BuildRequire this package unless you are sure that you
 are only building for distros newer than Leap 42.2
 
 %prep
-%setup -q -n multipython-macros
+%setup -q -n multipython-macros-%{version}
 
 %build
 /usr/bin/perl embed-macros.pl > macros.out
-cat macros.out common-defs > macros.pythons
+cat macros.out common-defs > macros.python_all
 
 %install
-install -m 644 macros.pythons %{buildroot}%{_sysconfdir}/rpm
+mkdir -p %{buildroot}%{_sysconfdir}/rpm
+install -m 644 macros.python_all %{buildroot}%{_sysconfdir}/rpm
 
 %files
 %defattr(-,root,root)
-%{_sysconfdir}/rpm/macros.pythons
+%{_sysconfdir}/rpm/macros.python_all

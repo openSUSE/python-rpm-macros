@@ -1,0 +1,26 @@
+%prepare_alternative(t:) \
+%define alternative_target %{-t:%{-t*}}%{!-t:%{_bindir}/%1} \
+rm -f %{buildroot}%{alternative_target} \
+mkdir -p %{buildroot}%{_sysconfdir}/alternatives \
+touch %{buildroot}%{_sysconfdir}/alternatives/%1 \
+ln -sf %{_sysconfdir}/alternatives/%1 %{buildroot}%{alternative_target} \
+%{nil}
+
+%install_alternative(s:t:p:n:) \
+%define alternative_name %{-n:%{-n*}}%{!-n:%1} \
+%define alternative_source %{-s:%{-s*}}%{!-s:%{_bindir}/%{alternative_name}} \
+%define alternative_target %{-t:%{-t*}}%{!-t:%2} \
+%define alternative_priority %{-p:%{-p*}}%{!-p:%3} \
+update-alternatives --install \\\
+    %{alternative_source} \\\
+    %{alternative_name} \\\
+    %{alternative_target} \\\
+    %{alternative_priority}
+
+%uninstall_alternative(n:t:) \
+%define alternative_name %{-n:%{-n*}}%{!-n:%1} \
+%define alternative_target %{-t:%{-t*}}%{!-t:%2} \
+if [ $1 -eq 0 ]; then \
+    update-alternatives --remove %{alternative_name} %{alternative_target} \
+fi \
+%{nil}

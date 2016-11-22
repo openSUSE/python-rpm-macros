@@ -1,5 +1,11 @@
 function _python_scan_spec()
-    -- get us a list of pythons
+    -- make sure this is only included once.
+    -- for reasons.
+    -- (we're defining some globals here. we can do that multiple times, but
+    -- it's rather ugly, esp. seeing as we will be invoking _scan_spec rather often
+    -- because we *need* it to run at start and we don't want to burden the user
+    -- with including it manually)
+    rpm.define("_python_scan_spec", "")
     if _spec_is_scanned ~= nil then return end
     _spec_is_scanned = true
 
@@ -49,6 +55,12 @@ function _python_scan_spec()
         else
             return "-n " .. param
         end
+    end
+
+    function python_exec_flavor(flavor, command)
+        print(rpm.expand("%{_python_push_flavor " .. flavor .. "}\n"));
+        print(command .. "\n");
+        print(rpm.expand("%{_python_pop_flavor " .. flavor .. "}\n"));
     end
 
     pythons = {}
@@ -257,9 +269,20 @@ function _python_output_description()
 end
 
 function python_exec()
+    python_exec_for_flavor
     for _, flavor in pythons do
-        print(rpm.expand("%{_python_push_flavor " .. flavor .. "}\n"));
-        print(rpm.expand("%__" .. flavor .. " %**\n"));
-        print(rpm.expand("%{_python_pop_flavor " .. flavor .. "}\n"));
+        python_exec_flavor(flavor, rpm.expand("%__" .. flavor .. " %**"))
+    end
+end
+
+function python_build()
+    for _, flavor in pythons do
+        python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_build %**"))
+    end
+end
+
+function python_install()
+    for _, flavor in pythons do
+        python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_install %**"))
     end
 end

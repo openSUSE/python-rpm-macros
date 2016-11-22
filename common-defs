@@ -2,6 +2,8 @@
 %__python3 /usr/bin/python3
 %__pypy3 /usr/bin/pypy3
 
+%system_python python2
+
 ##### fedora compatibility #####
 
 %py_setup setup.py
@@ -38,17 +40,6 @@
 %pypy3_version           %{python_version_tmpl %__pypy3}
 %pypy3_version_nodots    %{python_version_nodots_tmpl %__pypy3}
 
-##### fallbacks #####
-
-%python_sitelib          %python2_sitelib
-%python_sitearch         %python2_sitearch
-%python_version          %python2_version
-%python_version_nodots   %python2_version_nodots
-
-%py_ver  %python_version
-%py2_ver %python2_version
-%py3_ver %python3_version
-
 ##### templates #####
 
 %python_build_tmpl(i:o:)    %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} build \
@@ -70,3 +61,70 @@
 %py2_install %python2_install
 %py3_build   %python3_build
 %py3_install %python3_install
+
+##### alternative handling #####
+
+%python2_bin_suffix %python2_version
+%python3_bin_suffix %python3_version
+%pypy3_bin_suffix   pp%{pypy3_version}
+
+%python_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%{_bindir}/%{binary} \
+%{_bindir}/%{binary}-%{suffix} \
+%ghost %{_sysconfdir}/alternatives/%{binary} \
+%{nil}
+
+%python_install_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%define prio   %{expand:%%{-f*}_version_nodots} \
+%install_alternative -n %{binary} -t %{_bindir}/%1-%{suffix} -p %{prio}
+
+%python_uninstall_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%uninstall_alternative -n %{binary} -t %{_bindir}/%1-%{suffix}
+
+%python2_alternative()           %{python_alternative_tmpl           -b %1 -f python2}
+%python2_install_alternative()   %{python_install_alternative_tmpl   -b %1 -f python2}
+%python2_uninstall_alternative() %{python_uninstall_alternative_tmpl -b %1 -f python2}
+
+%python3_alternative()           %{python_alternative_tmpl           -b %1 -f python3}
+%python3_install_alternative()   %{python_install_alternative_tmpl   -b %1 -f python3}
+%python3_uninstall_alternative() %{python_uninstall_alternative_tmpl -b %1 -f python3}
+
+%pypy3_alternative()             %{python_alternative_tmpl           -b %1 -f pypy3}
+%pypy3_install_alternative()     %{python_install_alternative_tmpl   -b %1 -f pypy3}
+%pypy3_uninstall_alternative()   %{python_uninstall_alternative_tmpl -b %1 -f pypy3}
+
+##### fallbacks #####
+
+%if %system_python == python3
+
+%python_sitelib          %python3_sitelib
+%python_sitearch         %python3_sitearch
+%python_version          %python3_version
+%python_version_nodots   %python3_version_nodots
+
+%python_alternative           %python3_alternative
+%python_install_alternative   %python3_install_alternative
+%python_uninstall_alternative %python3_uninstall_alternative
+
+%else
+
+%python_sitelib          %python2_sitelib
+%python_sitearch         %python2_sitearch
+%python_version          %python2_version
+%python_version_nodots   %python2_version_nodots
+
+%python_alternative           %python2_alternative
+%python_install_alternative   %python2_install_alternative
+%python_uninstall_alternative %python2_uninstall_alternative
+
+%endif
+
+%py_ver  %python_version
+%py2_ver %python2_version
+%py3_ver %python3_version
