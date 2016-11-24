@@ -18,10 +18,10 @@
 %python_version_tmpl()         %(%1 -c "import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))")
 %python_version_nodots_tmpl()  %(%1 -c "import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))")
 
-%python_build_tmpl(i:o:)    %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} build \
+%python_build_tmpl(i:o:)    %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} build \\\
     --executable="%{expand:%%__%{-i*} %%{?%{-i*}_shbang_opts}}"
-%python_install_tmpl(i:o:)  %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} install \
-    --executable="%{expand:%%__%{-i*} %%{?%{-i*}_shbang_opts}}" \
+%python_install_tmpl(i:o:)  %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} install \\\
+    --executable="%{expand:%%__%{-i*} %%{?%{-i*}_shbang_opts}}" \\\
     -O1 --skip-build --root %{buildroot}
 
 ##### alternative handling #####
