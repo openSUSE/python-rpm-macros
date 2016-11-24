@@ -1,7 +1,7 @@
 # TODO this should not be here
-%have_python2 1
-%have_python3 1
-%have_pypy3   1
+%have_python2 %{?have_python2}%{!?have_python2:1}
+%have_python3 %{?have_python3}%{!?have_python3:1}
+%have_pypy3   %{?have_pypy3}%{!?have_pypy3:0}
 
 %pythons %{?have_python2:python2} %{?have_python3:python3} %{?have_pypy3:pypy3}
 
