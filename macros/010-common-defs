@@ -47,19 +47,9 @@
 
 ##### fallback preferred configuration #####
 
-%if %system_python == python3
-
-%python_sitelib          %python3_sitelib
-%python_sitearch         %python3_sitearch
-%python_version          %python3_version
-%python_version_nodots   %python3_version_nodots
-
-%python_alternative           %python3_alternative
-%python_install_alternative   %python3_install_alternative
-%python_uninstall_alternative %python3_uninstall_alternative
-
-%else
-
+# This can't be in a conditional section because there are no conditional
+# sections. Instead, `python2` is hardcoded here, to be reconfigured through
+# future package updates (supposedly).
 %python_sitelib          %python2_sitelib
 %python_sitearch         %python2_sitearch
 %python_version          %python2_version
@@ -68,7 +58,5 @@
 %python_alternative           %python2_alternative
 %python_install_alternative   %python2_install_alternative
 %python_uninstall_alternative %python2_uninstall_alternative
-
-%endif
 
 %py_ver  %python_version
