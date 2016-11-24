@@ -27,6 +27,8 @@ BuildRequires:  perl
 Provides:       python2-rpm-macros
 Provides:       python3-rpm-macros
 
+BuildArch:      noarch
+
 %description
 This package contains SUSE RPM macros for Python build automation.
 You should BuildRequire this package unless you are sure that you
