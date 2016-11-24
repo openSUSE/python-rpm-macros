@@ -5,7 +5,7 @@ function _python_scan_spec()
     -- it's rather ugly, esp. seeing as we will be invoking _scan_spec rather often
     -- because we *need* it to run at start and we don't want to burden the user
     -- with including it manually)
-    rpm.define("_python_scan_spec", "")
+    --rpm.define("_python_scan_spec", "")
     if _spec_is_scanned ~= nil then return end
     _spec_is_scanned = true
 
@@ -51,7 +51,7 @@ function _python_scan_spec()
         if param == modname then
             return ""
         elseif param:startswith(modname .. "-") then
-            return param:sub(modname:len() + 2)
+            return param:sub(modname:len() + 1)
         else
             return "-n " .. param
         end
@@ -75,7 +75,7 @@ function _python_scan_spec()
     for _,py in ipairs(pythons) do
         if name:find(py .. "-") == 1 then
             flavor = py
-            modname = name:sub(py:len() + 2)
+            modname = name:sub(py:len() + 1)
             break
         end
     end
@@ -180,13 +180,13 @@ function _python_output_subpackages()
         if python == flavor then
             -- this is already *it*
         else
-            print(string.format("%%{_subpackage_for %s %s}\n", python, modname))
+            print(string.format("%%{_python_subpackage_for %s %s}\n", python, modname))
             for _,subpkg in ipairs(subpackages) do
                 if subpkg:startswith("-n ") then
                     subpkg = subpkg:sub(4)
-                    print(string.format("%%{_subpackage_for %s %s}\n", python, subpkg))
+                    print(string.format("%%{_python_subpackage_for %s %s}\n", python, subpkg))
                 elseif subpkg ~= "" then
-                    print(string.format("%%{_subpackage_for %s %s-%s}\n", python, modname, subpkg))
+                    print(string.format("%%{_python_subpackage_for %s %s-%s}\n", python, modname, subpkg))
                 end
             end
         end
@@ -270,19 +270,19 @@ end
 
 function python_exec()
     python_exec_for_flavor
-    for _, flavor in pythons do
+    for _, flavor in ipairs(pythons) do
         python_exec_flavor(flavor, rpm.expand("%__" .. flavor .. " %**"))
     end
 end
 
 function python_build()
-    for _, flavor in pythons do
+    for _, flavor in ipairs(pythons) do
         python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_build %**"))
     end
 end
 
 function python_install()
-    for _, flavor in pythons do
+    for _, flavor in ipairs(pythons) do
         python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_install %**"))
     end
 end
