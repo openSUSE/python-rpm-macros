@@ -1,0 +1,17 @@
+##### macro definitions for flavor "#FLAVOR#" #####
+
+%__#FLAVOR#               /usr/bin/#FLAVOR#
+
+%#FLAVOR#_shbang_opts     %py_shbang_opts
+
+%#FLAVOR#_sitelib         %{python_sitelib_tmpl        %__#FLAVOR#}
+%#FLAVOR#_sitearch        %{python_sitearch_tmpl       %__#FLAVOR#}
+%#FLAVOR#_version         %{python_version_tmpl        %__#FLAVOR#}
+%#FLAVOR#_version_nodots  %{python_version_nodots_tmpl %__#FLAVOR#}
+
+%#FLAVOR#_build           %{python_build_tmpl   -i #FLAVOR#}
+%#FLAVOR#_install         %{python_install_tmpl -i #FLAVOR#}
+
+%#FLAVOR#_alternative()           %{python_alternative_tmpl           -b %1 -f #FLAVOR#}
+%#FLAVOR#_install_alternative()   %{python_install_alternative_tmpl   -b %1 -f #FLAVOR#}
+%#FLAVOR#_uninstall_alternative() %{python_uninstall_alternative_tmpl -b %1 -f #FLAVOR#}

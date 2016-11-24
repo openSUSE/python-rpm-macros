@@ -1,0 +1,526 @@
+%prepare_alternative(t:) \
+%define alternative_target %{-t:%{-t*}}%{!-t:%{_bindir}/%1} \
+rm -f %{buildroot}%{alternative_target} \
+mkdir -p %{buildroot}%{_sysconfdir}/alternatives \
+touch %{buildroot}%{_sysconfdir}/alternatives/%1 \
+ln -sf %{_sysconfdir}/alternatives/%1 %{buildroot}%{alternative_target} \
+%{nil}
+
+%install_alternative(s:t:p:n:) \
+%define alternative_name %{-n:%{-n*}}%{!-n:%1} \
+%define alternative_source %{-s:%{-s*}}%{!-s:%{_bindir}/%{alternative_name}} \
+%define alternative_target %{-t:%{-t*}}%{!-t:%2} \
+%define alternative_priority %{-p:%{-p*}}%{!-p:%3} \
+update-alternatives --install \\\
+    %{alternative_source} \\\
+    %{alternative_name} \\\
+    %{alternative_target} \\\
+    %{alternative_priority}
+
+%uninstall_alternative(n:t:) \
+%define alternative_name %{-n:%{-n*}}%{!-n:%1} \
+%define alternative_target %{-t:%{-t*}}%{!-t:%2} \
+if [ $1 -eq 0 ]; then \
+    update-alternatives --remove %{alternative_name} %{alternative_target} \
+fi \
+%{nil}
+
+%system_python python2
+
+##### fedora compatibility #####
+
+%py_setup setup.py
+%py_shbang_opts -s
+
+##### binary suffixes for flavors #####
+
+%python2_bin_suffix %python2_version
+%python3_bin_suffix %python3_version
+%pypy3_bin_suffix   pp%{pypy3_version}
+
+##### naming unification templates #####
+
+%python_sitelib_tmpl()         %(%1 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+%python_sitearch_tmpl()        %(%1 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
+%python_version_tmpl()         %(%1 -c "import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))")
+%python_version_nodots_tmpl()  %(%1 -c "import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))")
+
+%python_build_tmpl(i:o:)    %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} build \
+    --executable="%{expand:%%__%{-i*} %%{?%{-i*}_shbang_opts}}"
+%python_install_tmpl(i:o:)  %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} install \
+    --executable="%{expand:%%__%{-i*} %%{?%{-i*}_shbang_opts}}" \
+    -O1 --skip-build --root %{buildroot}
+
+##### alternative handling #####
+
+%python_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%{_bindir}/%{binary} \
+%{_bindir}/%{binary}-%{suffix} \
+%ghost %{_sysconfdir}/alternatives/%{binary} \
+%{nil}
+
+%python_install_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%define prio   %{expand:%%{-f*}_version_nodots} \
+%install_alternative -n %{binary} -t %{_bindir}/%1-%{suffix} -p %{prio}
+
+%python_uninstall_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%uninstall_alternative -n %{binary} -t %{_bindir}/%1-%{suffix}
+
+##### fallback preferred configuration #####
+
+%if %system_python == python3
+
+%python_sitelib          %python3_sitelib
+%python_sitearch         %python3_sitearch
+%python_version          %python3_version
+%python_version_nodots   %python3_version_nodots
+
+%python_alternative           %python3_alternative
+%python_install_alternative   %python3_install_alternative
+%python_uninstall_alternative %python3_uninstall_alternative
+
+%else
+
+%python_sitelib          %python2_sitelib
+%python_sitearch         %python2_sitearch
+%python_version          %python2_version
+%python_version_nodots   %python2_version_nodots
+
+%python_alternative           %python2_alternative
+%python_install_alternative   %python2_install_alternative
+%python_uninstall_alternative %python2_uninstall_alternative
+
+%endif
+
+%py_ver  %python_version
+
+##### macro definitions for flavor "pypy3" #####
+
+%__pypy3               /usr/bin/pypy3
+
+%pypy3_shbang_opts     %py_shbang_opts
+
+%pypy3_sitelib         %{python_sitelib_tmpl        %__pypy3}
+%pypy3_sitearch        %{python_sitearch_tmpl       %__pypy3}
+%pypy3_version         %{python_version_tmpl        %__pypy3}
+%pypy3_version_nodots  %{python_version_nodots_tmpl %__pypy3}
+
+%pypy3_build           %{python_build_tmpl   -i pypy3}
+%pypy3_install         %{python_install_tmpl -i pypy3}
+
+%pypy3_alternative()           %{python_alternative_tmpl           -b %1 -f pypy3}
+%pypy3_install_alternative()   %{python_install_alternative_tmpl   -b %1 -f pypy3}
+%pypy3_uninstall_alternative() %{python_uninstall_alternative_tmpl -b %1 -f pypy3}
+
+##### macro definitions for flavor "python2" #####
+
+%__python2               /usr/bin/python2
+
+%python2_shbang_opts     %py_shbang_opts
+
+%python2_sitelib         %{python_sitelib_tmpl        %__python2}
+%python2_sitearch        %{python_sitearch_tmpl       %__python2}
+%python2_version         %{python_version_tmpl        %__python2}
+%python2_version_nodots  %{python_version_nodots_tmpl %__python2}
+
+%python2_build           %{python_build_tmpl   -i python2}
+%python2_install         %{python_install_tmpl -i python2}
+
+%python2_alternative()           %{python_alternative_tmpl           -b %1 -f python2}
+%python2_install_alternative()   %{python_install_alternative_tmpl   -b %1 -f python2}
+%python2_uninstall_alternative() %{python_uninstall_alternative_tmpl -b %1 -f python2}
+
+##### macro definitions for flavor "python3" #####
+
+%__python3               /usr/bin/python3
+
+%python3_shbang_opts     %py_shbang_opts
+
+%python3_sitelib         %{python_sitelib_tmpl        %__python3}
+%python3_sitearch        %{python_sitearch_tmpl       %__python3}
+%python3_version         %{python_version_tmpl        %__python3}
+%python3_version_nodots  %{python_version_nodots_tmpl %__python3}
+
+%python3_build           %{python_build_tmpl   -i python3}
+%python3_install         %{python_install_tmpl -i python3}
+
+%python3_alternative()           %{python_alternative_tmpl           -b %1 -f python3}
+%python3_install_alternative()   %{python_install_alternative_tmpl   -b %1 -f python3}
+%python3_uninstall_alternative() %{python_uninstall_alternative_tmpl -b %1 -f python3}
+
+##### compatibility short-name macros #####
+
+# fedora expects %py_shbang_opts and %pyX_shbang_opts, possibly to be redefinable?
+# we expect everything to start with binary name, so we actually use %pythonX_shbang_opts
+# so if a specfile redefines the %pyX_, the correct one will be used
+%py2_shbang_opts %py_shbang_opts
+%python2_shbang_opts %py2_shbang_opts
+%py3_shbang_opts %py_shbang_opts
+%python3_shbang_opts %py3_shbang_opts
+
+%py2_build   %python2_build
+%py2_install %python2_install
+%py3_build   %python3_build
+%py3_install %python3_install
+
+%py2_ver     %python2_version
+%py3_ver     %python3_version
+
+# TODO this should not be here
+%have_python2 1
+%have_python3 1
+%have_pypy3   1
+
+%pythons %{?have_python2:python2} %{?have_python3:python3} %{?have_pypy3:pypy3}
+
+# TODO for now the requirement is on "python-" not "python2-" because aliases in python do not exist
+%python_module() %{expand: %{?have_python2:python-%1} %{?have_python3:python3-%1} %{?have_pypy3:pypy3-%1}}
+
+%if_python_kind() %if %{_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("1") else print("0") end}
+%if_not_python_kind() %if %{_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("0") else print("1") end}
+
+%ifpython3 %{if_python_kind python3}
+%ifpython2 %{if_python_kind python2}
+%ifpypy3 %{if_python_kind pypy3}
+
+%python3_only() %ifpython3 \
+%** \
+%endif
+
+%python2_only() %ifpython2 \
+%** \
+%endif
+
+%pypy3_only() %ifpypy3 \
+%** \
+%endif
+
+%pycache_only() %{if_not_python_kind python2} \
+%** \
+%endif
+
+%_python_pop_flavor() \
+if [ -d build ]; then mv build _build.tmp; fi \
+if [ -d _build.%1 ]; then mv _build.%1 build; fi \
+%{nil}
+
+%_python_push_flavor() \
+if [ -d build ]; then mv build _build.%1; fi \
+if [ -d _build.tmp ]; then mv _build.tmp build; fi \
+%{nil}
+
+
+%_python_scan_spec() %{lua: \
+    -- make sure this is only included once.\
+    -- for reasons.\
+    -- (we're defining some globals here. we can do that multiple times, but\
+    -- it's rather ugly, esp. seeing as we will be invoking _scan_spec rather often\
+    -- because we *need* it to run at start and we don't want to burden the user\
+    -- with including it manually)\
+    rpm.define("_python_scan_spec", "")\
+    if _spec_is_scanned ~= nil then return end\
+    _spec_is_scanned = true\
+\
+    -- declare common functions\
+    function string.startswith(str, prefix)\
+        return str:find(prefix) == 1\
+    end\
+\
+    function string.endswith(str, suffix)\
+        return suffix == str:sub(-suffix:len())\
+    end\
+\
+    SHORT_FLAVORS = {\
+        -- ??\
+        python = "py",\
+        -- ??\
+        python2 = "py2",\
+        python3 = "py3",\
+        pypy = "pypy",\
+    }\
+\
+    function replace_macros(str, targetflavor)\
+        local LONG_MACROS = { "sitelib", "sitearch",\
+            "alternative", "install_alternative", "uninstall_alternative",\
+            "version", "version_nodots"}\
+        local SHORT_MACROS = { "ver" }\
+        for _, macro in ipairs(LONG_MACROS) do\
+            local from = string.format("%s_%s", flavor, macro)\
+            local to = string.format("%s_%s", targetflavor, macro)\
+            str = str:gsub("%%" .. from, "%%" .. to)\
+            str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")\
+        end\
+        for _, macro in ipairs(SHORT_MACROS) do\
+            local from = string.format("%s_%s", SHORT_FLAVORS[flavor], macro)\
+            local to = string.format("%s_%s", SHORT_FLAVORS[targetflavor], macro)\
+            str = str:gsub("%%" .. from, "%%" .. to)\
+            str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")\
+        end\
+        return str\
+    end\
+\
+    function pkgname_from_param(param)\
+        if param == modname then\
+            return ""\
+        elseif param:startswith(modname .. "-") then\
+            return param:sub(modname:len() + 2)\
+        else\
+            return "-n " .. param\
+        end\
+    end\
+\
+    function python_exec_flavor(flavor, command)\
+        print(rpm.expand("%{_python_push_flavor " .. flavor .. "}\\n"));\
+        print(command .. "\\n");\
+        print(rpm.expand("%{_python_pop_flavor " .. flavor .. "}\\n"));\
+    end\
+\
+    pythons = {}\
+    for str in string.gmatch(rpm.expand("%pythons"), "%S+") do\
+        table.insert(pythons, str)\
+    end\
+\
+    modname = rpm.expand("%name")\
+    flavor = "python"\
+    -- modname from name\
+    local name = modname\
+    for _,py in ipairs(pythons) do\
+        if name:find(py .. "-") == 1 then\
+            flavor = py\
+            modname = name:sub(py:len() + 2)\
+            break\
+        end\
+    end\
+    -- if not found, modname == %name, flavor == "python"\
+    rpm.define("_modname " .. modname)\
+    rpm.define("_flavor " .. flavor)\
+\
+    -- find the spec file\
+    specpath = name .. ".spec"\
+    local locations = { rpm.expand("%_sourcedir"), rpm.expand("%_specdir"), "." }\
+    for _,loc in ipairs(locations) do\
+        local filename = loc .. "/" .. specpath\
+        if posix.stat(filename, "mode") ~= nil then\
+            specpath = filename\
+            break\
+        end\
+    end\
+\
+    subpackages = {}\
+    descriptions = {}\
+    filelists = {}\
+    requires = {}\
+    scriptlets = {}\
+\
+    spec, err = io.open(specpath, "r")\
+    local section = nil\
+    local section_name = ""\
+    local section_content = ""\
+\
+    -- build section lookup structure\
+    local KNOWN_SECTIONS = {"package", "description", "files", "prep",\
+        "build", "install", "check", "clean", "pre", "post", "preun", "postun",\
+        "pretrans", "posttrans", "changelog"}\
+    local SCRIPTLET_SECTIONS = { "pre", "post", "preun", "postun", "pretrans", "posttrans" }\
+    local section_table = {}\
+    local scriptlet_table = {}\
+    for _,v in ipairs(KNOWN_SECTIONS) do section_table[v] = true end\
+    for _,v in ipairs(SCRIPTLET_SECTIONS) do scriptlet_table[v] = true end\
+\
+    local function enter_section(name, param)\
+        if name == "package" then\
+            -- TODO "%package -n ahoj"\
+            table.insert(subpackages, param)\
+            descriptions[param] = ""\
+            filelists[param] = {}\
+            requires[param] = {}\
+        end\
+    end\
+\
+    -- create entry for main package\
+    enter_section("package", "")\
+\
+    local function leave_section(name, param, content)\
+        if name == "description" then\
+            descriptions[param] = content\
+        elseif scriptlet_table[name] then\
+            if not scriptlets[param] then scriptlets[param] = {} end\
+            scriptlets[param][name] = content\
+        end\
+    end\
+\
+    if err then print ("bad spec " .. specpath) return end\
+    while true do\
+        local line = spec:read()\
+        if line == nil then break end\
+        -- match section delimiter\
+        local section_noparam = line:match("^%%(%S+)(%s*)$")\
+        local section_withparam, param = line:match("^%%(%S+) (.+)$")\
+        local newsection = nil\
+        local newsection_name = ""\
+        if section_noparam then\
+            newsection = section_noparam\
+        elseif section_withparam then\
+            newsection = section_withparam\
+            newsection_name = param\
+        end\
+\
+        -- TODO convert parameter to modname-like\
+\
+        if section_table[newsection] then\
+            leave_section(section, section_name, section_content)\
+            enter_section(newsection, newsection_name)\
+            section = newsection\
+            section_name = newsection_name\
+            section_content = ""\
+        elseif line == "%python_subpackages" or line == "%{python_subpackages}" then\
+            -- nothing\
+        else\
+            section_content = section_content .. line .. "\\n"\
+            local property, value = line:match("^([A-Z]%S-):%s*(.*)$")\
+            if property == "Requires" or property == "Recommends" or property == "Suggests" then\
+                table.insert(requires[section_name], {property, value})\
+            elseif section == "files" then\
+                table.insert(filelists[section_name], line)\
+            end\
+        end\
+    end\
+}
+
+%_python_output_subpackages() %{lua: \
+    for _,python in ipairs(pythons) do\
+        if python == flavor then\
+            -- this is already *it*\
+        else\
+            print(string.format("%%{_subpackage_for %s %s}\\n", python, modname))\
+            for _,subpkg in ipairs(subpackages) do\
+                if subpkg:startswith("-n ") then\
+                    subpkg = subpkg:sub(4)\
+                    print(string.format("%%{_subpackage_for %s %s}\\n", python, subpkg))\
+                elseif subpkg ~= "" then\
+                    print(string.format("%%{_subpackage_for %s %s-%s}\\n", python, modname, subpkg))\
+                end\
+            end\
+        end\
+    end\
+}
+
+%_python_output_requires() %{lua: \
+    local myflavor = rpm.expand("%1")\
+    local pkgname = pkgname_from_param(rpm.expand("%2"))\
+    for _,req in ipairs(requires[pkgname]) do\
+        local prop = req[1]\
+        local val = rpm.expand(req[2])\
+        if val:match("^"..flavor) then\
+            val = val:gsub("^"..flavor, myflavor)\
+        end\
+        print(prop .. ": " .. val .. "\\n")\
+    end\
+}
+
+%_python_output_filelist() %{lua: \
+    local myflavor = rpm.expand("%1")\
+    local pkgname = pkgname_from_param(rpm.expand("%2"))\
+\
+    if myflavor == "python" then myflavor = "python2" end\
+\
+    local IFS_LIST = { python3=true, python2=true, pypy=true }\
+    local ONLY_LIST = { py3="python3", py2="python2", pypy="pypy" }\
+\
+    local only = nil\
+    for _,file in ipairs(filelists[pkgname]) do\
+        file = replace_macros(file, myflavor)\
+        local continue = false\
+\
+        -- test %ifpython2 etc\
+        for k, _ in pairs(IFS_LIST) do\
+            if file == "%if" .. k then\
+                only = k\
+                continue = true\
+            end\
+        end\
+        if file == "%endif" then\
+            only = nil\
+            continue = true\
+        end\
+\
+        -- test %python2_only etc\
+        -- for find, gsub etc., '%' is a special character and must be doubled\
+        for k, _ in pairs(IFS_LIST) do\
+            local only_expr = "%%" .. k .. "_only "\
+            if file:startswith(only_expr) then\
+                -- only_expr is 1 longer because of double %\
+                -- but string.sub counts 1-based\
+                -- so only_expr:len() is actually the right number\
+                local justfile = file:sub(only_expr:len())\
+                if myflavor == k then print(justfile .. "\\n") end\
+                continue = true\
+            end\
+        end\
+\
+        if not continue\
+           and (only == nil or only == myflavor) then\
+                print(file .. "\\n")\
+        end\
+    end\
+}
+
+%_python_output_scriptlets() %{lua: \
+    local myflavor = rpm.expand("%1")\
+    local pkgname = pkgname_from_param(rpm.expand("%2"))\
+    if not scriptlets[pkgname] then return end\
+    for k, v in pairs(scriptlets[pkgname]) do\
+        print("%" .. k .. " -n " .. myflavor .. "-" .. pkgname .. "\\n")\
+        print(replace_macros(v, myflavor) .. "\\n")\
+    end\
+}
+
+%_python_output_description() %{lua: \
+    local pkgname = pkgname_from_param(rpm.expand("%2"))\
+    print(descriptions[pkgname] .. "\\n")\
+}
+
+%python_exec() %{lua: \
+    python_exec_for_flavor\
+    for _, flavor in pythons do\
+        python_exec_flavor(flavor, rpm.expand("%__" .. flavor .. " %**"))\
+    end\
+}
+
+%python_build() %{lua: \
+    for _, flavor in pythons do\
+        python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_build %**"))\
+    end\
+}
+
+%python_install() %{lua: \
+    for _, flavor in pythons do\
+        python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_install %**"))\
+    end\
+}
+
+
+# %1 - flavor; %2 - modname (subpackage name)
+%_python_subpackage_for() \
+%package -n %1-%2 \
+Summary: %summary \
+Version: %version \
+%_python_output_requires \
+%description -n %1-%2 \
+%_python_output_description \
+%files -n %1-%2 \
+%{expand:%_python_output_filelist} \
+%{expand:%_python_output_scriptlets} \
+%{nil}
+
+
+%python_subpackages \
+%{_python_scan_spec} \
+%{expand:%{_python_output_subpackages}}
+

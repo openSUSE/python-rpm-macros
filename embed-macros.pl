@@ -4,7 +4,10 @@ use strict;
 use utf8;
 use warnings;
 
-open(MACROS, "<macros.in");
+my $INFILE=$ARGV[0];
+my $LUAFILE=$ARGV[1];
+
+open(MACROS, "<$INFILE");
 
 my $infunction = 0;
 
@@ -12,7 +15,7 @@ while (<MACROS>) {
     unless (/^### LUA-MACROS ###$/) {
         print $_;
     } else {
-        open(LUA, "<macros.lua");
+        open(LUA, "<$LUAFILE");
         while (<LUA>) {
             chomp $_;
             if (/^function (\S*)$/) {

@@ -1,0 +1,74 @@
+%system_python python2
+
+##### fedora compatibility #####
+
+%py_setup setup.py
+%py_shbang_opts -s
+
+##### binary suffixes for flavors #####
+
+%python2_bin_suffix %python2_version
+%python3_bin_suffix %python3_version
+%pypy3_bin_suffix   pp%{pypy3_version}
+
+##### naming unification templates #####
+
+%python_sitelib_tmpl()         %(%1 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+%python_sitearch_tmpl()        %(%1 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
+%python_version_tmpl()         %(%1 -c "import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))")
+%python_version_nodots_tmpl()  %(%1 -c "import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))")
+
+%python_build_tmpl(i:o:)    %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} build \
+    --executable="%{expand:%%__%{-i*} %%{?%{-i*}_shbang_opts}}"
+%python_install_tmpl(i:o:)  %{expand:%%__%{-i*}} %{py_setup} %{?py_setup_args} install \
+    --executable="%{expand:%%__%{-i*} %%{?%{-i*}_shbang_opts}}" \
+    -O1 --skip-build --root %{buildroot}
+
+##### alternative handling #####
+
+%python_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%{_bindir}/%{binary} \
+%{_bindir}/%{binary}-%{suffix} \
+%ghost %{_sysconfdir}/alternatives/%{binary} \
+%{nil}
+
+%python_install_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%define prio   %{expand:%%{-f*}_version_nodots} \
+%install_alternative -n %{binary} -t %{_bindir}/%1-%{suffix} -p %{prio}
+
+%python_uninstall_alternative_tmpl(b:f:) \
+%define binary %{-b*} \
+%define suffix %{expand:%%{-f*}_bin_suffix} \
+%uninstall_alternative -n %{binary} -t %{_bindir}/%1-%{suffix}
+
+##### fallback preferred configuration #####
+
+%if %system_python == python3
+
+%python_sitelib          %python3_sitelib
+%python_sitearch         %python3_sitearch
+%python_version          %python3_version
+%python_version_nodots   %python3_version_nodots
+
+%python_alternative           %python3_alternative
+%python_install_alternative   %python3_install_alternative
+%python_uninstall_alternative %python3_uninstall_alternative
+
+%else
+
+%python_sitelib          %python2_sitelib
+%python_sitearch         %python2_sitearch
+%python_version          %python2_version
+%python_version_nodots   %python2_version_nodots
+
+%python_alternative           %python2_alternative
+%python_install_alternative   %python2_install_alternative
+%python_uninstall_alternative %python2_uninstall_alternative
+
+%endif
+
+%py_ver  %python_version

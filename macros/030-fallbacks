@@ -1,0 +1,17 @@
+##### compatibility short-name macros #####
+
+# fedora expects %py_shbang_opts and %pyX_shbang_opts, possibly to be redefinable?
+# we expect everything to start with binary name, so we actually use %pythonX_shbang_opts
+# so if a specfile redefines the %pyX_, the correct one will be used
+%py2_shbang_opts %py_shbang_opts
+%python2_shbang_opts %py2_shbang_opts
+%py3_shbang_opts %py_shbang_opts
+%python3_shbang_opts %py3_shbang_opts
+
+%py2_build   %python2_build
+%py2_install %python2_install
+%py3_build   %python3_build
+%py3_install %python3_install
+
+%py2_ver     %python2_version
+%py3_ver     %python3_version

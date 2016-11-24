@@ -5,9 +5,9 @@ MYPATH=$(dirname "$REALPATH")
 
 (
     cd "$MYPATH"
-    perl embed-macros.pl > macros
+    ./compile-macros.sh
 )
 
 rpmspec -v \
-    --macros=$MYPATH/macros:/usr/lib/rpm/macros:/etc/rpm/macros.python:/etc/rpm/macros.python3 \
+    --macros=$MYPATH/macros.python_all:/usr/lib/rpm/macros:/etc/rpm/macros.python:/etc/rpm/macros.python3 \
     -P "$1"
