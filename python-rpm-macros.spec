@@ -16,7 +16,7 @@
 #
 
 Name:           python-rpm-macros
-Version:        1.0git.1479486726.e6001db
+Version:        1.0
 Release:        0
 License:        WTFPL
 Summary:        RPM macros for building of Python modules
@@ -36,8 +36,7 @@ are only building for distros newer than Leap 42.2
 %setup -q -n multipython-macros-%{version}
 
 %build
-/usr/bin/perl embed-macros.pl > macros.out
-cat macros.out common-defs > macros.python_all
+./compile-macros.sh
 
 %install
 mkdir -p %{buildroot}%{_sysconfdir}/rpm
