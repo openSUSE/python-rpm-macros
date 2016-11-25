@@ -32,17 +32,19 @@ function _python_scan_spec()
             "alternative", "install_alternative", "uninstall_alternative",
             "version", "version_nodots"}
         local SHORT_MACROS = { "ver" }
-        for _, macro in ipairs(LONG_MACROS) do
-            local from = string.format("%s_%s", flavor, macro)
-            local to = string.format("%s_%s", targetflavor, macro)
-            str = str:gsub("%%" .. from, "%%" .. to)
-            str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
-        end
-        for _, macro in ipairs(SHORT_MACROS) do
-            local from = string.format("%s_%s", SHORT_FLAVORS[flavor], macro)
-            local to = string.format("%s_%s", SHORT_FLAVORS[targetflavor], macro)
-            str = str:gsub("%%" .. from, "%%" .. to)
-            str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
+        for _, srcflavor in ipairs({flavor, "python"}) do
+            for _, macro in ipairs(LONG_MACROS) do
+                local from = string.format("%s_%s", srcflavor, macro)
+                local to = string.format("%s_%s", targetflavor, macro)
+                str = str:gsub("%%" .. from, "%%" .. to)
+                str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
+            end
+            for _, macro in ipairs(SHORT_MACROS) do
+                local from = string.format("%s_%s", SHORT_FLAVORS[srcflavor], macro)
+                local to = string.format("%s_%s", SHORT_FLAVORS[targetflavor], macro)
+                str = str:gsub("%%" .. from, "%%" .. to)
+                str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
+            end
         end
         return str
     end
@@ -255,10 +257,11 @@ end
 
 function _python_output_scriptlets()
     local myflavor = rpm.expand("%1")
-    local pkgname = pkgname_from_param(rpm.expand("%2"))
+    local label = rpm.expand("%2")
+    local pkgname = pkgname_from_param(label)
     if not scriptlets[pkgname] then return end
     for k, v in pairs(scriptlets[pkgname]) do
-        print("%" .. k .. " -n " .. myflavor .. "-" .. pkgname .. "\n")
+        print("%" .. k .. " -n " .. myflavor .. "-" .. label .. "\n")
         print(replace_macros(v, myflavor) .. "\n")
     end
 end
