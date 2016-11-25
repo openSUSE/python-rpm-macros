@@ -5,7 +5,7 @@ function _python_scan_spec()
     -- it's rather ugly, esp. seeing as we will be invoking _scan_spec rather often
     -- because we *need* it to run at start and we don't want to burden the user
     -- with including it manually)
-    --rpm.define("_python_scan_spec", "")
+    rpm.define("_python_scan_spec %{nil}")
     if _spec_is_scanned ~= nil then return end
     _spec_is_scanned = true
 
@@ -53,7 +53,7 @@ function _python_scan_spec()
         if param == modname then
             return ""
         elseif param:startswith(modname .. "-") then
-            return param:sub(modname:len() + 1)
+            return param:sub(modname:len() + 2)
         else
             return "-n " .. param
         end
@@ -75,11 +75,16 @@ function _python_scan_spec()
     -- modname from name
     local name = modname
     for _,py in ipairs(pythons) do
-        if name:find(py .. "-") == 1 then
+        if name:find(py .. "%-") == 1 then
             flavor = py
-            modname = name:sub(py:len() + 1)
+            modname = name:sub(py:len() + 2)
             break
         end
+    end
+    -- try to match "python-"
+    if name == modname and name:find("python%-") == 1 then
+        flavor = "python"
+        modname = name:sub(8)
     end
     -- if not found, modname == %name, flavor == "python"
     rpm.define("_modname " .. modname)
