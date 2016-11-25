@@ -4,14 +4,22 @@
 
 %#FLAVOR#_shbang_opts     %py_shbang_opts
 
-%#FLAVOR#_sitelib         %{python_sitelib_tmpl        %__#FLAVOR#}
-%#FLAVOR#_sitearch        %{python_sitearch_tmpl       %__#FLAVOR#}
-%#FLAVOR#_version         %{python_version_tmpl        %__#FLAVOR#}
-%#FLAVOR#_version_nodots  %{python_version_nodots_tmpl %__#FLAVOR#}
+%#FLAVOR#_sitelib         %(%__#FLAVOR# -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+%#FLAVOR#_sitearch        %(%__#FLAVOR# -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
+%#FLAVOR#_version         %(%__#FLAVOR# -c "import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))")
+%#FLAVOR#_version_nodots  %(%__#FLAVOR# -c "import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))")
 
 %#FLAVOR#_build           %{python_build_tmpl   -i #FLAVOR#}
 %#FLAVOR#_install         %{python_install_tmpl -i #FLAVOR#}
 
-%#FLAVOR#_alternative()           %{python_alternative_tmpl           -b %1 -f #FLAVOR#}
-%#FLAVOR#_install_alternative()   %{python_install_alternative_tmpl   -b %1 -f #FLAVOR#}
-%#FLAVOR#_uninstall_alternative() %{python_uninstall_alternative_tmpl -b %1 -f #FLAVOR#}
+%#FLAVOR#_alternative() \
+%{_bindir}/%1 \
+%{_bindir}/%1-%#FLAVOR#_bin_suffix \
+%ghost %{_sysconfdir}/alternatives/%1 \
+%{nil}
+
+%#FLAVOR#_install_alternative() \
+%{install_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix -p %#FLAVOR#_version_nodots}
+
+%#FLAVOR#_uninstall_alternative() \
+%{uninstall_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix}
