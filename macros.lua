@@ -203,6 +203,8 @@ function _python_output_requires()
         local val = rpm.expand(req[2])
         if val:match("^"..flavor) then
             val = val:gsub("^"..flavor, myflavor)
+        elseif val:match("^python") then
+            val = val:gsub("^python", myflavor)
         end
         print(prop .. ": " .. val .. "\n")
     end
