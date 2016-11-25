@@ -45,8 +45,10 @@ flavor. Intended as: `BuildRequires: %{python_module foo}`.
 __`%ifpython2`, `%ifpython3`, `%ifpypy3`__: applies the following section only to subpackages of
 that particular flavor.
 
-__`%python2_only`, `%python3_only`, `%pypy_only`__: applies the contents of the
-line only to subpackages of that particular flavor.
+__`%python2_only`, `%python3_only`, `%pypy3_only`__: applies the contents of the line only to
+subpackages of that particular flavor.  
+__`%pycache_only`__: applies the contents of the line only to subpackages of flavors that generate
+`__pycache__` directories. Useful in filelists: `%pycache_only %{python_sitelib}/__pycache__/*`
 
 __`%python_build`__ expands to build instructions for  all flavors.
 

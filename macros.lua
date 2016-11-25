@@ -214,8 +214,7 @@ function _python_output_filelist()
 
     if myflavor == "python" then myflavor = "python2" end
 
-    local IFS_LIST = { python3=true, python2=true, pypy=true }
-    local ONLY_LIST = { py3="python3", py2="python2", pypy="pypy" }
+    local IFS_LIST = { python3=true, python2=true, pypy3=true, pycache=false}
 
     local only = nil
     for _,file in ipairs(filelists[pkgname]) do
@@ -243,7 +242,11 @@ function _python_output_filelist()
                 -- but string.sub counts 1-based
                 -- so only_expr:len() is actually the right number
                 local justfile = file:sub(only_expr:len())
-                if myflavor == k then print(justfile .. "\n") end
+                if myflavor == k then
+                    print(justfile .. "\n")
+                elseif k == "pycache" and myflavor ~= "python2" then
+                    print(justfile .. "\n")
+                end
                 continue = true
             end
         end
