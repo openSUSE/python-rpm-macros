@@ -15,6 +15,7 @@
 %ifpython3 %{if_python_kind python3}
 %ifpython2 %{if_python_kind python2}
 %ifpypy3 %{if_python_kind pypy3}
+%ifpycache %{if_not_python_kind python2}
 
 %python3_only() %ifpython3 \
 %** \
@@ -28,7 +29,7 @@
 %** \
 %endif
 
-%pycache_only() %{if_not_python_kind python2} \
+%pycache_only() %ifpycache \
 %** \
 %endif
 

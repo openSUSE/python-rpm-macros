@@ -252,7 +252,8 @@ function _python_output_filelist()
         end
 
         if not continue
-           and (only == nil or only == myflavor) then
+           and (only == nil or only == myflavor
+            or (only == "pycache" and myflavor ~= "python2")) then
                 print(file .. "\n")
         end
     end
