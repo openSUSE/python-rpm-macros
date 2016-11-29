@@ -7,7 +7,8 @@
 %pythons %{?have_python2:python2} %{?have_pypy3:pypy3} %{?have_python3:python3}
 
 # TODO for now the requirement is on "python-" not "python2-" because aliases in python do not exist
-%python_module() %{expand: %{?have_python2:python-%1} %{?have_python3:python3-%1} %{?have_pypy3:pypy3-%1}}
+%_python2_package_prefix %{?python2_package_prefix}%{?!python2_package_prefix:python}
+%python_module() %{expand: %{?have_python2:%{_python2_package_prefix}-%1} %{?have_python3:python3-%1} %{?have_pypy3:pypy3-%1}}
 
 %if_python_kind() %if %{_python_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("1") else print("0") end}
 %if_not_python_kind() %if %{_python_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("0") else print("1") end}
@@ -44,6 +45,9 @@ if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 %{nil}
 
 
+%python_files %{nil}
+
+
 ### LUA-MACROS ###
 
 
@@ -60,7 +64,9 @@ Version: %version \
 %{expand:%_python_output_scriptlets} \
 %{nil}
 
+%_python_emit_empty_files %{nil}
 
 %python_subpackages \
 %{_python_scan_spec} \
+%{_python_emit_empty_files} \
 %{expand:%{_python_output_subpackages}}
