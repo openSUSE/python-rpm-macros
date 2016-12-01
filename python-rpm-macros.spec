@@ -22,7 +22,6 @@ License:        WTFPL
 Summary:        RPM macros for building of Python modules
 Url:            https://github.com/opensuse/multipython-macros
 Source:         multipython-macros-%{version}.tar
-BuildRequires:  perl
 # Fedora compatibility
 Provides:       python2-rpm-macros
 Provides:       python3-rpm-macros
