@@ -88,6 +88,8 @@ function _python_scan_spec()
     end
     -- if not found, modname == %name, flavor == "python"
 
+    is_called_python = flavor == "python"
+
     -- find the spec file
     specpath = name .. ".spec"
     local locations = { rpm.expand("%_sourcedir"), rpm.expand("%_specdir"), "." }
@@ -108,19 +110,23 @@ function _python_scan_spec()
     -- is the package built for python2 as "python-foo" ?
     old_python2 = rpm.expand("%_python2_package_prefix") == "python"
 
+    python_files_flavor = ""
+
     -- assuming `%files %python_files` is present:
-    if old_python2 and flavor == "python" then
+    if old_python2 and is_called_python then
         -- everything is all right
-    elseif old_python2 and flavor == "python2" then
-        -- python2-foo remains empty, generate python-foo
-        rpm.define("python_files -n python-" .. modname)
-        -- emit empty %files
-        rpm.define("_python_emit_empty_files %files")
-    elseif not old_python2 and flavor == "python" then
-        -- emit empty %files
-        rpm.define("_python_emit_empty_files %files")
+    elseif old_python2 and not is_called_python then
+        -- this case covers package named "python2(3)-foo" attempting
+        -- to generate "python-foo" subpackage. This should not happen
+        -- in practice and is probably broken anyway.
+        python_files_flavor = "python"
+        -- TODO emit empty %files
+    elseif not old_python2 and is_called_python then
+        -- the expected case: subpackage should be called "python2-foo"
+        -- and files sections for "python-foo" should be left empty
         -- python-foo is empty, python2-foo is python_files
-        rpm.define("python_files -n python2-" .. modname)
+        python_files_flavor = pythons[1]
+        -- TODO emit empty %files
     end
 
     spec, err = io.open(specpath, "r")
@@ -145,9 +151,10 @@ function _python_scan_spec()
             descriptions[param] = ""
             filelists[param] = {}
             requires[param] = {}
-        elseif name == "files" and param == "" and flavor == "python" then
-            print('%error Package with "python-" prefix must not contain unlabeled "%files" section. '
-            .. '(Use "%files %python_files" instead.)')
+        elseif name == "files" and is_called_python and not param:find("%%{?python_files") then -- }
+            -- TODO this for "%files subpkg" also
+            print('%{error: Package with "python-" prefix must not contain unlabeled "%files" section. '
+            .. '(Use "%files %python_files" or "%files %{python_files foo}" instead.)}')
         end
     end
 
@@ -185,11 +192,11 @@ function _python_scan_spec()
             leave_section(section, section_name, section_content)
             enter_section(newsection, newsection_name)
             section = newsection
-            if newsection == "files"
-                and (newsection_name == "%python_files" or newsection_name == "%{python_files}") then
-                section_name = ""
-            else
-                section_name = newsection_name
+            section_name = newsection_name
+            -- handle %python_files
+            if section == "files" then
+                section_name = section_name:gsub("%%{python_files%s+(.*)}", "%1")
+                section_name = section_name:gsub("%%{?python_files}?", "")
             end
             section_content = ""
         elseif line == "%python_subpackages" or line == "%{python_subpackages}" then
@@ -208,7 +215,7 @@ end
 
 function _python_output_subpackages()
     for _,python in ipairs(pythons) do
-        if python == flavor or (old_python2 and flavor == "python" and python == "python2") then
+        if python == flavor or (old_python2 and is_called_python and python == "python2") then
             -- this is already *it*
         else
             print(string.format("%%{_python_subpackage_for %s %s}\n", python, modname))
@@ -220,6 +227,13 @@ function _python_output_subpackages()
                     print(string.format("%%{_python_subpackage_for %s %s-%s}\n", python, modname, subpkg))
                 end
             end
+        end
+    end
+
+    -- emit empty %files
+    if python_files_flavor ~= "" then
+        for _,subpkg in ipairs(subpackages) do
+            print("%files " .. subpkg .. "\n")
         end
     end
 end
@@ -249,6 +263,10 @@ function _python_output_filelist()
     local myflavor = rpm.expand("%1")
     local label = rpm.expand("%2")
     local pkgname = pkgname_from_param(label)
+
+    if myflavor == python_files_flavor then return end
+
+    print("%files -n " .. myflavor .. "-" .. label .. "\n");
 
     if myflavor == "python" then myflavor = "python2" end
 
@@ -314,20 +332,34 @@ function _python_output_description()
 end
 
 function python_exec()
-    python_exec_for_flavor
-    for _, flavor in ipairs(pythons) do
-        python_exec_flavor(flavor, rpm.expand("%__" .. flavor .. " %**"))
+    for _, python in ipairs(pythons) do
+        python_exec_flavor(python, rpm.expand("%__" .. python .. " %**"))
     end
 end
 
 function python_build()
-    for _, flavor in ipairs(pythons) do
-        python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_build %**"))
+    for _, python in ipairs(pythons) do
+        python_exec_flavor(python, rpm.expand("%" .. python .. "_build %**"))
     end
 end
 
 function python_install()
-    for _, flavor in ipairs(pythons) do
-        python_exec_flavor(flavor, rpm.expand("%" .. flavor .. "_install %**"))
+    for _, python in ipairs(pythons) do
+        python_exec_flavor(python, rpm.expand("%" .. python .. "_install %**"))
+    end
+end
+
+function python_files()
+    local nparams = rpm.expand("%#")
+    local param = ""
+    local fparam = ""
+    if tonumber(nparams) > 0 then
+        param = rpm.expand("%1")
+        fparam = "-" .. param
+    end
+    if python_files_flavor ~= "" then
+        print(string.format("-n %s-%s%s", python_files_flavor, modname, fparam))
+    else
+        print(param)
     end
 end

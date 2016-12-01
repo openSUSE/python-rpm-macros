@@ -45,9 +45,6 @@ if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 %{nil}
 
 
-%python_files %{nil}
-
-
 ### LUA-MACROS ###
 
 
@@ -59,14 +56,11 @@ Version: %version \
 %_python_output_requires \
 %description -n %1-%2 \
 %_python_output_description \
-%files -n %1-%2 \
 %{expand:%_python_output_filelist} \
 %{expand:%_python_output_scriptlets} \
 %{nil}
 
-%_python_emit_empty_files %{nil}
 
 %python_subpackages \
 %{_python_scan_spec} \
-%{_python_emit_empty_files} \
 %{expand:%{_python_output_subpackages}}
