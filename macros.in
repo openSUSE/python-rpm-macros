@@ -49,6 +49,7 @@ if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 
 
 # %1 - flavor; %2 - modname (subpackage name)
+# TODO specialcase for flavor==python2 and old_python2
 %_python_subpackage_for() \
 %package -n %1-%2 \
 Summary: %summary \

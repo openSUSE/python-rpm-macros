@@ -60,9 +60,9 @@ function _python_scan_spec()
     end
 
     function python_exec_flavor(flavor, command)
-        print(rpm.expand("%{_python_push_flavor " .. flavor .. "}\n"));
-        print(command .. "\n");
-        print(rpm.expand("%{_python_pop_flavor " .. flavor .. "}\n"));
+        print(rpm.expand("%{_python_push_flavor " .. flavor .. "}\n"))
+        print(command .. "\n")
+        print(rpm.expand("%{_python_pop_flavor " .. flavor .. "}\n"))
     end
 
     pythons = {}
@@ -88,7 +88,12 @@ function _python_scan_spec()
     end
     -- if not found, modname == %name, flavor == "python"
 
+    system_python = rpm.expand("%system_python")
+    -- is the package built for python2 as "python-foo" ?
+    old_python2 = rpm.expand("%_python2_package_prefix") == "python"
     is_called_python = flavor == "python"
+    -- flavor must NEVER be "python". Handling old_python2 must be done locally.
+    if is_called_python then flavor = system_python end
 
     -- find the spec file
     specpath = name .. ".spec"
@@ -107,9 +112,6 @@ function _python_scan_spec()
     requires = {}
     scriptlets = {}
 
-    -- is the package built for python2 as "python-foo" ?
-    old_python2 = rpm.expand("%_python2_package_prefix") == "python"
-
     python_files_flavor = ""
 
     -- assuming `%files %python_files` is present:
@@ -120,14 +122,15 @@ function _python_scan_spec()
         -- to generate "python-foo" subpackage. This should not happen
         -- in practice and is probably broken anyway.
         python_files_flavor = "python"
-        -- TODO emit empty %files
     elseif not old_python2 and is_called_python then
         -- the expected case: subpackage should be called "python2-foo"
         -- and files sections for "python-foo" should be left empty
         -- python-foo is empty, python2-foo is python_files
-        python_files_flavor = pythons[1]
-        -- TODO emit empty %files
+        python_files_flavor = flavor
     end
+    -- else: not old_python2 and not is_called_python, so
+    -- package is called python3-foo and we generate subpackages
+    -- that don't involve "python-foo" at all.
 
     spec, err = io.open(specpath, "r")
     local section = nil
@@ -215,9 +218,17 @@ end
 
 function _python_output_subpackages()
     for _,python in ipairs(pythons) do
-        if python == flavor or (old_python2 and is_called_python and python == "python2") then
-            -- this is already *it*
-        else
+        -- base case: generating for "python3-foo" in "python3-foo"
+        local is_current_flavor = python == flavor
+        -- "python-foo" case:
+        if is_called_python then
+            -- if we're in old-style package
+            if old_python2 then is_current_flavor = python == "python2"
+            -- else nothing is current flavor, always generate
+            else is_current_flavor = false end
+        end
+
+        if not is_current_flavor then
             print(string.format("%%{_python_subpackage_for %s %s}\n", python, modname))
             for _,subpkg in ipairs(subpackages) do
                 if subpkg:startswith("-n ") then
@@ -254,8 +265,8 @@ function _python_output_requires()
     end
 
     if myflavor == "python2" then
-        print(rpm.expand("Obsoletes: python-" .. label .. " < %{version}\n"))
-        print(rpm.expand("Provides: python-" .. label .. " = %{version}\n"))
+        print(rpm.expand("Obsoletes: python-" .. label .. " < %{version}-%{release}\n"))
+        print(rpm.expand("Provides: python-" .. label .. " = %{version}-%{release}\n"))
     end
 end
 
@@ -266,9 +277,11 @@ function _python_output_filelist()
 
     if myflavor == python_files_flavor then return end
 
-    print("%files -n " .. myflavor .. "-" .. label .. "\n");
-
-    if myflavor == "python" then myflavor = "python2" end
+    if myflavor == "python2" and old_python2 then
+        print("%files -n python-" .. label .. "\n")
+    else
+        print("%files -n " .. myflavor .. "-" .. label .. "\n")
+    end
 
     local IFS_LIST = { python3=true, python2=true, pypy3=true, pycache=false}
 
@@ -321,7 +334,11 @@ function _python_output_scriptlets()
     local pkgname = pkgname_from_param(label)
     if not scriptlets[pkgname] then return end
     for k, v in pairs(scriptlets[pkgname]) do
-        print("%" .. k .. " -n " .. myflavor .. "-" .. label .. "\n")
+        if myflavor == "python2" and old_python2 then
+            print("%" .. k .. " -n python-" .. label .. "\n")
+        else
+            print("%" .. k .. " -n " .. myflavor .. "-" .. label .. "\n")
+        end
         print(replace_macros(v, myflavor) .. "\n")
     end
 end
