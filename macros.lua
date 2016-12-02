@@ -156,8 +156,10 @@ function _python_scan_spec()
             requires[param] = {}
         elseif name == "files" and is_called_python and not param:find("%%{?python_files") then -- }
             -- TODO this for "%files subpkg" also
-            print('%{error: Package with "python-" prefix must not contain unlabeled "%files" section. '
-            .. '(Use "%files %python_files" or "%files %{python_files foo}" instead.)}')
+            rpm.expand('%{error:Package with "python-" prefix must not contain unlabeled "%files" section.}\n')
+            rpm.expand('%{error:Use "%%files %%python_files" or "%%files %%{python_files foo} instead.}\n')
+            print('%package -n errorpackage-' .. param .. '\n')
+            print('Error: %python_files missing\n')
         end
     end
 
