@@ -155,11 +155,10 @@ function _python_scan_spec()
             filelists[param] = {}
             requires[param] = {}
         elseif name == "files" and is_called_python and not param:find("%%{?python_files") then -- }
-            -- TODO this for "%files subpkg" also
-            rpm.expand('%{error:Package with "python-" prefix must not contain unlabeled "%files" section.}\n')
-            rpm.expand('%{error:Use "%%files %%python_files" or "%%files %%{python_files foo} instead.}\n')
-            print('%package -n errorpackage-' .. param .. '\n')
-            print('Error: %python_files missing\n')
+            -- kingly hack. but RPM's native %error does not work.
+            io.stderr:write('Package with "python-" prefix must not contain unmarked "%files" sections.\n')
+            io.stderr:write('Use "%files %python_files" or "%files %{python_files foo} instead.\n')
+            os.exit(1)
         end
     end
 
