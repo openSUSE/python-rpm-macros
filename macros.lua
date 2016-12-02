@@ -59,12 +59,6 @@ function _python_scan_spec()
         end
     end
 
-    function python_exec_flavor(flavor, command)
-        print(rpm.expand("%{_python_push_flavor " .. flavor .. "}\n"))
-        print(command .. "\n")
-        print(rpm.expand("%{_python_pop_flavor " .. flavor .. "}\n"))
-    end
-
     pythons = {}
     for str in string.gmatch(rpm.expand("%pythons"), "%S+") do
         table.insert(pythons, str)
@@ -351,19 +345,21 @@ end
 
 function python_exec()
     for _, python in ipairs(pythons) do
-        python_exec_flavor(python, rpm.expand("%__" .. python .. " %**"))
+        print(rpm.expand("%{_python_push_flavor " .. python .. "}\n"))
+        print(rpm.expand("%__" .. python .. " %**\n")))
+        print(rpm.expand("%{_python_pop_flavor " .. python .. "}\n"))
     end
 end
 
 function python_build()
     for _, python in ipairs(pythons) do
-        python_exec_flavor(python, rpm.expand("%" .. python .. "_build %**"))
+        print(rpm.expand("%" .. python .. "_build %**"))
     end
 end
 
 function python_install()
     for _, python in ipairs(pythons) do
-        python_exec_flavor(python, rpm.expand("%" .. python .. "_install %**"))
+        print(rpm.expand("%" .. python .. "_install %**"))
     end
 end
 

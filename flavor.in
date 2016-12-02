@@ -9,8 +9,17 @@
 %#FLAVOR#_version         %(%__#FLAVOR# -c "import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))")
 %#FLAVOR#_version_nodots  %(%__#FLAVOR# -c "import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))")
 
-%#FLAVOR#_build           %{python_build_tmpl   -i #FLAVOR#}
-%#FLAVOR#_install         %{python_install_tmpl -i #FLAVOR#}
+%#FLAVOR#_build \
+%{_python_push_flavor #FLAVOR#} \
+%__#FLAVOR# %{py_setup} %{?py_setup_args} build \\\
+    --executable="%__#FLAVOR# %#FLAVOR#_shbang_opts" \
+%{_python_pop_flavor  #FLAVOR#}
+
+%#FLAVOR#_install \
+%{_python_push_flavor #FLAVOR#} \
+%__#FLAVOR# %{py_setup} %{?py_setup_args} install \\\
+    -O1 --skip-build --root %{buildroot} --prefix %{_prefix} \
+%{_python_pop_flavor  #FLAVOR#}
 
 %#FLAVOR#_alternative() \
 %{_bindir}/%1 \
