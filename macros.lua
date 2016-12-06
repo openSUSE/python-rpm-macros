@@ -346,7 +346,7 @@ end
 function python_exec()
     for _, python in ipairs(pythons) do
         print(rpm.expand("%{_python_push_flavor " .. python .. "}\n"))
-        print(rpm.expand("%__" .. python .. " %**\n")))
+        print(rpm.expand("%__" .. python .. " %**\n"))
         print(rpm.expand("%{_python_pop_flavor " .. python .. "}\n"))
     end
 end
