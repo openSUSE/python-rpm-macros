@@ -30,9 +30,10 @@ function _python_scan_spec()
     function replace_macros(str, targetflavor)
         local LONG_MACROS = { "sitelib", "sitearch",
             "alternative", "install_alternative", "uninstall_alternative",
-            "version", "version_nodots"}
+            "version", "version_nodots", "bin_suffix"}
         local SHORT_MACROS = { "ver" }
         for _, srcflavor in ipairs({flavor, "python"}) do
+            str = str:gsub("%%__" .. srcflavor, "%%__" .. targetflavor)
             for _, macro in ipairs(LONG_MACROS) do
                 local from = string.format("%s_%s", srcflavor, macro)
                 local to = string.format("%s_%s", targetflavor, macro)
@@ -344,10 +345,17 @@ function _python_output_description()
 end
 
 function python_exec()
+    local args = rpm.expand("%**")
+    print(rpm.expand("%{python_expand %__python " .. args .. "}"))
+end
+
+function python_expand()
+    local args = rpm.expand("%**")
     for _, python in ipairs(pythons) do
-        print(rpm.expand("%{_python_push_flavor " .. python .. "}\n"))
-        print(rpm.expand("%__" .. python .. " %**\n"))
-        print(rpm.expand("%{_python_pop_flavor " .. python .. "}\n"))
+        print(rpm.expand("%{_python_use_flavor " .. python .. "}\n"))
+        local cmd = replace_macros(args, python)
+        cmd = cmd:gsub("$python", python)
+        print(rpm.expand(cmd .. "\n"))
     end
 end
 

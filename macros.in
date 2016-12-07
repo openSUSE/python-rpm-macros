@@ -34,12 +34,17 @@
 %** \
 %endif
 
-%_python_pop_flavor() \
-if [ -d build ]; then mv build _build.tmp; fi \
-if [ -d _build.%1 ]; then mv _build.%1 build; fi \
+%_python_use_flavor() \
+python_flavor=`[ -f _current_flavor ] && cat _current_flavor || true` \
+if [ -z "$python_flavor" ]; then python_flavor="tmp"; fi \
+if [ "$python_flavor" != "%1" ]; then \
+    if [ -d build ]; then mv build _build.$python_flavor; fi \
+    if [ -d _build.%1 ]; then mv _build.%1 build; fi \
+fi \
+echo %1 > _current_flavor \
 %{nil}
 
-%_python_push_flavor() \
+%_python_stash_flavor() \
 if [ -d build ]; then mv build _build.%1; fi \
 if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 %{nil}
