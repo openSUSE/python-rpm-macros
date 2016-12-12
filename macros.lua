@@ -346,7 +346,7 @@ end
 
 function python_exec()
     local args = rpm.expand("%**")
-    print(rpm.expand("%{python_expand %__python " .. args .. "}"))
+    print(rpm.expand("%{python_expand %__$python " .. args .. "}"))
 end
 
 function python_expand()
@@ -379,7 +379,9 @@ function python_files()
         param = rpm.expand("%1")
         fparam = "-" .. param
     end
-    if python_files_flavor ~= "" then
+    -- for "re" command, all these things are nil because scan_spec doesn't seem to run?
+    -- checking for validity of python_files_flavor seems to fix this.
+    if python_files_flavor and python_files_flavor ~= "" then
         print(string.format("-n %s-%s%s", python_files_flavor, modname, fparam))
     else
         print(param)
