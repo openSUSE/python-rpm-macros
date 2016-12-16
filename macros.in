@@ -10,8 +10,8 @@
 %_python2_package_prefix %{?python2_package_prefix}%{?!python2_package_prefix:python}
 %python_module() %{expand: %{?have_python2:%{_python2_package_prefix}-%1} %{?have_python3:python3-%1} %{?have_pypy3:pypy3-%1}}
 
-%if_python_kind() %if %{_python_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("1") else print("0") end}
-%if_not_python_kind() %if %{_python_scan_spec} %{lua: if flavor == rpm.expand("%1") then print("0") else print("1") end}
+%if_python_kind() %if %{_python_scan_spec} %{lua: if current_flavor == rpm.expand("%1") then print("1") else print("0") end}
+%if_not_python_kind() %if %{_python_scan_spec} %{lua: if current_flavor == rpm.expand("%1") then print("0") else print("1") end}
 
 %ifpython3 %{if_python_kind python3}
 %ifpython2 %{if_python_kind python2}
@@ -53,20 +53,6 @@ if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 ### LUA-MACROS ###
 
 
-# %1 - flavor; %2 - modname (subpackage name)
-# TODO specialcase for flavor==python2 and old_python2
-%_python_subpackage_for() \
-%package -n %1-%2 \
-Summary: %summary \
-Version: %version \
-%_python_output_requires \
-%description -n %1-%2 \
-%_python_output_description \
-%{expand:%_python_output_filelist} \
-%{expand:%_python_output_scriptlets} \
-%{nil}
-
-
 %python_subpackages \
 %{_python_scan_spec} \
-%{expand:%{_python_output_subpackages}}
+%{expand:%{_python_emit_subpackages}}

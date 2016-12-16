@@ -18,6 +18,12 @@ function _python_scan_spec()
         return suffix == str:sub(-suffix:len())
     end
 
+    function lookup_table(tbl)
+        local result = {}
+        for _,v in ipairs(tbl) do result[v] = true end
+        return result
+    end
+
     SHORT_FLAVORS = {
         -- ??
         python = "py",
@@ -53,7 +59,7 @@ function _python_scan_spec()
     function pkgname_from_param(param)
         if param == modname then
             return ""
-        elseif param:startswith(modname .. "-") then
+        elseif param:startswith(modname .. "%-") then
             return param:sub(modname:len() + 2)
         else
             return "-n " .. param
@@ -82,6 +88,8 @@ function _python_scan_spec()
         modname = name:sub(8)
     end
     -- if not found, modname == %name, flavor == "python"
+
+    current_flavor = flavor
 
     system_python = rpm.expand("%system_python")
     -- is the package built for python2 as "python-foo" ?
@@ -126,88 +134,210 @@ function _python_scan_spec()
     -- else: not old_python2 and not is_called_python, so
     -- package is called python3-foo and we generate subpackages
     -- that don't involve "python-foo" at all.
+end
 
-    spec, err = io.open(specpath, "r")
-    local section = nil
-    local section_name = ""
-    local section_content = ""
+function _python_emit_subpackages()
+    local run_until = nil
+    local spec = nil
+    local current_name = nil
 
-    -- build section lookup structure
-    local KNOWN_SECTIONS = {"package", "description", "files", "prep",
-        "build", "install", "check", "clean", "pre", "post", "preun", "postun",
-        "pretrans", "posttrans", "changelog"}
-    local SCRIPTLET_SECTIONS = { "pre", "post", "preun", "postun", "pretrans", "posttrans" }
-    local section_table = {}
-    local scriptlet_table = {}
-    for _,v in ipairs(KNOWN_SECTIONS) do section_table[v] = true end
-    for _,v in ipairs(SCRIPTLET_SECTIONS) do scriptlet_table[v] = true end
+    local function eval_if(line, yield)
+        line = replace_macros(line, current_flavor)
+        io.stderr:write("diving into if: " .. line .. "\n")
+        local result = rpm.expand(line .. "\n"
+            .. "1\n"
+            .. "%else\n"
+            .. "0\n"
+            .. "%endif")
+        if result == 1 then
+            run_until("%endif", yield, true)
+        else
+            run_until("%endif", yield, false)
+        end
+        io.stderr:write("endif: " .. line .. "\n")
+    end
 
-    local function enter_section(name, param)
-        if name == "package" then
-            -- TODO "%package -n ahoj"
-            table.insert(subpackages, param)
-            descriptions[param] = ""
-            filelists[param] = {}
-            requires[param] = {}
-        elseif name == "files" and is_called_python and not param:find("%%{?python_files") then -- }
+    function run_until(what, yield, branch)
+        -- what = end condition
+        -- yield = whether this run should produce output
+        -- branch = whether we're in the "true" or "false" branch of an if statement
+        local line = spec:read()
+        if line == what then
+            return
+        elseif line == nil and what ~= nil then
+            print("unclosed %if\n")
+            print("(...i think.)\n")
+            return
+        elseif what == "%endif" and line == "%else" then
+            -- flip branch
+            return run_until(what, yield, not branch)
+        elseif line:startswith("%%if") then
+            -- start a new branch. only make it yielding if we're in a yielding branch
+            eval_if(line, what, yield and branch)
+            -- continue when that branch is done
+            return run_until(what, yield, branch)
+        else
+            -- yield from a true branch
+            if yield and branch then coroutine.yield(line) end
+            -- continue
+            return run_until(what, yield, branch)
+        end
+    end
+
+    -- line processing functions
+
+    local function print_altered(line)
+        print(replace_macros(line, current_flavor) .. "\n")
+    end
+
+    local function ignore_line(line) end
+
+    local PROPERTY_COPY_UNMODIFIED = lookup_table { "Summary", "Version" }
+    local PROPERTY_COPY_MODIFIED = lookup_table {
+        "Requires", "Provides",
+        "Recommends", "Suggests",
+        "Conflicts", "Obsoletes",
+    }
+
+    local function process_mainpackage_line(line)
+        local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
+        if PROPERTY_COPY_UNMODIFIED[property] then
+            print_altered(line)
+        elseif PROPERTY_COPY_MODIFIED[property] then
+            local expanded = rpm.expand(value)
+            if expanded == "python" or expanded == flavor then
+                expanded = current_flavor
+            else
+                expanded = expanded:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
+                expanded = expanded:gsub("^python(%W)", current_flavor .. "%1")
+            end
+            print_altered(string.format("%s: %s", property, expanded))
+        end
+    end
+
+    local function process_subpackage_line(line)
+        line = line:gsub("%%{?name}?", current_name)
+        return process_mainpackage_line(line)
+    end
+    -- end line processing functions
+
+    local function print_obsoletes(modname)
+        if current_flavor == "python2" then
+            print(rpm.expand("Obsoletes: python-" .. label .. " < %{version}-%{release}\n"))
+            print(rpm.expand("Provides: python-" .. label .. " = %{version}-%{release}\n"))
+        end
+    end
+
+    local function package_name(flavor, modname, subpkg, append)
+        local name = flavor .. "-" .. modname
+        if subpkg and subpkg ~= "" then
+            name = name .. "-" .. subpkg
+        end
+        if append and append ~= "" then
+            name = name .. " " .. append
+        end
+        return name
+    end
+
+    local function files_headline(flavor, param, empty)
+        local append = param:match("(%-f%s+%S+)")
+        local nof = param:gsub("%-f%s+%S+%s*", "")
+        local python_files, subpkg = param:match("(%%{?python_files(.-)}?)")
+
+        if old_python2 and is_called_python and not python_files then
             -- kingly hack. but RPM's native %error does not work.
             io.stderr:write('error: Package with "python-" prefix must not contain unmarked "%files" sections.\n')
             io.stderr:write('error: Use "%files %python_files" or "%files %{python_files foo} instead.\n')
             os.exit(1)
         end
-    end
 
-    -- create entry for main package
-    enter_section("package", "")
+        local mymodname = nof
+        if python_files then mymodname = subpkg end
 
-    local function leave_section(name, param, content)
-        if name == "description" then
-            descriptions[param] = content
-        elseif scriptlet_table[name] then
-            if not scriptlets[param] then scriptlets[param] = {} end
-            scriptlets[param][name] = content
-        end
-    end
-
-    if err then print ("bad spec " .. specpath) return end
-    while true do
-        local line = spec:read()
-        if line == nil then break end
-        -- match section delimiter
-        local section_noparam = line:match("^%%(%S+)(%s*)$")
-        local section_withparam, param = line:match("^%%(%S+) (.+)$")
-        local newsection = nil
-        local newsection_name = ""
-        if section_noparam then
-            newsection = section_noparam
-        elseif section_withparam then
-            newsection = section_withparam
-            newsection_name = param
-        end
-
-        -- TODO convert parameter to modname-like
-
-        if section_table[newsection] then
-            leave_section(section, section_name, section_content)
-            enter_section(newsection, newsection_name)
-            section = newsection
-            section_name = newsection_name
-            -- handle %python_files
-            if section == "files" then
-                section_name = section_name:gsub("%%{python_files%s+(.*)}", "%1")
-                section_name = section_name:gsub("%%{?python_files}?", "")
-            end
-            section_content = ""
-        elseif line == "%python_subpackages" or line == "%{python_subpackages}" then
-            -- nothing
+        if empty then
+            return "%files " .. mymodname .. "\n"
         else
-            section_content = section_content .. line .. "\n"
-            local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
-            if property == "Requires" or property == "Recommends" or property == "Suggests" then
-                table.insert(requires[section_name], {property, value})
-            elseif section == "files" then
-                table.insert(filelists[section_name], line)
+            return "%files -n " .. package_name(flavor, modname, mymodname, append) .. "\n"
+        end
+    end
+
+
+    local function section_headline(section, flavor, param)
+        if section == "files" then
+            return files_headline(flavor, param, false)
+        else
+            return "%" .. section .. " -n " .. package_name(flavor, modname, param) .. "\n"
+        end
+    end
+
+    -- build section lookup structure
+    local KNOWN_SECTIONS = lookup_table {"package", "description", "files", "prep",
+        "build", "install", "check", "clean", "pre", "post", "preun", "postun",
+        "pretrans", "posttrans", "changelog"}
+    local COPIED_SECTIONS = lookup_table {"description", "files",
+        "pre", "post", "preun", "postun", "pretrans", "posttrans"}
+
+    -- rescan spec for each flavor
+    for _,python in ipairs(pythons) do
+        local is_current_flavor = python == flavor
+        -- "python-foo" case:
+        if is_called_python then
+            -- if we're in old-style package
+            if old_python2 then is_current_flavor = python == "python2"
+            -- else nothing is current flavor, always generate
+            else is_current_flavor = false end
+        end
+
+        current_flavor = python
+
+        if not is_current_flavor then 
+            spec, err = io.open(specpath, "r")
+            if err then print ("bad spec " .. specpath) return end
+            local reader = coroutine.create(function() run_until(nil, true, true) end)
+
+            local section_function = process_mainpackage_line
+            print(section_headline("package", current_flavor, nil))
+            print_obsoletes(modname)
+
+            current_name = current_flavor .. "-" .. modname
+
+            while true do
+                local ok, line = coroutine.resume(reader)
+                io.stderr:write(tostring(err) .. " " .. current_flavor .. " >".. tostring(line) .."<\n")
+                if not ok or line == nil then break end
+
+                -- match section delimiter
+                local section_noparam = line:match("^%%(%S+)(%s*)$")
+                local section_withparam, param = line:match("^%%(%S+)%s+(.+)$")
+                local newsection = section_noparam or section_withparam
+
+                if KNOWN_SECTIONS[newsection] then
+                    -- enter new section
+                    if param and param:startswith("%-n") then
+                        -- ignore named section
+                        section_function = ignore_line
+                    elseif newsection == "package" then
+                        print(section_headline("package", current_flavor, param))
+                        print_obsoletes(modname .. "-" .. param)
+                        section_function = process_subpackage_line
+                    elseif newsection == "files" and current_flavor == python_files_flavor then
+                        -- take this opportunity to emit empty %files
+                        print(files_headline(current_flavor, param, true))
+                        section_function = ignore_line
+                    elseif COPIED_SECTIONS[newsection] then
+                        print(section_headline(newsection, current_flavor, param))
+                        section_function = print_altered
+                    else
+                        section_function = ignore_line
+                    end
+                elseif line:startswith("%%python_subpackages") then
+                    -- ignore
+                else
+                    section_function(line)
+                end
             end
+
+            spec:close()
         end
     end
 end
