@@ -56,6 +56,18 @@ function _python_scan_spec()
         return str
     end
 
+    function package_name(flavor, modname, subpkg, append)
+        local name = flavor .. "-" .. modname
+        if subpkg and subpkg ~= "" then
+            name = name .. "-" .. subpkg
+        end
+        if append and append ~= "" then
+            name = name .. " " .. append
+        end
+        return name
+    end
+
+
     function pkgname_from_param(param)
         if param == modname then
             return ""
@@ -89,14 +101,25 @@ function _python_scan_spec()
     end
     -- if not found, modname == %name, flavor == "python"
 
-    current_flavor = flavor
-
     system_python = rpm.expand("%system_python")
     -- is the package built for python2 as "python-foo" ?
     old_python2 = rpm.expand("%_python2_package_prefix") == "python"
     is_called_python = flavor == "python"
-    -- flavor must NEVER be "python". Handling old_python2 must be done locally.
-    if is_called_python then flavor = system_python end
+
+    -- `current_flavor` is set to "what should we set to evaluate macros"
+    -- `flavor` should always be "what is actually intended for build"
+    if is_called_python then
+        if old_python2 then
+            -- in old python2, %ifpython2 should be true in "python-"
+            flavor = "python2"
+            current_flavor = "python2"
+        else
+            -- otherwise, every %if$flavor should be false in "python-",
+            -- the real flavor is system_python
+            flavor = system_python
+            current_flavor = "python"
+        end
+    end
 
     -- find the spec file
     specpath = name .. ".spec"
@@ -137,57 +160,9 @@ function _python_scan_spec()
 end
 
 function _python_emit_subpackages()
-    local run_until = nil
-    local spec = nil
-    local current_name = nil
-
-    local function eval_if(line, yield)
-        line = replace_macros(line, current_flavor)
-        io.stderr:write("diving into if: " .. line .. "\n")
-        local result = rpm.expand(line .. "\n"
-            .. "1\n"
-            .. "%else\n"
-            .. "0\n"
-            .. "%endif")
-        if result == 1 then
-            run_until("%endif", yield, true)
-        else
-            run_until("%endif", yield, false)
-        end
-        io.stderr:write("endif: " .. line .. "\n")
-    end
-
-    function run_until(what, yield, branch)
-        -- what = end condition
-        -- yield = whether this run should produce output
-        -- branch = whether we're in the "true" or "false" branch of an if statement
-        local line = spec:read()
-        if line == what then
-            return
-        elseif line == nil and what ~= nil then
-            print("unclosed %if\n")
-            print("(...i think.)\n")
-            return
-        elseif what == "%endif" and line == "%else" then
-            -- flip branch
-            return run_until(what, yield, not branch)
-        elseif line:startswith("%%if") then
-            -- start a new branch. only make it yielding if we're in a yielding branch
-            eval_if(line, what, yield and branch)
-            -- continue when that branch is done
-            return run_until(what, yield, branch)
-        else
-            -- yield from a true branch
-            if yield and branch then coroutine.yield(line) end
-            -- continue
-            return run_until(what, yield, branch)
-        end
-    end
-
     -- line processing functions
-
     local function print_altered(line)
-        print(replace_macros(line, current_flavor) .. "\n")
+        print(rpm.expand(replace_macros(line, current_flavor)) .. "\n")
     end
 
     local function ignore_line(line) end
@@ -200,6 +175,7 @@ function _python_emit_subpackages()
     }
 
     local function process_mainpackage_line(line)
+        -- TODO implement %$flavor_only support here?
         local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
         if PROPERTY_COPY_UNMODIFIED[property] then
             print_altered(line)
@@ -216,33 +192,24 @@ function _python_emit_subpackages()
     end
 
     local function process_subpackage_line(line)
-        line = line:gsub("%%{?name}?", current_name)
+        line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
         return process_mainpackage_line(line)
     end
     -- end line processing functions
 
     local function print_obsoletes(modname)
         if current_flavor == "python2" then
-            print(rpm.expand("Obsoletes: python-" .. label .. " < %{version}-%{release}\n"))
-            print(rpm.expand("Provides: python-" .. label .. " = %{version}-%{release}\n"))
+            print(rpm.expand("Obsoletes: python-" .. modname .. " < %{version}-%{release}\n"))
+            print(rpm.expand("Provides: python-" .. modname .. " = %{version}-%{release}\n"))
         end
     end
 
-    local function package_name(flavor, modname, subpkg, append)
-        local name = flavor .. "-" .. modname
-        if subpkg and subpkg ~= "" then
-            name = name .. "-" .. subpkg
-        end
-        if append and append ~= "" then
-            name = name .. " " .. append
-        end
-        return name
-    end
-
-    local function files_headline(flavor, param, empty)
+    local function files_headline(flavor, param)
         local append = param:match("(%-f%s+%S+)")
         local nof = param:gsub("%-f%s+%S+%s*", "")
-        local python_files, subpkg = param:match("(%%{?python_files(.-)}?)")
+        local python_files = param:match("%python_files")
+        local subpkg = param:match("%%{python_files%s*(.-)}")
+        if subpkg then python_files = true end
 
         if old_python2 and is_called_python and not python_files then
             -- kingly hack. but RPM's native %error does not work.
@@ -253,58 +220,54 @@ function _python_emit_subpackages()
 
         local mymodname = nof
         if python_files then mymodname = subpkg end
-
-        if empty then
-            return "%files " .. mymodname .. "\n"
-        else
-            return "%files -n " .. package_name(flavor, modname, mymodname, append) .. "\n"
-        end
+        return "%files -n " .. package_name(flavor, modname, mymodname, append) .. "\n"
     end
 
 
     local function section_headline(section, flavor, param)
         if section == "files" then
-            return files_headline(flavor, param, false)
+            return files_headline(flavor, param)
         else
             return "%" .. section .. " -n " .. package_name(flavor, modname, param) .. "\n"
         end
     end
 
-    -- build section lookup structure
     local KNOWN_SECTIONS = lookup_table {"package", "description", "files", "prep",
         "build", "install", "check", "clean", "pre", "post", "preun", "postun",
         "pretrans", "posttrans", "changelog"}
     local COPIED_SECTIONS = lookup_table {"description", "files",
         "pre", "post", "preun", "postun", "pretrans", "posttrans"}
 
-    -- rescan spec for each flavor
+    local current_flavor_toplevel = current_flavor
+
     for _,python in ipairs(pythons) do
         local is_current_flavor = python == flavor
         -- "python-foo" case:
         if is_called_python then
-            -- if we're in old-style package
-            if old_python2 then is_current_flavor = python == "python2"
-            -- else nothing is current flavor, always generate
-            else is_current_flavor = false end
+            if old_python2 then
+                -- if we're in old-style package, "python" == "python2"
+                is_current_flavor = python == "python2"
+            else
+                -- else nothing is current flavor, always generate
+                is_current_flavor = false
+            end
         end
 
         current_flavor = python
 
-        if not is_current_flavor then 
-            spec, err = io.open(specpath, "r")
+        -- rescan spec for each flavor
+        if not is_current_flavor then
+            local spec, err = io.open(specpath, "r")
             if err then print ("bad spec " .. specpath) return end
-            local reader = coroutine.create(function() run_until(nil, true, true) end)
 
             local section_function = process_mainpackage_line
             print(section_headline("package", current_flavor, nil))
             print_obsoletes(modname)
 
-            current_name = current_flavor .. "-" .. modname
-
             while true do
-                local ok, line = coroutine.resume(reader)
-                io.stderr:write(tostring(err) .. " " .. current_flavor .. " >".. tostring(line) .."<\n")
-                if not ok or line == nil then break end
+                line = spec:read()
+                io.stderr:write(current_flavor .. " >".. tostring(line) .."<\n")
+                if line == nil then break end
 
                 -- match section delimiter
                 local section_noparam = line:match("^%%(%S+)(%s*)$")
@@ -321,8 +284,6 @@ function _python_emit_subpackages()
                         print_obsoletes(modname .. "-" .. param)
                         section_function = process_subpackage_line
                     elseif newsection == "files" and current_flavor == python_files_flavor then
-                        -- take this opportunity to emit empty %files
-                        print(files_headline(current_flavor, param, true))
                         section_function = ignore_line
                     elseif COPIED_SECTIONS[newsection] then
                         print(section_headline(newsection, current_flavor, param))
@@ -332,6 +293,24 @@ function _python_emit_subpackages()
                     end
                 elseif line:startswith("%%python_subpackages") then
                     -- ignore
+                elseif line:startswith("%%if") then
+                    -- RPM handles %if on top level, whole sections can be conditional.
+                    -- We must copy the %if declarations always, even if they are part
+                    -- of non-copied sections. Otherwise we miss this:
+                    -- %files A
+                    -- /bin/something
+                    -- %if %condition
+                    -- %files B
+                    -- /bin/otherthing
+                    -- %endif
+                    print_altered(line)
+                    -- We are, however, copying expanded versions. This way, specifically,
+                    -- macros like %ifpython3 are evaluated differently in the top-level spec
+                    -- itself and in the copied sections.
+                    io.stderr:write(rpm.expand(line) .. "\n")
+                elseif line == "%else" or line == "%endif" then
+                    print(line .. "\n")
+                    io.stderr:write(line .. "\n")
                 else
                     section_function(line)
                 end
@@ -340,138 +319,9 @@ function _python_emit_subpackages()
             spec:close()
         end
     end
-end
 
-function _python_output_subpackages()
-    for _,python in ipairs(pythons) do
-        -- base case: generating for "python3-foo" in "python3-foo"
-        local is_current_flavor = python == flavor
-        -- "python-foo" case:
-        if is_called_python then
-            -- if we're in old-style package
-            if old_python2 then is_current_flavor = python == "python2"
-            -- else nothing is current flavor, always generate
-            else is_current_flavor = false end
-        end
-
-        if not is_current_flavor then
-            print(string.format("%%{_python_subpackage_for %s %s}\n", python, modname))
-            for _,subpkg in ipairs(subpackages) do
-                if subpkg:startswith("-n ") then
-                    subpkg = subpkg:sub(4)
-                    print(string.format("%%{_python_subpackage_for %s %s}\n", python, subpkg))
-                elseif subpkg ~= "" then
-                    print(string.format("%%{_python_subpackage_for %s %s-%s}\n", python, modname, subpkg))
-                end
-            end
-        end
-    end
-
-    -- emit empty %files
-    if python_files_flavor ~= "" then
-        for _,subpkg in ipairs(subpackages) do
-            print("%files " .. subpkg .. "\n")
-        end
-    end
-end
-
-function _python_output_requires()
-    local myflavor = rpm.expand("%1")
-    local label = rpm.expand("%2")
-    local pkgname = pkgname_from_param(label)
-    for _,req in ipairs(requires[pkgname]) do
-        local prop = req[1]
-        local val = rpm.expand(req[2])
-        if val:match("^"..flavor) then
-            val = val:gsub("^"..flavor, myflavor)
-        elseif val:match("^python") then
-            val = val:gsub("^python", myflavor)
-        end
-        print(prop .. ": " .. val .. "\n")
-    end
-
-    if myflavor == "python2" then
-        print(rpm.expand("Obsoletes: python-" .. label .. " < %{version}-%{release}\n"))
-        print(rpm.expand("Provides: python-" .. label .. " = %{version}-%{release}\n"))
-    end
-end
-
-function _python_output_filelist()
-    local myflavor = rpm.expand("%1")
-    local label = rpm.expand("%2")
-    local pkgname = pkgname_from_param(label)
-
-    if myflavor == python_files_flavor then return end
-
-    if myflavor == "python2" and old_python2 then
-        print("%files -n python-" .. label .. "\n")
-    else
-        print("%files -n " .. myflavor .. "-" .. label .. "\n")
-    end
-
-    local IFS_LIST = { python3=true, python2=true, pypy3=true, pycache=false}
-
-    local only = nil
-    for _,file in ipairs(filelists[pkgname]) do
-        file = replace_macros(file, myflavor)
-        local continue = false
-
-        -- test %ifpython2 etc
-        for k, _ in pairs(IFS_LIST) do
-            if file == "%if" .. k then
-                only = k
-                continue = true
-            end
-        end
-        if file == "%endif" then
-            only = nil
-            continue = true
-        end
-
-        -- test %python2_only etc
-        -- for find, gsub etc., '%' is a special character and must be doubled
-        for k, _ in pairs(IFS_LIST) do
-            local only_expr = "%%" .. k .. "_only "
-            if file:startswith(only_expr) then
-                -- only_expr is 1 longer because of double %
-                -- but string.sub counts 1-based
-                -- so only_expr:len() is actually the right number
-                local justfile = file:sub(only_expr:len())
-                if myflavor == k then
-                    print(justfile .. "\n")
-                elseif k == "pycache" and myflavor ~= "python2" then
-                    print(justfile .. "\n")
-                end
-                continue = true
-            end
-        end
-
-        if not continue
-           and (only == nil or only == myflavor
-            or (only == "pycache" and myflavor ~= "python2")) then
-                print(file .. "\n")
-        end
-    end
-end
-
-function _python_output_scriptlets()
-    local myflavor = rpm.expand("%1")
-    local label = rpm.expand("%2")
-    local pkgname = pkgname_from_param(label)
-    if not scriptlets[pkgname] then return end
-    for k, v in pairs(scriptlets[pkgname]) do
-        if myflavor == "python2" and old_python2 then
-            print("%" .. k .. " -n python-" .. label .. "\n")
-        else
-            print("%" .. k .. " -n " .. myflavor .. "-" .. label .. "\n")
-        end
-        print(replace_macros(v, myflavor) .. "\n")
-    end
-end
-
-function _python_output_description()
-    local pkgname = pkgname_from_param(rpm.expand("%2"))
-    print(descriptions[pkgname] .. "\n")
+    -- restore current_flavor for further processing
+    current_flavor = current_flavor_toplevel
 end
 
 function python_exec()
@@ -504,16 +354,15 @@ end
 function python_files()
     local nparams = rpm.expand("%#")
     local param = ""
-    local fparam = ""
-    if tonumber(nparams) > 0 then
-        param = rpm.expand("%1")
-        fparam = "-" .. param
-    end
+    if tonumber(nparams) > 0 then param = rpm.expand("%1") end
+
+    print(param)
+
     -- for "re" command, all these things are nil because scan_spec doesn't seem to run?
     -- checking for validity of python_files_flavor seems to fix this.
     if python_files_flavor and python_files_flavor ~= "" then
-        print(string.format("-n %s-%s%s", python_files_flavor, modname, fparam))
-    else
-        print(param)
+        print("\n")
+        current_flavor = python_files_flavor
+        print("%files -n " .. package_name(python_files_flavor, modname, param))
     end
 end
