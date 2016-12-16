@@ -85,9 +85,11 @@ package, remove `<targetfile>` from a list of alternatives under `<name>`
 
 Alternative-related, for Python:
 
-__`%python_alternative <name>`__: expands to a filelist entries for `%{_bindir}/<name>`, the
+__`%python_alternative <name>`__: expands to filelist entries for `%{_bindir}/<name>`, the
 `/etc/alternatives/<name>` symlink, and the target called `%{_bindir}/<name>-%{py_ver}` (or
-$flavor_ver respectively).
+$flavor_ver respectively).  
+__`%python_alternative_man <number> <name>`__: similar, except expands to filelist entries
+for manual page `<name>` in section `<number>`.
 
 __`%python_install_alternative <name>`__: runs `update-alternatives` for  `<name>-%{py_ver}`.
 
