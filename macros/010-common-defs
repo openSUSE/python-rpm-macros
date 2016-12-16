@@ -25,6 +25,7 @@
 # I am honestly not quite sure how the following works. By all logic it should not.
 # I suppose that the macro body is copied here and applied on the `%1`?
 %python_alternative()           %{expand:%python2_alternative}
+%python_alternative_man()       %{expand:%python2_alternative_man}
 %python_install_alternative()   %{expand:%python2_install_alternative}
 %python_uninstall_alternative() %{expand:%python2_uninstall_alternative}
 

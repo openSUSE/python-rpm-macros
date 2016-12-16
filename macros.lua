@@ -29,7 +29,8 @@ function _python_scan_spec()
 
     function replace_macros(str, targetflavor)
         local LONG_MACROS = { "sitelib", "sitearch",
-            "alternative", "install_alternative", "uninstall_alternative",
+            "alternative", "alternative_man",
+            "install_alternative", "uninstall_alternative",
             "version", "version_nodots", "bin_suffix"}
         local SHORT_MACROS = { "ver" }
         for _, srcflavor in ipairs({flavor, "python"}) do
@@ -39,6 +40,7 @@ function _python_scan_spec()
                 local to = string.format("%s_%s", targetflavor, macro)
                 str = str:gsub("%%" .. from, "%%" .. to)
                 str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
+                str = str:gsub("%%{" .. from .. "(%s+.-)}", "%%{" .. to .. "%1}")
             end
             for _, macro in ipairs(SHORT_MACROS) do
                 local from = string.format("%s_%s", SHORT_FLAVORS[srcflavor], macro)
