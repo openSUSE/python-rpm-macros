@@ -207,6 +207,7 @@ function _python_emit_subpackages()
     end
 
     local function files_headline(flavor, param)
+        if not param then param = "" end
         local append = param:match("(%-f%s+%S+)")
         local nof = param:gsub("%-f%s+%S+%s*", "")
         local python_files = param:match("%python_files")
