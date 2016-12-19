@@ -210,7 +210,7 @@ function _python_emit_subpackages()
         if not param then param = "" end
         local append = param:match("(%-f%s+%S+)")
         local nof = param:gsub("%-f%s+%S+%s*", "")
-        local python_files = param:match("%python_files")
+        local python_files = param:match("%%{?python_files}?")
         local subpkg = param:match("%%{python_files%s*(.-)}")
         if subpkg then python_files = true end
 
