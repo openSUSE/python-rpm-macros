@@ -218,7 +218,7 @@ function _python_emit_subpackages()
             -- kingly hack. but RPM's native %error does not work.
             io.stderr:write('error: Package with "python-" prefix must not contain unmarked "%files" sections.\n')
             io.stderr:write('error: Use "%files %python_files" or "%files %{python_files foo} instead.\n')
-            os.exit(1)
+            error('Invalid spec file')
         end
 
         local mymodname = nof

@@ -55,4 +55,4 @@ if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 
 %python_subpackages \
 %{_python_scan_spec} \
-%{expand:%{_python_emit_subpackages}}
+%{_python_emit_subpackages}
