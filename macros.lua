@@ -359,13 +359,12 @@ function python_files()
     local param = ""
     if tonumber(nparams) > 0 then param = rpm.expand("%1") end
 
-    print(param)
-
     -- for "re" command, all these things are nil because scan_spec doesn't seem to run?
     -- checking for validity of python_files_flavor seems to fix this.
     if python_files_flavor and python_files_flavor ~= "" then
-        print("\n")
+        print("-n " .. package_name(python_files_flavor, modname, param))
         current_flavor = python_files_flavor
-        print("%files -n " .. package_name(python_files_flavor, modname, param))
+    else
+        print(param)
     end
 end
