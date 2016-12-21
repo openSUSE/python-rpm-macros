@@ -311,7 +311,7 @@ function _python_emit_subpackages()
                     -- macros like %ifpython3 are evaluated differently in the top-level spec
                     -- itself and in the copied sections.
                     io.stderr:write(rpm.expand(line) .. "\n")
-                elseif line:startswith("%else") or line:startswith("%endif") then
+                elseif line:startswith("%%else") or line:startswith("%%endif") then
                     print(line .. "\n")
                     io.stderr:write(line .. "\n")
                 else
