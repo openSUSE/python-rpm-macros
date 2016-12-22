@@ -137,12 +137,6 @@ function _python_scan_spec()
         end
     end
 
-    subpackages = {}
-    descriptions = {}
-    filelists = {}
-    requires = {}
-    scriptlets = {}
-
     python_files_flavor = ""
 
     -- assuming `%files %python_files` is present:
