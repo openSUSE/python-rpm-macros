@@ -59,6 +59,9 @@ function _python_scan_spec()
     end
 
     function package_name(flavor, modname, subpkg, append)
+        if flavor == "python2" and old_python2 then
+            flavor = "python"
+        end
         local name = flavor .. "-" .. modname
         if subpkg and subpkg ~= "" then
             name = name .. "-" .. subpkg
@@ -143,17 +146,10 @@ function _python_scan_spec()
     python_files_flavor = ""
 
     -- assuming `%files %python_files` is present:
-    if old_python2 and is_called_python then
-        -- everything is all right
-    elseif old_python2 and not is_called_python then
-        -- this case covers package named "python2(3)-foo" attempting
-        -- to generate "python-foo" subpackage. This should not happen
-        -- in practice and is probably broken anyway.
-        python_files_flavor = "python"
-    elseif not old_python2 and is_called_python then
-        -- the expected case: subpackage should be called "python2-foo"
-        -- and files sections for "python-foo" should be left empty
-        -- python-foo is empty, python2-foo is python_files
+    if is_called_python and not old_python2 then
+        -- subpackage should be called "python2-foo"
+        -- files sections for "python-foo" should not exist
+        -- %files %python_files is set to "%files -n python2-foo"
         python_files_flavor = flavor
     end
     -- else: not old_python2 and not is_called_python, so
