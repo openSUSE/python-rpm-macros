@@ -154,6 +154,9 @@ end
 function _python_emit_subpackages()
     -- line processing functions
     local function print_altered(line)
+        -- set %name macro to proper flavor-name
+        line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
+        -- print expanded
         print(rpm.expand(replace_macros(line, current_flavor)) .. "\n")
     end
 
@@ -166,7 +169,7 @@ function _python_emit_subpackages()
         "Conflicts", "Obsoletes",
     }
 
-    local function process_mainpackage_line(line)
+    local function process_package_line(line)
         -- TODO implement %$flavor_only support here?
         local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
         if PROPERTY_COPY_UNMODIFIED[property] then
@@ -181,11 +184,6 @@ function _python_emit_subpackages()
             end
             print_altered(string.format("%s: %s", property, expanded))
         end
-    end
-
-    local function process_subpackage_line(line)
-        line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
-        return process_mainpackage_line(line)
     end
     -- end line processing functions
 
@@ -253,7 +251,7 @@ function _python_emit_subpackages()
             local spec, err = io.open(specpath, "r")
             if err then print ("bad spec " .. specpath) return end
 
-            local section_function = process_mainpackage_line
+            local section_function = process_package_line
             print(section_headline("package", current_flavor, nil))
             print_obsoletes(modname)
 
@@ -275,7 +273,7 @@ function _python_emit_subpackages()
                     elseif newsection == "package" then
                         print(section_headline("package", current_flavor, param))
                         print_obsoletes(modname .. "-" .. param)
-                        section_function = process_subpackage_line
+                        section_function = process_package_line
                     elseif newsection == "files" and current_flavor == python_files_flavor then
                         section_function = ignore_line
                     elseif COPIED_SECTIONS[newsection] then
