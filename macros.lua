@@ -321,6 +321,8 @@ function python_exec()
 end
 
 function python_expand()
+    -- force spec scan
+    rpm.expand("%_python_scan_spec")
     local args = rpm.expand("%**")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%{_python_use_flavor " .. python .. "}\n"))
