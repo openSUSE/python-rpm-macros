@@ -25,6 +25,7 @@ Source:         multipython-macros-%{version}.tar
 # Fedora compatibility
 Provides:       python2-rpm-macros
 Provides:       python3-rpm-macros
+#!BuildIgnore:  python-rpm-macros
 
 BuildArch:      noarch
 
@@ -37,9 +38,10 @@ are only building for distros newer than Leap 42.2
 %setup -q -n multipython-macros-%{version}
 %if 0%{?suse_version} < 1330
 cat > macros/035-compat-defs <<END
-%have_python2   1
-%have_python3   1
+%%have_python2   1
+%%have_python3   1
 END
+%endif
 
 %build
 ./compile-macros.sh
