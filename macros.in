@@ -1,8 +1,3 @@
-# TODO this should not be here
-%have_python2 1
-%have_python3 1
-# do not define pypy3
-
 # order is important! if builds install the same binary, the last one is preferred
 %pythons %{?have_python2:python2} %{?have_pypy3:pypy3} %{?have_python3:python3}
 

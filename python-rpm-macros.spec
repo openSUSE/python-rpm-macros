@@ -35,6 +35,11 @@ are only building for distros newer than Leap 42.2
 
 %prep
 %setup -q -n multipython-macros-%{version}
+%if 0%{?suse_version} < 1330
+cat > macros/035-compat-defs <<END
+%have_python2   1
+%have_python3   1
+END
 
 %build
 ./compile-macros.sh
