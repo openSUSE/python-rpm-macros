@@ -257,7 +257,7 @@ function _python_emit_subpackages()
 
             while true do
                 line = spec:read()
-                io.stderr:write(current_flavor .. " >".. tostring(line) .."<\n")
+                --io.stderr:write(current_flavor .. " >".. tostring(line) .."<\n")
                 if line == nil then break end
 
                 -- match section delimiter
@@ -298,10 +298,10 @@ function _python_emit_subpackages()
                     -- We are, however, copying expanded versions. This way, specifically,
                     -- macros like %ifpython3 are evaluated differently in the top-level spec
                     -- itself and in the copied sections.
-                    io.stderr:write(rpm.expand(line) .. "\n")
+                    --io.stderr:write(rpm.expand(line) .. "\n")
                 elseif line:startswith("%%else") or line:startswith("%%endif") then
                     print(line .. "\n")
-                    io.stderr:write(line .. "\n")
+                    --io.stderr:write(line .. "\n")
                 else
                     section_function(line)
                 end
