@@ -35,8 +35,7 @@ function _python_scan_spec()
 
     function replace_macros(str, targetflavor)
         local LONG_MACROS = { "sitelib", "sitearch",
-            "alternative", "alternative_man",
-            "install_alternative", "uninstall_alternative",
+            "alternative", "install_alternative", "uninstall_alternative",
             "version", "version_nodots", "bin_suffix"}
         local SHORT_MACROS = { "ver" }
         for _, srcflavor in ipairs({flavor, "python"}) do

@@ -24,12 +24,6 @@
 %{_python_alternative_origin -b %#FLAVOR#_bin_suffix} \
 %{nil}
 
-%#FLAVOR#_alternative_man() \
-%{_mandir}/man%1/%2.%1.gz \
-%{_mandir}/man%1/%2-%#FLAVOR#_bin_suffix.%1.gz \
-%ghost %{_sysconfdir}/alternatives/%2.%1.gz \
-%{nil}
-
 %#FLAVOR#_install_alternative() \
 %{install_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix -p %#FLAVOR#_version_nodots}
 
