@@ -17,6 +17,9 @@ my $pysub_found = 0;
 my $pymodule_inserted = 0;
 my $macros_inserted = 0;
 
+my @known_backports = qw/singledispatch futures/;
+my %backports = map { $_ => 1 } @known_backports;
+
 while (<SOURCE>) {
     if ($oldsuse == 1) {
         if (/^%else$/) {
@@ -40,6 +43,9 @@ while (<SOURCE>) {
         if ($2 eq "rpm-macros") {
             print DEST $_ unless $macros_inserted;
             $macros_inserted = 1;
+        } elsif ($2 =~ /^backports/ || exists($backports{$2})) {
+            # skip known backports that won't be available for new pythons
+            print DEST $_;
         } else {
             if (!$macros_inserted) {
                 print DEST "BuildRequires:$1python-rpm-macros\n";
@@ -56,6 +62,9 @@ while (<SOURCE>) {
         print DEST $_;
         $pysub_found = 1;
     } elsif (/^python setup\.py build/) {
+        print DEST "%python_build\n";
+    } elsif (/^(CFLAGS="%\{optflags\}") python setup\.py build/) {
+        print DEST "export $1\n";
         print DEST "%python_build\n";
     } elsif (/^python setup\.py install.*/) {
         print DEST "%python_install\n";
