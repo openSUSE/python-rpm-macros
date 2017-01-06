@@ -30,3 +30,17 @@
 %python_uninstall_alternative() %{expand:%python2_uninstall_alternative}
 
 %py_ver  %python_version
+
+##### common code for alternative name creation #####
+%_python_alternative_origin(b:) %{lua: do \
+    local param = rpm.expand("%1") \
+    local binsuffix = rpm.expand("%{-b*}") \
+    -- try manpage syntax \
+    local try = param:gsub("/(.*)%.(%d)%.gz$", "/%1-" .. binsuffix .. ".%2.gz") \
+    -- try simple file extension \
+    if try == param then try = param:gsub("/(.*)%.(.-)$", "/%1-" .. binsuffix .. ".%2") end \
+    -- append binsuffix \
+    if try == param then try = param .. "-" .. binsuffix end \
+    print(try) \
+end }
+

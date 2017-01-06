@@ -24,3 +24,7 @@ if [ $1 -eq 0 ]; then \
     update-alternatives --remove %{alternative_name} %{alternative_target} \
 fi \
 %{nil}
+
+%alternative_for() \
+%1 \
+%ghost %{_sysconfdir}/alternatives/%{basename:%1}
