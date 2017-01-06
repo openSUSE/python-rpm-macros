@@ -1,0 +1,5 @@
+# this file should be excluded for new distributions,
+# where %have_$flavor is determined by installed python packages
+
+%have_python2 1
+%have_python3 1
