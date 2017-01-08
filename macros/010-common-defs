@@ -35,10 +35,8 @@
     local param = rpm.expand("%1") \
     local binsuffix = rpm.expand("%{-b*}") \
     -- try manpage syntax \
-    local try = param:gsub("/(.*)%.(%d)%.gz$", "/%1-" .. binsuffix .. ".%2.gz") \
-    -- try simple file extension \
-    if try == param then try = param:gsub("/(.*)%.(.-)$", "/%1-" .. binsuffix .. ".%2") end \
-    -- append binsuffix \
+    local try = param:gsub("(.*)%.(%d)%.gz$", "%1-" .. binsuffix .. ".%2.gz") \
+    -- append binsuffix
     if try == param then try = param .. "-" .. binsuffix end \
     print(try) \
 end }

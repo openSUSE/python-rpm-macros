@@ -101,8 +101,7 @@ Alternative-related, for Python:
 
 __`%python_alternative <file>`__: expands to filelist entries for `<file>`, its symlink in
 `/etc/alternatives`, and the target file called `<file>-%python_bin_suffix`.  
-If the target file has a single extension (`file.py`), the target is called `file-%suffix.py`. In
-case the file is a manpage (`file.1.gz`), the target is called `file-%suffix.1.gz`.
+In case the file is a manpage (`file.1.gz`), the target is called `file-%suffix.1.gz`.
 
 __`%python_install_alternative <name>`__: runs `update-alternatives` for  `<name>-%{py_ver}`.
 
