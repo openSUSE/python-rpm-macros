@@ -1,7 +1,7 @@
 #
 # spec file for package python-rpm-macros
 #
-# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -15,18 +15,19 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
+
 Name:           python-rpm-macros
 Version:        1.0
 Release:        0
-License:        WTFPL
 Summary:        RPM macros for building of Python modules
+License:        WTFPL
+Group:          Development/Tools/Other
 Url:            https://github.com/opensuse/multipython-macros
 Source:         multipython-macros-%{version}.tar.bz2
 # Fedora compatibility
 Provides:       python2-rpm-macros
 Provides:       python3-rpm-macros
 #!BuildIgnore:  python-rpm-macros
-
 BuildArch:      noarch
 
 %description
@@ -50,3 +51,5 @@ install -m 644 macros.python_all %{buildroot}%{_sysconfdir}/rpm
 %files
 %defattr(-,root,root)
 %{_sysconfdir}/rpm/macros.python_all
+
+%changelog
