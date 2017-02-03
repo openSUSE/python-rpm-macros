@@ -15,3 +15,5 @@
 
 %py2_ver     %python2_version
 %py3_ver     %python3_version
+
+%python2_prefix   %{?python2_package_prefix}%{?!python2_package_prefix:python}

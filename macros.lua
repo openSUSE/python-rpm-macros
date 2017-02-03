@@ -107,7 +107,7 @@ function _python_scan_spec()
 
     system_python = rpm.expand("%system_python")
     -- is the package built for python2 as "python-foo" ?
-    old_python2 = rpm.expand("%_python2_package_prefix") == "python"
+    old_python2 = rpm.expand("%python2_prefix") == "python"
     is_called_python = spec_name_prefix == "python"
 
     -- `current_flavor` is set to "what should we set to evaluate macros"

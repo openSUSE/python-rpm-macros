@@ -126,6 +126,9 @@ directory.
 __`%python2_version`__: dotted major.minor version. `2.7` for CPython 2.7.  
 __`%python2_version_nodots`__: concatenated major.minor version. `27` for CPython 2.7.
 
+__`%python2_prefix`__: prefix of the package name. `python` for old-style distros, `python2` for
+new-style. For other flavors, the value is the same as flavor name.
+
 For reasons of preferred-flavor-agnosticity, aliases `python_*` are available for all of these.
 
 We recognize `%py_ver`, `%py2_ver` and `%py3_ver` as deprecated spellings of `%flavor_version`. No

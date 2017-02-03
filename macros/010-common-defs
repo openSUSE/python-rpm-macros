@@ -21,6 +21,7 @@
 %python_sitearch         %python2_sitearch
 %python_version          %python2_version
 %python_version_nodots   %python2_version_nodots
+%python_prefix           %python2_prefix
 
 # I am honestly not quite sure how the following works. By all logic it should not.
 # I suppose that the macro body is copied here and applied on the `%1`?
