@@ -88,41 +88,45 @@ function _python_scan_spec()
     end
 
     modname = rpm.expand("%name")
-    flavor = "python"
+    local spec_name_prefix = "python"
     -- modname from name
     local name = modname
     for _,py in ipairs(pythons) do
         if name:find(py .. "%-") == 1 then
-            flavor = py
+            spec_name_prefix = py
             modname = name:sub(py:len() + 2)
             break
         end
     end
     -- try to match "python-"
     if name == modname and name:find("python%-") == 1 then
-        flavor = "python"
+        spec_name_prefix = "python"
         modname = name:sub(8)
     end
-    -- if not found, modname == %name, flavor == "python"
+    -- if not found, modname == %name, spec_name_prefix == "python"
 
     system_python = rpm.expand("%system_python")
     -- is the package built for python2 as "python-foo" ?
     old_python2 = rpm.expand("%_python2_package_prefix") == "python"
-    is_called_python = flavor == "python"
+    is_called_python = spec_name_prefix == "python"
 
     -- `current_flavor` is set to "what should we set to evaluate macros"
     -- `flavor` should always be "what is actually intended for build"
     if is_called_python then
         if old_python2 then
             -- in old python2, %ifpython2 should be true in "python-"
-            flavor = "python2"
             current_flavor = "python2"
+            flavor         = "python2"
         else
             -- otherwise, every %if$flavor should be false in "python-",
             -- the real flavor is system_python
-            flavor = system_python
             current_flavor = "python"
+            flavor         = system_python
         end
+    else
+        -- specname is something other than "python-", we use it literally
+        flavor         = spec_name_prefix
+        current_flavor = spec_name_prefix
     end
 
     -- find the spec file
