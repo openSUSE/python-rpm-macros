@@ -36,7 +36,7 @@ You should BuildRequire this package unless you are sure that you
 are only building for distros newer than Leap 42.2
 
 %prep
-%setup -q -n multipython-macros-%{version}
+%setup -q
 %if 0%{?suse_version} < 1330
 mv macros-default-pythons macros/035-default-pythons
 %endif
