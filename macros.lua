@@ -206,18 +206,18 @@ function _python_emit_subpackages()
         if subpkg then python_files = true end
 
         if old_python2 and is_called_python and not python_files then
-            error('Invalid spec file')
             -- new rpm is "more resilient" to macro errors.
             -- WATCH ME.
             -- kingly hack. but RPM's native %error does not work.
-            local errmsg = 'error: Package with "python-" prefix must not contain unmarked "%files" sections.\\\n'
-            errmsg ..= 'error: Use "%files %python_files" or "%files %{python_files foo} instead.\\\n'
+            local errmsg = 'echo \'error: Package with "python-" prefix must not contain unmarked "%files" sections.\'\\\n'
+            errmsg ..= 'echo \'error: Use "%files %python_files" or "%files %{python_files foo} instead.\'\\\n'
             rpm.define("build " .. errmsg .. "exit 1")
             -- yes.
             -- this redefines %build, so that instead of delimiting a section,
             -- %prep continues with "echo error" and then "exit 1",
             -- thus triggering a build script error, which HOPEFULLY KILLS THE BUILD
             -- ffs.
+            error('Invalid spec file')
         end
 
         local mymodname = nof
