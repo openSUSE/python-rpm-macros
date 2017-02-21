@@ -205,10 +205,13 @@ function _python_emit_subpackages()
         local subpkg = param:match("%%{python_files%s*(.-)}")
         if subpkg then python_files = true end
 
-        if old_python2 and is_called_python and not python_files then
+        if is_called_python and not python_files then
             -- kingly hack. but RPM's native %error does not work.
-            io.stderr:write('error: Package with "python-" prefix must not contain unmarked "%files" sections.\n')
-            io.stderr:write('error: Use "%files %python_files" or "%files %{python_files foo} instead.\n')
+            local errmsg =
+                'error: Package with "python-" prefix must not contain unmarked "%files" sections.\n' ..
+                'error: Use "%files %python_files" or "%files %{python_files foo} instead.\n'
+            io.stderr:write(errmsg)
+            print(errmsg)
             error('Invalid spec file')
         end
 
