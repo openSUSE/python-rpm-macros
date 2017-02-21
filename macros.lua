@@ -209,8 +209,11 @@ function _python_emit_subpackages()
             -- new rpm is "more resilient" to macro errors.
             -- WATCH ME.
             -- kingly hack. but RPM's native %error does not work.
-            local errmsg = 'echo \'error: Package with "python-" prefix must not contain unmarked "%files" sections.\'\\\n'
-            errmsg ..= 'echo \'error: Use "%files %python_files" or "%files %{python_files foo} instead.\'\\\n'
+            local errmsg =
+                'echo \'error: Package with "python-" prefix ' ..
+                    'must not contain unmarked "%files" sections.\'\\\n' ..
+                'echo \'error: Use "%files %python_files" or ' ..
+                    '"%files %{python_files foo} instead.\'\\\n'
             rpm.define("build " .. errmsg .. "exit 1")
             -- yes.
             -- this redefines %build, so that instead of delimiting a section,
