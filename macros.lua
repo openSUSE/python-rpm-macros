@@ -178,13 +178,13 @@ function _python_emit_subpackages()
         if PROPERTY_COPY_UNMODIFIED[property] then
             print_altered(line)
         elseif PROPERTY_COPY_MODIFIED[property] then
-            local expanded = rpm.expand(value)
-            if expanded == "python" or expanded == flavor then
-                expanded = current_flavor
+            if value == "python" or value == flavor then
+                value = current_flavor
             else
-                expanded = expanded:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
-                expanded = expanded:gsub("^python(%W)", current_flavor .. "%1")
+                value = value:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
+                value = value:gsub("^python(%W)", current_flavor .. "%1")
             end
+            local expanded = rpm.expand(value)
             print_altered(string.format("%s: %s", property, expanded))
         end
     end
