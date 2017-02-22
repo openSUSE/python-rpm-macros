@@ -165,7 +165,7 @@ function _python_emit_subpackages()
 
     local function ignore_line(line) end
 
-    local PROPERTY_COPY_UNMODIFIED = lookup_table { "Summary", "Version" }
+    local PROPERTY_COPY_UNMODIFIED = lookup_table { "Summary", "Version", "BuildArch" }
     local PROPERTY_COPY_MODIFIED = lookup_table {
         "Requires", "Provides",
         "Recommends", "Suggests",
