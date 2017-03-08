@@ -176,11 +176,20 @@ function _python_emit_subpackages()
     }
 
     local function process_package_line(line)
+        -- This function processes lines like "Requires: something something".
+        -- "Requires: python-foo" -> "Requires: python3-foo"
+        -- "Requires: %{name} = %{version}" -> "Requires: python3-modname = %{version}"
+        -- "Supplements: packageand(python-a:python-b)" -> "Supplements: packageand(python3-a:python3-b)"
+        -- you get the idea.
         -- TODO implement %$flavor_only support here?
+
+        -- first split Property: value
         local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
 
+        -- "python-foo" -> "python3-foo"
         local function rename_package(package, flavor)
             if package == "python" or package == flavor then
+                -- specialcase plain "python"
                 package = current_flavor
             else
                 package = package:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
@@ -189,6 +198,7 @@ function _python_emit_subpackages()
             return package
         end
 
+        -- split and rewrite "packageand(a:b:c)", using rename_package() for each of a, b, c
         local function fix_packageand(packageand, flavor)
             local inner = packageand:match("^packageand%((.*)%)$")
             if not inner then return packageand end
@@ -213,13 +223,16 @@ function _python_emit_subpackages()
         if PROPERTY_COPY_UNMODIFIED[property] then
             print_altered(line)
         elseif PROPERTY_COPY_MODIFIED[property] then
+            -- specifically handle %name macro before expansion
+            line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
+            -- convert value using the appropriate function
             if value:startswith("packageand") then
                 value = fix_packageand(value, flavor)
             else
                 value = rename_package(value, flavor)
             end
-            local expanded = rpm.expand(value)
-            print_altered(string.format("%s: %s", property, expanded))
+            -- rely on print_altered to perform expansion on the result
+            print_altered(string.format("%s: %s", property, value))
         end
     end
     -- end line processing functions
