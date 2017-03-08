@@ -155,6 +155,8 @@ function _python_scan_spec()
 end
 
 function _python_emit_subpackages()
+    _python_subpackages_emitted = true
+
     -- line processing functions
     local function print_altered(line)
         -- set %name macro to proper flavor-name
@@ -339,12 +341,14 @@ function python_expand()
 end
 
 function python_build()
+    rpm.expand("%_python_scan_spec")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%" .. python .. "_build %**"))
     end
 end
 
 function python_install()
+    rpm.expand("%_python_scan_spec")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%" .. python .. "_install %**"))
     end
@@ -357,7 +361,8 @@ function python_files()
 
     -- for "re" command, all these things are nil because scan_spec doesn't seem to run?
     -- checking for validity of python_files_flavor seems to fix this.
-    if python_files_flavor and python_files_flavor ~= "" then
+    if _python_subpackages_emitted
+        and python_files_flavor and python_files_flavor ~= "" then
         print("-n " .. package_name(python_files_flavor, modname, param))
         current_flavor = python_files_flavor
     else
