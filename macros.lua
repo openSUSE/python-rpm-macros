@@ -172,19 +172,51 @@ function _python_emit_subpackages()
         "Requires", "Provides",
         "Recommends", "Suggests",
         "Conflicts", "Obsoletes",
+        "Supplements", "Enhances",
     }
 
     local function process_package_line(line)
         -- TODO implement %$flavor_only support here?
         local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
+
+        local function rename_package(package, flavor)
+            if package == "python" or package == flavor then
+                package = current_flavor
+            else
+                package = package:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
+                package = package:gsub("^python(%W)", current_flavor .. "%1")
+            end
+            return package
+        end
+
+        local function fix_packageand(packageand, flavor)
+            local inner = packageand:match("^packageand%((.*)%)$")
+            if not inner then return packageand end
+            local eat = inner
+            local result = "packageand("
+            while eat do
+                local idx = eat:find(":")
+                local n = ""
+                if idx then
+                    n = eat:sub(1, idx)
+                    eat = eat:sub(idx+1)
+                else
+                    n = eat
+                    eat = nil
+                end
+                n = n:gsub("^%s*", "")
+                result = result .. rename_package(n, flavor)
+            end
+            return result .. ")"
+        end
+
         if PROPERTY_COPY_UNMODIFIED[property] then
             print_altered(line)
         elseif PROPERTY_COPY_MODIFIED[property] then
-            if value == "python" or value == flavor then
-                value = current_flavor
+            if value:startswith("packageand") then
+                value = fix_packageand(value, flavor)
             else
-                value = value:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
-                value = value:gsub("^python(%W)", current_flavor .. "%1")
+                value = rename_package(value, flavor)
             end
             local expanded = rpm.expand(value)
             print_altered(string.format("%s: %s", property, expanded))
