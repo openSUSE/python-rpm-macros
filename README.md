@@ -72,6 +72,10 @@ expands to:
 `python3 generatefile.py %python3_bin_suffix`  
 etc.
 
+__`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
+flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
+to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modified accordingly.
+
 __`%python2_build`, `%python3_build`, `%pypy3_build`__ expands to build instructions for the
 particular flavor.  
 __`%python2_install`, `%python3_install`, `%pypy3_install`__ expands to install

@@ -414,3 +414,14 @@ function python_files()
         print(param)
     end
 end
+
+function python_clone()
+    rpm.expand("%_python_scan_spec")
+    local param = rpm.expand("%1")
+    for _, python in ipairs(pythons) do
+        local binsuffix = rpm.expand("%" .. python .. "_bin_suffix")
+        local origin = rpm.expand(string.format("%%{_python_alternative_origin -b %s %s}", binsuffix, param))
+        print(rpm.expand(string.format("cp %s %s\n", param, origin)))
+        print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!/usr/bin/%s@' %s\n", python, origin)))
+    end
+end
