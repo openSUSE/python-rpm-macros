@@ -329,7 +329,10 @@ function _python_emit_subpackages()
             while true do
                 line = spec:read()
                 --io.stderr:write(current_flavor .. " >".. tostring(line) .."<\n")
-                if line == nil then break end
+                if line == nil then
+                    flush_buffer()
+                    break
+                end
 
                 -- match section delimiter
                 local section_noparam = line:match("^%%(%S+)(%s*)$")
