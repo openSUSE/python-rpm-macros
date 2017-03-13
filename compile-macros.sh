@@ -19,7 +19,7 @@ done
         if echo "$line" | grep -q '^function '; then
             # entering top-level Lua function
             INFUNC=1;
-            echo "$line" | sed -r -e 's/^function (.*)\(\)$/%\1() %{lua: \\/'
+            echo "$line" | sed -r -e 's/^function (.*)\((.*)\)$/%\1(\2) %{lua: \\/'
         elif [ "$line" == "end" ]; then
             # leaving top-level Lua function
             INFUNC=0;

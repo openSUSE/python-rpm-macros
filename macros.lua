@@ -439,15 +439,23 @@ function python_files()
     end
 end
 
-function python_clone()
+function python_clone(a)
     rpm.expand("%_python_scan_spec")
     rpm.expand("%_python_define_install_alternative")
     local param = rpm.expand("%1")
+    local link, name, path
     for _, python in ipairs(pythons) do
         local binsuffix = rpm.expand("%" .. python .. "_bin_suffix")
-        local _,_,origin = python_alternative_names(param, binsuffix)
-        print(rpm.expand(string.format("cp %s %s\n", param, origin)))
-        print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!/usr/bin/%s@' %s\n", python, origin)))
+        link,name,path = python_alternative_names(param, binsuffix)
+        print(rpm.expand(string.format("cp %s %s\n", param, path)))
+        print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!/usr/bin/%s@' %s\n", python, path)))
+    end
+
+    -- %python_clone -a
+    if rpm.expand("%{?-a}") == "-a" then
+        local buildroot = rpm.expand("%{buildroot}")
+        if link:startswith(buildroot) then link = link:sub(buildroot:len() + 1) end
+        print(rpm.expand(string.format("%%{prepare_alternative -t %s %s}\n", link, name)))
     end
 end
 
