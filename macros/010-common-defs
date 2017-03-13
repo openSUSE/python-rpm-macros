@@ -25,22 +25,15 @@
 
 %python_bin_suffix       %python2_bin_suffix
 
-# I am honestly not quite sure how the following works. By all logic it should not.
-# I suppose that the macro body is copied here and applied on the `%1`?
-%python_alternative()           %{expand:%python2_alternative}
-%python_install_alternative()   %{expand:%python2_install_alternative}
-%python_uninstall_alternative() %{expand:%python2_uninstall_alternative}
+%_rec_macro_helper %{lua:
+    rpm.define("_rec_macro_helper %{nil}")
+    function recurse_macro(name)
+        local aa = rpm.expand("%**")
+        print(rpm.expand("%{" .. name .. " " .. aa .."}"))
+    end}
+
+%python_alternative()           %{_rec_macro_helper}%{lua:recurse_macro("python2_alternative")}
+%python_install_alternative()   %{_rec_macro_helper}%{lua:recurse_macro("python2_install_alternative")}
+%python_uninstall_alternative() %{_rec_macro_helper}%{lua:recurse_macro("python2_uninstall_alternative")}
 
 %py_ver  %python_version
-
-##### common code for alternative name creation #####
-%_python_alternative_origin(b:) %{lua: do \
-    local param = rpm.expand("%1") \
-    local binsuffix = rpm.expand("%{-b*}") \
-    -- try manpage syntax \
-    local try = param:gsub("(.*)%.(%d)%.gz$", "%1-" .. binsuffix .. ".%2.gz") \
-    -- append binsuffix
-    if try == param then try = param .. "-" .. binsuffix end \
-    print(try) \
-end }
-
