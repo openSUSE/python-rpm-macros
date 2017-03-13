@@ -45,7 +45,7 @@ function _python_scan_spec()
                 local to = string.format("%s_%s", targetflavor, macro)
                 str = str:gsub("%%" .. from, "%%" .. to)
                 str = str:gsub("%%{" .. from .. "}", "%%{" .. to .. "}")
-                str = str:gsub("%%{" .. from .. "(%s+.-)}", "%%{" .. to .. "%1}")
+                str = str:gsub("%%{" .. from .. "(%s+.-)", "%%{" .. to .. "%1") -- }}
             end
             for _, macro in ipairs(SHORT_MACROS) do
                 local from = string.format("%s_%s", SHORT_FLAVORS[srcflavor], macro)
@@ -157,12 +157,27 @@ end
 function _python_emit_subpackages()
     _python_subpackages_emitted = true
 
+    local section_buffer = {}
+    local function flush_buffer()
+        print(rpm.expand(table.concat(section_buffer, "\n")) .. "\n")
+        section_buffer = {}
+    end
+
     -- line processing functions
-    local function print_altered(line)
+    local function alter_line(line)
         -- set %name macro to proper flavor-name
         line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
+        return replace_macros(line, current_flavor)
+    end
+
+    local function print_altered(line)
+        flush_buffer()
         -- print expanded
-        print(rpm.expand(replace_macros(line, current_flavor)) .. "\n")
+        print(rpm.expand(alter_line(line)) .. "\n")
+    end
+
+    local function store_altered(line)
+        table.insert(section_buffer, alter_line(line))
     end
 
     local function ignore_line(line) end
@@ -221,7 +236,7 @@ function _python_emit_subpackages()
         end
 
         if PROPERTY_COPY_UNMODIFIED[property] then
-            print_altered(line)
+            store_altered(line)
         elseif PROPERTY_COPY_MODIFIED[property] then
             -- specifically handle %name macro before expansion
             line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
@@ -231,8 +246,7 @@ function _python_emit_subpackages()
             else
                 value = rename_package(value, flavor)
             end
-            -- rely on print_altered to perform expansion on the result
-            print_altered(string.format("%s: %s", property, value))
+            store_altered(string.format("%s: %s", property, value))
         end
     end
     -- end line processing functions
@@ -319,6 +333,7 @@ function _python_emit_subpackages()
                 local newsection = section_noparam or section_withparam
 
                 if KNOWN_SECTIONS[newsection] then
+                    flush_buffer()
                     -- enter new section
                     if param and param:startswith("%-n") then
                         -- ignore named section
@@ -331,7 +346,7 @@ function _python_emit_subpackages()
                         section_function = ignore_line
                     elseif COPIED_SECTIONS[newsection] then
                         print(section_headline(newsection, current_flavor, param))
-                        section_function = print_altered
+                        section_function = store_altered
                     else
                         section_function = ignore_line
                     end
@@ -353,6 +368,7 @@ function _python_emit_subpackages()
                     -- itself and in the copied sections.
                     --io.stderr:write(rpm.expand(line) .. "\n")
                 elseif line:startswith("%%else") or line:startswith("%%endif") then
+                    flush_buffer()
                     print(line .. "\n")
                     --io.stderr:write(line .. "\n")
                 else
