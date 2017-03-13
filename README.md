@@ -74,7 +74,9 @@ etc.
 
 __`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
 flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
-to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modified accordingly.
+to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modified accordingly.  
+__`%python_clone -a filename`__ will also invoke __%prepare_alternative__ with the appropriate
+arguments.
 
 __`%python2_build`, `%python3_build`, `%pypy3_build`__ expands to build instructions for the
 particular flavor.  
@@ -107,9 +109,17 @@ __`%python_alternative <file>`__: expands to filelist entries for `<file>`, its 
 `/etc/alternatives`, and the target file called `<file>-%python_bin_suffix`.  
 In case the file is a manpage (`file.1.gz`), the target is called `file-%suffix.1.gz`.
 
-__`%python_install_alternative <name>`__: runs `update-alternatives` for  `<name>-%{py_ver}`.
+__`%python_install_alternative <name> [<name> <name>...]`__: runs `update-alternatives`
+for `<name>-%{python_bin_suffix}`. If more than one argument is present, the remaining ones are
+converted to `--slave` arguments.  
+If a `name` is in the form of `something.1` or `something.4.gz` (any number applies), it is
+handled as a manpage and assumed to live in the appropriate `%{_mandir}` subdirectory, otherwise
+it is handled as a binary and assumed to live in `%{_bindir}`. You can also supply a full path
+to override this behavior.
 
-__`%python_uninstall_alternative <name>`__: reverse of the preceding.
+__`%python_uninstall_alternative <name>`__: reverse of the preceding.  
+Note that if you created a group by specifying multiple arguments to `install_alternative`, only
+the first one applies for `uninstall_alternative`.
 
 Each of these has a flavor-specific spelling: `%python2_alternative` etc.
 
