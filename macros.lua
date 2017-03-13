@@ -271,13 +271,22 @@ function _python_emit_subpackages()
         return "%files -n " .. package_name(flavor, modname, mymodname, append) .. "\n"
     end
 
-
     local function section_headline(section, flavor, param)
         if section == "files" then
             return files_headline(flavor, param)
         else
             return "%" .. section .. " -n " .. package_name(flavor, modname, param) .. "\n"
         end
+    end
+
+    local function match_braces(line)
+        local count = 0
+        for c in line:gmatch(".") do
+            if c == "{" then count = count + 1
+            elseif c == "}" and count > 0 then count = count - 1
+            end
+        end
+        return count == 0
     end
 
     local KNOWN_SECTIONS = lookup_table {"package", "description", "files", "prep",
@@ -313,9 +322,17 @@ function _python_emit_subpackages()
             print_obsoletes(modname)
 
             while true do
-                line = spec:read()
-                --io.stderr:write(current_flavor .. " >".. tostring(line) .."<\n")
+                -- collect lines until braces match. it's what rpm does, kind of.
+                local eof = false
+                local line = spec:read()
                 if line == nil then break end
+                while not match_braces(line) do
+                    local nl = spec:read()
+                    if nl == nil then eof = true break end
+                    line = line .. "\n" .. nl
+                end
+                if eof then break end
+                --io.stderr:write(current_flavor .. " >".. tostring(line) .."<\n")
 
                 -- match section delimiter
                 local section_noparam = line:match("^%%(%S+)(%s*)$")
