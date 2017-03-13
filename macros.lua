@@ -171,12 +171,15 @@ function _python_emit_subpackages()
 
     local function ignore_line(line) end
 
-    local PROPERTY_COPY_UNMODIFIED = lookup_table { "Summary", "Version", "BuildArch" }
+    local PROPERTY_COPY_UNMODIFIED = lookup_table { "Summary:", "Version:", "BuildArch:" }
     local PROPERTY_COPY_MODIFIED = lookup_table {
-        "Requires", "Provides",
-        "Recommends", "Suggests",
-        "Conflicts", "Obsoletes",
-        "Supplements", "Enhances",
+        "Requires:", "Provides:",
+        "Recommends:", "Suggests:",
+        "Conflicts:", "Obsoletes:",
+        "Supplements:", "Enhances:",
+        "%requires_eq", "%requires_ge",
+        "Requires(pre):", "Requires(preun):", "Requires(post):", "Requires(postun):",
+        "Requires(pretrans):", "Requires(posttrans):",
     }
 
     local function process_package_line(line)
@@ -188,7 +191,7 @@ function _python_emit_subpackages()
         -- TODO implement %$flavor_only support here?
 
         -- first split Property: value
-        local property, value = line:match("^([A-Z]%S-):%s*(.*)$")
+        local property, value = line:match("^([A-Z%%]%S+)%s*(.*)$")
 
         -- "python-foo" -> "python3-foo"
         local function rename_package(package, flavor)
@@ -236,7 +239,7 @@ function _python_emit_subpackages()
                 value = rename_package(value, flavor)
             end
             -- rely on print_altered to perform expansion on the result
-            print_altered(string.format("%s: %s", property, value))
+            print_altered(string.format("%s %s", property, value))
         end
     end
     -- end line processing functions
