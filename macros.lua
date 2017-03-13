@@ -11,7 +11,7 @@ function _python_scan_spec()
 
     -- declare common functions
     function string.startswith(str, prefix)
-        return str:find(prefix) == 1
+        return str:sub(1, prefix:len()) == prefix
     end
 
     function string.basename(str)
@@ -79,7 +79,7 @@ function _python_scan_spec()
     function pkgname_from_param(param)
         if param == modname then
             return ""
-        elseif param:startswith(modname .. "%-") then
+        elseif param:startswith(modname .. "-") then
             return param:sub(modname:len() + 2)
         else
             return "-n " .. param
@@ -341,7 +341,7 @@ function _python_emit_subpackages()
 
                 if KNOWN_SECTIONS[newsection] then
                     -- enter new section
-                    if param and param:startswith("%-n") then
+                    if param and param:startswith("-n") then
                         -- ignore named section
                         section_function = ignore_line
                     elseif newsection == "package" then
@@ -356,9 +356,9 @@ function _python_emit_subpackages()
                     else
                         section_function = ignore_line
                     end
-                elseif line:startswith("%%python_subpackages") then
+                elseif line:startswith("%python_subpackages") then
                     -- ignore
-                elseif line:startswith("%%if") then
+                elseif line:startswith("%if") then
                     -- RPM handles %if on top level, whole sections can be conditional.
                     -- We must copy the %if declarations always, even if they are part
                     -- of non-copied sections. Otherwise we miss this:
@@ -373,7 +373,7 @@ function _python_emit_subpackages()
                     -- macros like %ifpython3 are evaluated differently in the top-level spec
                     -- itself and in the copied sections.
                     --io.stderr:write(rpm.expand(line) .. "\n")
-                elseif line:startswith("%%else") or line:startswith("%%endif") then
+                elseif line:startswith("%else") or line:startswith("%endif") then
                     print(line .. "\n")
                     --io.stderr:write(line .. "\n")
                 else
