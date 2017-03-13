@@ -14,8 +14,12 @@ function _python_scan_spec()
         return str:find(prefix) == 1
     end
 
-    function string.endswith(str, suffix)
-        return suffix == str:sub(-suffix:len())
+    function string.basename(str)
+        while true do
+            local idx = str:find("/")
+            if not idx then return str end
+            str = str:sub(idx + 1)
+        end
     end
 
     function lookup_table(tbl)
@@ -433,11 +437,63 @@ end
 
 function python_clone()
     rpm.expand("%_python_scan_spec")
+    rpm.expand("%_python_define_install_alternative")
     local param = rpm.expand("%1")
     for _, python in ipairs(pythons) do
         local binsuffix = rpm.expand("%" .. python .. "_bin_suffix")
-        local origin = rpm.expand(string.format("%%{_python_alternative_origin -b %s %s}", binsuffix, param))
+        local _,_,origin = python_alternative_names(param, binsuffix)
         print(rpm.expand(string.format("cp %s %s\n", param, origin)))
         print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!/usr/bin/%s@' %s\n", python, origin)))
+    end
+end
+
+function _python_define_install_alternative()
+    rpm.define("_python_define_install_alternative %{nil}")
+    bindir = rpm.expand("%{_bindir}")
+    mandir = rpm.expand("%{_mandir}")
+
+    function python_alternative_names(arg, binsuffix)
+        local link, name, path
+        name = arg:basename()
+        if name:match("%.%d%.gz$") then
+            name = name:sub(1,-4)
+        end
+        local man_ending = arg:match("%.%d%.gz$") or arg:match("%.%d$")
+        if arg:startswith("/") then
+            link = arg
+        elseif man_ending then
+            link = mandir .. "/man" .. man_ending:sub(2,2) .. "/" .. arg
+        else
+            link = bindir .. "/" .. arg
+        end
+        if man_ending then
+            path = link:sub(1, -man_ending:len()-1) .. "-" .. binsuffix .. man_ending
+        else
+            path = link .. "-" .. binsuffix
+        end
+        return link, name, path
+    end
+
+    function python_install_alternative(flavor)
+        local prio      = rpm.expand("%" .. flavor .. "_version_nodots")
+        local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
+
+        local params = {}
+        for p in string.gmatch(rpm.expand("%*"), "%S+") do
+            table.insert(params, p)
+        end
+
+        if #params == 0 then
+            print("error")
+            return
+        end
+
+        local link, name, path = python_alternative_names(params[1], binsuffix)
+        print(string.format("update-alternatives --install %s %s %s %s", link, name, path, prio))
+        table.remove(params, 1)
+        for _, v in ipairs(params) do
+            print(string.format(" \\\n --slave %s %s %s", python_alternative_names(v, binsuffix)))
+        end
+        print("\n")
     end
 end
