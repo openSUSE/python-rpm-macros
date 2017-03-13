@@ -22,7 +22,7 @@
 
 %#FLAVOR#_alternative() %_python_define_install_alternative \
 %{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \
-print("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n") \
+print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
 print(link .. "\\\n") \
 print(path .. "\\\n") }
 
