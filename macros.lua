@@ -14,6 +14,10 @@ function _python_scan_spec()
         return str:sub(1, prefix:len()) == prefix
     end
 
+    function string.endswith(str, suffix)
+        return str:sub(-suffix:len()) == suffix
+    end
+
     function string.basename(str)
         while true do
             local idx = str:find("/")
@@ -446,7 +450,7 @@ function python_clone(a)
     local link, name, path
     for _, python in ipairs(pythons) do
         local binsuffix = rpm.expand("%" .. python .. "_bin_suffix")
-        link,name,path = python_alternative_names(param, binsuffix)
+        link,name,path = python_alternative_names(param, binsuffix, true)
         print(rpm.expand(string.format("cp %s %s\n", param, path)))
         print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!/usr/bin/%s@' %s\n", python, path)))
     end
@@ -471,13 +475,10 @@ function _python_define_install_alternative()
         ext_man_expr = "%.%d%" .. ext_man .. "$"
     end
 
-    function python_alternative_names(arg, binsuffix)
+    function python_alternative_names(arg, binsuffix, keep_path_unmangled)
         local link, name, path
         name = arg:basename()
-        if ext_man ~= "" and name:match("%.%d$") then
-            name = name .. ext_man
-        end
-        local man_ending = arg:match(ext_man_expr)
+        local man_ending = arg:match(ext_man_expr) or arg:match("%.%d$")
         if arg:startswith("/") then
             link = arg
         elseif man_ending then
@@ -489,6 +490,14 @@ function _python_define_install_alternative()
             path = link:sub(1, -man_ending:len()-1) .. "-" .. binsuffix .. man_ending
         else
             path = link .. "-" .. binsuffix
+        end
+
+        -- now is the time to append ext_man if appropriate
+        -- "link" and "name" get ext_man always
+        if ext_man ~= "" and man_ending and not arg:endswith(ext_man) then
+            link = link .. ext_man
+            name = name .. ext_man
+            if not keep_path_unmangled then path = path .. ext_man end
         end
         return link, name, path
     end
