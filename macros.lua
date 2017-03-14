@@ -463,14 +463,21 @@ function _python_define_install_alternative()
     rpm.define("_python_define_install_alternative %{nil}")
     bindir = rpm.expand("%{_bindir}")
     mandir = rpm.expand("%{_mandir}")
+    ext_man = rpm.expand("%{ext_man}")
+    if ext_man == "" then
+        ext_man_expr = "%.%d$"
+    else
+        -- ASSUMPTION: ext_man:startswith(".")
+        ext_man_expr = "%.%d%" .. ext_man .. "$"
+    end
 
     function python_alternative_names(arg, binsuffix)
         local link, name, path
         name = arg:basename()
-        if name:match("%.%d%.gz$") then
-            name = name:sub(1,-4)
+        if ext_man ~= "" and name:match("%.%d$") then
+            name = name .. ext_man
         end
-        local man_ending = arg:match("%.%d%.gz$") or arg:match("%.%d$")
+        local man_ending = arg:match(ext_man_expr)
         if arg:startswith("/") then
             link = arg
         elseif man_ending then
@@ -504,7 +511,7 @@ function _python_define_install_alternative()
         print(string.format("update-alternatives --install %s %s %s %s", link, name, path, prio))
         table.remove(params, 1)
         for _, v in ipairs(params) do
-            print(string.format(" \\\n --slave %s %s %s", python_alternative_names(v, binsuffix)))
+            print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
         end
         print("\n")
     end
