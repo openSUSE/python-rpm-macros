@@ -1,6 +1,11 @@
 %prepare_alternative(t:) \
 %define alternative_target %{-t:%{-t*}}%{!-t:%{_bindir}/%1} \
 rm -f %{buildroot}%{alternative_target} \
+alternative_target="%{alternative_target}" \
+if [[ "$alternative_target" == %{_mandir}* ]]; then \
+    rm -f %{buildroot}${alternative_target%%%%%{ext_man}} \
+    rm -f %{buildroot}%{alternative_target}%{ext_man} \
+fi \
 mkdir -p %{buildroot}%{_sysconfdir}/alternatives \
 touch %{buildroot}%{_sysconfdir}/alternatives/%1 \
 ln -sf %{_sysconfdir}/alternatives/%1 %{buildroot}%{alternative_target} \
