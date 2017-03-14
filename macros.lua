@@ -522,6 +522,5 @@ function _python_define_install_alternative()
         for _, v in ipairs(params) do
             print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
         end
-        print("\n")
     end
 end
