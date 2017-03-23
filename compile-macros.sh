@@ -12,6 +12,11 @@ done
     # copy macros.in up to LUA-MACROS
     sed -n -e '1,/^### LUA-MACROS ###$/p' macros.in
 
+    # include "functions.lua", without empty lines, as %_python_definitions
+    echo "%_python_definitions %{lua:"
+    sed -n -r -e '/^.+$/p' functions.lua
+    echo "}"
+
     INFUNC=0
     # brute line-by-line read of macros.lua
     IFS=""
