@@ -20,13 +20,13 @@
 %__#FLAVOR# %{py_setup} %{?py_setup_args} install \\\
     -O1 --skip-build --root %{buildroot} --prefix %{_prefix}
 
-%#FLAVOR#_alternative() %_python_define_install_alternative \
+%#FLAVOR#_alternative() %{_python_macro_init} \
 %{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \
 print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
 print(link .. "\\\n") \
 print(path .. "\\\n") }
 
-%#FLAVOR#_install_alternative() %_python_define_install_alternative \
+%#FLAVOR#_install_alternative() %{_python_macro_init} \
 %{lua:python_install_alternative("#FLAVOR#")}
 
 %#FLAVOR#_uninstall_alternative() \

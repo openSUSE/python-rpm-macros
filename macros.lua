@@ -1,14 +1,4 @@
-function _python_scan_spec()
-    -- make sure this is only included once.
-    -- for reasons.
-    -- (we're defining some globals here. we can do that multiple times, but
-    -- it's rather ugly, esp. seeing as we will be invoking _scan_spec rather often
-    -- because we *need* it to run at start and we don't want to burden the user
-    -- with including it manually)
-    rpm.define("_python_scan_spec %{nil}")
-    if _spec_is_scanned ~= nil then return end
-    _spec_is_scanned = true
-
+function _python_definitions()
     -- declare common functions
     function string.startswith(str, prefix)
         return str:sub(1, prefix:len()) == prefix
@@ -32,6 +22,7 @@ function _python_scan_spec()
         return result
     end
 
+    -- macro replacements
     SHORT_FLAVORS = {
         -- ??
         python = "py",
@@ -79,7 +70,6 @@ function _python_scan_spec()
         return name
     end
 
-
     function pkgname_from_param(param)
         if param == modname then
             return ""
@@ -90,6 +80,69 @@ function _python_scan_spec()
         end
     end
 
+    -- alternative-related
+    local bindir = rpm.expand("%{_bindir}")
+    local mandir = rpm.expand("%{_mandir}")
+    local ext_man, ext_man_expr
+    ext_man = rpm.expand("%{ext_man}")
+    if ext_man == "" then
+        ext_man_expr = "%.%d$"
+    else
+        -- ASSUMPTION: ext_man:startswith(".")
+        ext_man_expr = "%.%d%" .. ext_man .. "$"
+    end
+
+    function python_alternative_names(arg, binsuffix, keep_path_unmangled)
+        local link, name, path
+        name = arg:basename()
+        local man_ending = arg:match(ext_man_expr) or arg:match("%.%d$")
+        if arg:startswith("/") then
+            link = arg
+        elseif man_ending then
+            link = mandir .. "/man" .. man_ending:sub(2,2) .. "/" .. arg
+        else
+            link = bindir .. "/" .. arg
+        end
+        if man_ending then
+            path = link:sub(1, -man_ending:len()-1) .. "-" .. binsuffix .. man_ending
+        else
+            path = link .. "-" .. binsuffix
+        end
+
+        -- now is the time to append ext_man if appropriate
+        -- "link" and "name" get ext_man always
+        if ext_man ~= "" and man_ending and not arg:endswith(ext_man) then
+            link = link .. ext_man
+            name = name .. ext_man
+            if not keep_path_unmangled then path = path .. ext_man end
+        end
+        return link, name, path
+    end
+
+    function python_install_alternative(flavor)
+        local prio      = rpm.expand("%" .. flavor .. "_version_nodots")
+        local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
+
+        local params = {}
+        for p in string.gmatch(rpm.expand("%*"), "%S+") do
+            table.insert(params, p)
+        end
+
+        if #params == 0 then
+            print("error")
+            return
+        end
+
+        local link, name, path = python_alternative_names(params[1], binsuffix)
+        print(string.format("update-alternatives --install %s %s %s %s", link, name, path, prio))
+        table.remove(params, 1)
+        for _, v in ipairs(params) do
+            print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
+        end
+    end
+end
+
+function _python_scan_spec()
     pythons = {}
     for str in string.gmatch(rpm.expand("%pythons"), "%S+") do
         table.insert(pythons, str)
@@ -162,7 +215,8 @@ function _python_scan_spec()
     -- that don't involve "python-foo" at all.
 end
 
-function _python_emit_subpackages()
+function python_subpackages()
+    rpm.expand("%_python_macro_init")
     _python_subpackages_emitted = true
 
     -- line processing functions
@@ -403,7 +457,7 @@ end
 
 function python_expand(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
     -- force spec scan
-    rpm.expand("%_python_scan_spec")
+    rpm.expand("%_python_macro_init")
     local args = rpm.expand("%**")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%{_python_use_flavor " .. python .. "}\n"))
@@ -414,14 +468,14 @@ function python_expand(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234
 end
 
 function python_build(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
-    rpm.expand("%_python_scan_spec")
+    rpm.expand("%_python_macro_init")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%" .. python .. "_build %**"))
     end
 end
 
 function python_install(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
-    rpm.expand("%_python_scan_spec")
+    rpm.expand("%_python_macro_init")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%" .. python .. "_install %**"))
     end
@@ -451,8 +505,7 @@ function python_files()
 end
 
 function python_clone(a)
-    rpm.expand("%_python_scan_spec")
-    rpm.expand("%_python_define_install_alternative")
+    rpm.expand("%_python_macro_init")
     local param = rpm.expand("%1")
     local link, name, path
     for _, python in ipairs(pythons) do
@@ -467,67 +520,5 @@ function python_clone(a)
         local buildroot = rpm.expand("%{buildroot}")
         if link:startswith(buildroot) then link = link:sub(buildroot:len() + 1) end
         print(rpm.expand(string.format("%%{prepare_alternative -t %s %s}\n", link, name)))
-    end
-end
-
-function _python_define_install_alternative()
-    rpm.define("_python_define_install_alternative %{nil}")
-    bindir = rpm.expand("%{_bindir}")
-    mandir = rpm.expand("%{_mandir}")
-    ext_man = rpm.expand("%{ext_man}")
-    if ext_man == "" then
-        ext_man_expr = "%.%d$"
-    else
-        -- ASSUMPTION: ext_man:startswith(".")
-        ext_man_expr = "%.%d%" .. ext_man .. "$"
-    end
-
-    function python_alternative_names(arg, binsuffix, keep_path_unmangled)
-        local link, name, path
-        name = arg:basename()
-        local man_ending = arg:match(ext_man_expr) or arg:match("%.%d$")
-        if arg:startswith("/") then
-            link = arg
-        elseif man_ending then
-            link = mandir .. "/man" .. man_ending:sub(2,2) .. "/" .. arg
-        else
-            link = bindir .. "/" .. arg
-        end
-        if man_ending then
-            path = link:sub(1, -man_ending:len()-1) .. "-" .. binsuffix .. man_ending
-        else
-            path = link .. "-" .. binsuffix
-        end
-
-        -- now is the time to append ext_man if appropriate
-        -- "link" and "name" get ext_man always
-        if ext_man ~= "" and man_ending and not arg:endswith(ext_man) then
-            link = link .. ext_man
-            name = name .. ext_man
-            if not keep_path_unmangled then path = path .. ext_man end
-        end
-        return link, name, path
-    end
-
-    function python_install_alternative(flavor)
-        local prio      = rpm.expand("%" .. flavor .. "_version_nodots")
-        local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
-
-        local params = {}
-        for p in string.gmatch(rpm.expand("%*"), "%S+") do
-            table.insert(params, p)
-        end
-
-        if #params == 0 then
-            print("error")
-            return
-        end
-
-        local link, name, path = python_alternative_names(params[1], binsuffix)
-        print(string.format("update-alternatives --install %s %s %s %s", link, name, path, prio))
-        table.remove(params, 1)
-        for _, v in ipairs(params) do
-            print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
-        end
     end
 end
