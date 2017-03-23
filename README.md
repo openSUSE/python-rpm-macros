@@ -173,13 +173,17 @@ what is going on with your spec file.
 __`flavor.in`__: template for flavor-specific macros. Generates `macros/020-flavor-$flavor` for
 every flavor listed in `compile-macros.sh`.
 
+__`functions.lua`__: Lua function definitions used in `macros.lua` and elsewhere. In the compile
+step, these are converted to a RPM macro `%_python_definitions`, which is evaluated as part of
+`%_python_macro_init`. This can then be called anywhere that we need a ready-made Lua environment.
+
 __`macros.in`__: pure-RPM-macro definitions for the single-spec generator. References and uses the
 private Lua macros.  The line `### LUA-MACROS ###` is replaced with inlined Lua macro definitions.
 
 __`macros.lua`__: Lua macro definitions for the single-spec generator.  
 This is actually pseudo-Lua: the top-level functions are not functions, and are instead converted to
-Lua macro snippets. (That means that you can't call the top-level functions from Lua, and that you
-need to place actual Lua functions inside a snippet, preferably the `_python_scan_spec()` snippet.)
+Lua macro snippets. (That means that you can't call the top-level functions from Lua. For defining
+pure Lua functions that won't be available as Lua macros, use the `functions.lua` file.)
 
 __`macros-default-pythons`__: macro definitions for `%have_python2` and `%have_python3` for systems
 where this is not provided by your Python installation. The spec file uses this for SUSE <= Leap 42.3.
