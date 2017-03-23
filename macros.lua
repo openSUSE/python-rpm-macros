@@ -441,6 +441,13 @@ function python_files()
     else
         print(param)
     end
+    if not _python_subpackages_emitted then
+        print("\n/%python_subpackages_macro_not_present\n")
+        io.stderr:write("%python_subpackages macro not present\n"
+            .. "(To get rid of this error, either add a %python_subpackages macro to preamble "
+            .. "or remove %python_files.\n")
+        error("%python_subpackages macro not present\n")
+    end
 end
 
 function python_clone(a)
