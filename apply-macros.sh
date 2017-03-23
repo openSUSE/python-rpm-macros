@@ -9,5 +9,5 @@ MYPATH=$(dirname "$REALPATH")
 )
 
 rpmspec -v \
-    --macros=$MYPATH/macros.python_all:/usr/lib/rpm/macros:/etc/rpm/macros.python2:/etc/rpm/macros.python3 \
+    --macros=/usr/lib/rpm/macros:/etc/rpm/macros.python2:/etc/rpm/macros.python3:$MYPATH/macros.python_all \
     -P "$1"
