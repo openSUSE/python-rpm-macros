@@ -46,8 +46,4 @@ if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 ### LUA-MACROS ###
 
 
-%_python_macro_init \
-%{_python_definitions} \
-%{_python_scan_spec} \
-%global _python_macro_init %{nil} \
-%{nil}
+%_python_macro_init %{_python_definitions} %{_python_scan_spec} %{lua: rpm.define("_python_macro_init %{nil}")}
