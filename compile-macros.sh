@@ -14,7 +14,10 @@ done
 
     # include "functions.lua", without empty lines, as %_python_definitions
     echo "%_python_definitions %{lua:"
-    sed -n -r -e '/^.+$/p' functions.lua
+    sed -n -r \
+        -e 's/\\/\\\\/g' \
+        -e '/^.+$/p' \
+        functions.lua
     echo "}"
 
     INFUNC=0
