@@ -156,6 +156,19 @@ function python_subpackages()
             print_altered(string.format("%s %s", property, value))
         end
     end
+
+    local alternatives_list  = {}
+    local alternatives_param = nil
+
+    local function expect_alternatives(line)
+        if line:startswith("%python_install_alternative")
+        or line:startswith("%{python_install_alternative") -- "}"
+        or line:startswith("%" .. flavor .. "_install_alternative")
+        or line:startswith("%{" .. flavor .. "_install_alternative") then -- "}"
+            table.insert(alternatives_list, line)
+        end
+        return print_altered(line)
+    end
     -- end line processing functions
 
     local function print_obsoletes(modname)
@@ -194,6 +207,25 @@ function python_subpackages()
         else
             return "%" .. section .. " -n " .. package_name(flavor, modname, param) .. "\n"
         end
+    end
+
+    local python2_binsuffix = rpm.expand("%python2_bin_suffix")
+    local function dump_alternatives_posttrans()
+        if not old_python2 and current_flavor == "python2"
+        and #alternatives_list > 0 then
+            print(section_headline("posttrans", current_flavor, param))
+            for _, line in ipairs(alternatives_list) do
+                firstarg = line:match("install_alternative%s+(%S+)")
+                if firstarg then
+                    local _,_,path = python_alternative_names(firstarg, python2_binsuffix)
+                    print(string.format('if [ -e "%s" ]; then\n', path))
+                    print_altered(line)
+                    print("fi\n")
+                end
+            end
+        end
+        alternatives_list = {}
+        alternatives_param = nil
     end
 
     local function match_braces(line)
@@ -257,6 +289,7 @@ function python_subpackages()
                 local newsection = section_noparam or section_withparam
 
                 if KNOWN_SECTIONS[newsection] then
+                    dump_alternatives_posttrans()
                     -- enter new section
                     if param and param:startswith("-n") then
                         -- ignore named section
@@ -269,7 +302,12 @@ function python_subpackages()
                         section_function = ignore_line
                     elseif COPIED_SECTIONS[newsection] then
                         print(section_headline(newsection, current_flavor, param))
-                        section_function = print_altered
+                        if current_flavor == "python2" and newsection == "post" then
+                            section_function = expect_alternatives
+                            alternatives_param = param
+                        else
+                            section_function = print_altered
+                        end
                     else
                         section_function = ignore_line
                     end
@@ -297,6 +335,8 @@ function python_subpackages()
                     section_function(line)
                 end
             end
+
+            dump_alternatives_posttrans()
 
             spec:close()
         end
