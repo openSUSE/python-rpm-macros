@@ -26,7 +26,7 @@ update-alternatives --install \\\
 %define alternative_name %{-n:%{-n*}}%{!-n:%1} \
 %define alternative_target %{-t:%{-t*}}%{!-t:%2} \
 if [ ! -e "%{alternative_target}" ]; then \
-    update-alternatives --remove "%{alternative_name}" "%{alternative_target}" \
+    update-alternatives --quiet --remove "%{alternative_name}" "%{alternative_target}" \
 fi \
 %{nil}
 
