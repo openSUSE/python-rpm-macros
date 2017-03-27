@@ -157,15 +157,15 @@ function python_subpackages()
         end
     end
 
-    local alternatives_list  = {}
-    local alternatives_param = nil
+    local auto_posttrans = {}
+    local auto_posttrans_current = {}
 
     local function expect_alternatives(line)
         if line:startswith("%python_install_alternative")
         or line:startswith("%{python_install_alternative") -- "}"
         or line:startswith("%" .. flavor .. "_install_alternative")
         or line:startswith("%{" .. flavor .. "_install_alternative") then -- "}"
-            table.insert(alternatives_list, line)
+            table.insert(auto_posttrans_current, line)
         end
         return print_altered(line)
     end
@@ -211,21 +211,38 @@ function python_subpackages()
 
     local python2_binsuffix = rpm.expand("%python2_bin_suffix")
     local function dump_alternatives_posttrans()
-        if not old_python2 and current_flavor == "python2"
-        and #alternatives_list > 0 then
-            print(section_headline("posttrans", current_flavor, alternatives_param))
-            for _, line in ipairs(alternatives_list) do
-                firstarg = line:match("install_alternative%s+(%S+)")
-                if firstarg then
-                    local _,_,path = python_alternative_names(firstarg, python2_binsuffix)
-                    print(string.format('if [ -e "%s" ]; then\n', path))
-                    print_altered(line)
-                    print("fi\n")
+        if not old_python2 and current_flavor == "python2" then
+            for label, value in pairs(auto_posttrans) do
+                if value ~= false then
+                    print(section_headline("posttrans", current_flavor, label))
+                    for _, line in ipairs(value) do
+                        firstarg = line:match("install_alternative%s+(%S+)")
+                        if firstarg then
+                            local _,_,path = python_alternative_names(firstarg, python2_binsuffix)
+                            print(string.format('if [ -e "%s" ]; then\n', path))
+                            print_altered(line)
+                            print("fi\n")
+                        end
+                    end
                 end
             end
         end
-        alternatives_list = {}
-        alternatives_param = nil
+        auto_posttrans = {}
+    end
+
+    local function should_expect_alternatives(section, param)
+        if old_python2 or current_flavor ~= "python2" then return false end
+        if param == nil then param = "" end
+        if section == "posttrans" then
+            auto_posttrans[param] = false
+            return false
+        end
+        if section == "post" and auto_posttrans[param] ~= false then
+            auto_posttrans_current = {}
+            auto_posttrans[param] = auto_posttrans_current
+            return true
+        end
+        return false
     end
 
     local function match_braces(line)
@@ -289,7 +306,6 @@ function python_subpackages()
                 local newsection = section_noparam or section_withparam
 
                 if KNOWN_SECTIONS[newsection] then
-                    dump_alternatives_posttrans()
                     -- enter new section
                     if param and param:startswith("-n") then
                         -- ignore named section
@@ -302,9 +318,8 @@ function python_subpackages()
                         section_function = ignore_line
                     elseif COPIED_SECTIONS[newsection] then
                         print(section_headline(newsection, current_flavor, param))
-                        if current_flavor == "python2" and newsection == "post" then
+                        if should_expect_alternatives(newsection, param) then
                             section_function = expect_alternatives
-                            alternatives_param = param
                         else
                             section_function = print_altered
                         end
