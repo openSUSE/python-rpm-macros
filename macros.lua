@@ -213,7 +213,7 @@ function python_subpackages()
     local function dump_alternatives_posttrans()
         if not old_python2 and current_flavor == "python2"
         and #alternatives_list > 0 then
-            print(section_headline("posttrans", current_flavor, param))
+            print(section_headline("posttrans", current_flavor, alternatives_param))
             for _, line in ipairs(alternatives_list) do
                 firstarg = line:match("install_alternative%s+(%S+)")
                 if firstarg then
