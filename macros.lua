@@ -36,9 +36,15 @@ function _python_scan_spec()
             flavor         = "python2"
         else
             -- otherwise, every %if$flavor should be false in "python-",
-            -- the real flavor is system_python
+            -- the real flavor is system_python or whatever is present
             current_flavor = "python"
-            flavor         = system_python
+
+            for _,py in ipairs(pythons) do
+                flavor = py
+                -- if system_python is found in %pythons, stop the loop and use it
+                if flavor == system_python then break end
+            end
+            -- otherwise, flavor is set to the last entry of %pythons
         end
     else
         -- specname is something other than "python-", we use it literally
