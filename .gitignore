@@ -1,4 +1,5 @@
 /macros.python_all
 /macros/020-flavor-*
+/macros/035-default-pythons
 /macros/040-automagic
 *.swp
