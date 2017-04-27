@@ -10,7 +10,7 @@ tmpdir=tmp.$RANDOM
 
 git clone --depth=1 $GIT_URL $tmpdir
 cd $tmpdir
-cp $SPEC_FILE_NAME ..
+cp packaging/* ..
 
 VERSION=$(git log -n 1 --date=format:%Y.%m.%d --format=format:%cd.%h)
 git archive --format=tar --prefix=python-rpm-macros-$VERSION HEAD \
