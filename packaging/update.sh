@@ -13,7 +13,7 @@ cd $tmpdir
 cp packaging/* ..
 
 VERSION=$(git log -n 1 --date=format:%Y.%m.%d --format=format:%cd.%h)
-git archive --format=tar --prefix=python-rpm-macros-$VERSION HEAD \
+git archive --format=tar --prefix=python-rpm-macros-$VERSION/ HEAD \
     | bzip2 -c > ../python-rpm-macros-$VERSION.tar.bz2
 
 cd ..
