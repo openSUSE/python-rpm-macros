@@ -269,6 +269,11 @@ function python_subpackages()
 
     local current_flavor_toplevel = current_flavor
 
+    -- before we start, print Provides: python2-modname
+    if is_called_python and old_python2 then
+        print(rpm.expand("Provides: python2-" .. modname .. " = %{version}-%{release}\n"))
+    end
+
     for _,python in ipairs(pythons) do
         local is_current_flavor = python == flavor
         -- "python-foo" case:
