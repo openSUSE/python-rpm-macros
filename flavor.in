@@ -4,11 +4,14 @@
 
 %#FLAVOR#_shbang_opts     %py_shbang_opts
 
-%#FLAVOR#_sitelib         %(%__#FLAVOR# -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-%#FLAVOR#_sitearch        %(%__#FLAVOR# -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
-%#FLAVOR#_version         %(%__#FLAVOR# -c "import sys; sys.stdout.write('{0.major}.{0.minor}'.format(sys.version_info))")
-%#FLAVOR#_version_nodots  %(%__#FLAVOR# -c "import sys; sys.stdout.write('{0.major}{0.minor}'.format(sys.version_info))")
 %#FLAVOR#_prefix          #FLAVOR#
+%#FLAVOR#_sitelib         %{_python_sysconfig_path #FLAVOR# purelib}
+%#FLAVOR#_sitearch        %{_python_sysconfig_path #FLAVOR# platlib}
+%#FLAVOR#_version         %{_python_sysconfig_var #FLAVOR# py_version_short}
+%#FLAVOR#_version_nodots  %{_python_sysconfig_var #FLAVOR# py_version_nodot}
+
+%#FLAVOR#_sysconfig_path() %{_rec_macro_helper}%{lua:call_sysconfig("path", "#FLAVOR#")}
+%#FLAVOR#_sysconfig_var()  %{_rec_macro_helper}%{lua:call_sysconfig("var", "#FLAVOR#")}
 
 %#FLAVOR#_build \
 %{_python_use_flavor #FLAVOR#} \

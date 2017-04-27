@@ -1,5 +1,26 @@
 %system_python python2
 
+%python_flavor %system_python
+
+##### common functionality #####
+
+%_python_sysconfig_path() %(%1 -c "import sysconfig as s; print(s.get_path('%2'))")
+%_python_sysconfig_var()  %(%1 -c "import sysconfig as s; print(s.get_config_var('%2'))")
+
+%_rec_macro_helper %{lua:
+    rpm.define("_rec_macro_helper %{nil}")
+    function recurse_macro(name)
+        local interp = rpm.expand("%python_flavor")
+        local args   = rpm.expand("%**")
+        if args == "%**" then args = "" end
+        print(rpm.expand("%{" .. interp .. "_" .. name .. " " .. args .."}"))
+    end
+    function call_sysconfig(which, interp)
+        local arg = rpm.expand("%1")
+        print(rpm.expand("%{_python_sysconfig_" .. which .. " " .. interp .. " " .. arg .. "}"))
+    end
+}
+
 ##### fedora compatibility #####
 
 %py_setup setup.py
@@ -11,29 +32,21 @@
 %python3_bin_suffix %python3_version
 %pypy3_bin_suffix   pp%{pypy3_version}
 
-##### fallback preferred configuration #####
+##### preferred configuration #####
 
-# This can't be in a conditional section because there are no conditional
-# sections. Instead, `python2` is hardcoded here, to be reconfigured through
-# future package updates (supposedly).
+%python_sitelib          %{python_sysconfig_path purelib}
+%python_sitearch         %{python_sysconfig_path platlib}
+%python_version          %{python_sysconfig_var py_version_short}
+%python_version_nodots   %{python_sysconfig_var py_version_nodot}
 
-%python_sitelib          %python2_sitelib
-%python_sitearch         %python2_sitearch
-%python_version          %python2_version
-%python_version_nodots   %python2_version_nodots
-%python_prefix           %python2_prefix
+%python_prefix                  %{_rec_macro_helper}%{lua:recurse_macro("prefix")}
+%python_bin_suffix              %{_rec_macro_helper}%{lua:recurse_macro("bin_suffix")}
 
-%python_bin_suffix       %python2_bin_suffix
+%python_sysconfig_path()        %{_rec_macro_helper}%{lua:call_sysconfig("path", "%python_flavor")}
+%python_sysconfig_var()         %{_rec_macro_helper}%{lua:call_sysconfig("var", "%python_flavor")}
 
-%_rec_macro_helper %{lua:
-    rpm.define("_rec_macro_helper %{nil}")
-    function recurse_macro(name)
-        local aa = rpm.expand("%**")
-        print(rpm.expand("%{" .. name .. " " .. aa .."}"))
-    end}
-
-%python_alternative()           %{_rec_macro_helper}%{lua:recurse_macro("python2_alternative")}
-%python_install_alternative()   %{_rec_macro_helper}%{lua:recurse_macro("python2_install_alternative")}
-%python_uninstall_alternative() %{_rec_macro_helper}%{lua:recurse_macro("python2_uninstall_alternative")}
+%python_alternative()           %{_rec_macro_helper}%{lua:recurse_macro("alternative")}
+%python_install_alternative()   %{_rec_macro_helper}%{lua:recurse_macro("install_alternative")}
+%python_uninstall_alternative() %{_rec_macro_helper}%{lua:recurse_macro("uninstall_alternative")}
 
 %py_ver  %python_version
