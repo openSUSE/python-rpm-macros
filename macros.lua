@@ -165,13 +165,22 @@ function python_subpackages()
 
     local auto_posttrans = {}
     local auto_posttrans_current = {}
+    local auto_posttrans_backslash = false
 
     local function expect_alternatives(line)
-        if line:startswith("%python_install_alternative")
-        or line:startswith("%{python_install_alternative") -- "}"
-        or line:startswith("%" .. flavor .. "_install_alternative")
-        or line:startswith("%{" .. flavor .. "_install_alternative") then -- "}"
-            table.insert(auto_posttrans_current, line)
+        if auto_posttrans_backslash then
+            local apc = auto_posttrans_current
+            apc[#apc] = apc[#apc] .. "\n" .. line
+            auto_posttrans_backslash = line:endswith("\\")
+        elseif line:startswith("%python_install_alternative")
+            or line:startswith("%{python_install_alternative") -- "}"
+            or line:startswith("%" .. flavor .. "_install_alternative")
+            or line:startswith("%{" .. flavor .. "_install_alternative") -- "}"
+            then
+                table.insert(auto_posttrans_current, line)
+                auto_posttrans_backslash = line:endswith("\\")
+        else
+            auto_posttrans_backslash = false
         end
         return print_altered(line)
     end
@@ -221,8 +230,10 @@ function python_subpackages()
             for label, value in pairs(auto_posttrans) do
                 if value ~= false then
                     print(section_headline("posttrans", current_flavor, label))
-                    for _, line in ipairs(value) do
-                        firstarg = line:match("install_alternative%s+(%S+)")
+                    for _,line in ipairs(value) do
+                        -- RPM needs {} characters in Lua macros to match, so
+                        -- this is an opening "{" for this one: ----------v
+                        firstarg = line:match("install_alternative%s+([^%s}]+)")
                         if firstarg then
                             local _,_,path = python_alternative_names(firstarg, python2_binsuffix)
                             print(string.format('if [ -e "%s" ]; then\n', path))
@@ -268,6 +279,11 @@ function python_subpackages()
         "pre", "post", "preun", "postun", "pretrans", "posttrans"}
 
     local current_flavor_toplevel = current_flavor
+
+    -- before we start, print Provides: python2-modname
+    if is_called_python and old_python2 then
+        print(rpm.expand("Provides: python2-" .. modname .. " = %{version}-%{release}\n"))
+    end
 
     for _,python in ipairs(pythons) do
         local is_current_flavor = python == flavor

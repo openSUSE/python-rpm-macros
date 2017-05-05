@@ -21,7 +21,7 @@
 %#FLAVOR#_install \
 %{_python_use_flavor #FLAVOR#} \
 %__#FLAVOR# %{py_setup} %{?py_setup_args} install \\\
-    -O1 --skip-build --root %{buildroot} --prefix %{_prefix}
+    -O1 --skip-build --force --root %{buildroot} --prefix %{_prefix}
 
 %#FLAVOR#_alternative() %{_python_macro_init} \
 %{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \

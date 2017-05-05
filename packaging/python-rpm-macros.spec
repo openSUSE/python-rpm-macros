@@ -24,6 +24,8 @@ License:        WTFPL
 Group:          Development/Tools/Other
 Url:            https://github.com/opensuse/multipython-macros
 Source:         python-rpm-macros-%{version}.tar.bz2
+Source100:      README.packaging
+Source101:      update.sh
 # Fedora compatibility
 Provides:       python2-rpm-macros
 Provides:       python3-rpm-macros
