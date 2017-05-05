@@ -41,7 +41,9 @@ function _python_scan_spec()
             end
         end
     else
-        -- specname is something other than "python-", we use it literally
+        -- specname is something other than "python-", and it is a valid
+        -- python flavor (otherwise spec_name_prefix defaults to "python"
+        -- so `is_called_python` is true), so we use it literally
         flavor = spec_name_prefix
     end
 
