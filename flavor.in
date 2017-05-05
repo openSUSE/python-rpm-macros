@@ -13,6 +13,12 @@
 %#FLAVOR#_sysconfig_path() %{_rec_macro_helper}%{lua:call_sysconfig("path", "#FLAVOR#")}
 %#FLAVOR#_sysconfig_var()  %{_rec_macro_helper}%{lua:call_sysconfig("var", "#FLAVOR#")}
 
+%if#FLAVOR#      %if "%{python_flavor}" == "#FLAVOR#"
+
+%#FLAVOR#_only() %if "%{python_flavor}" == "#FLAVOR#" \
+%** \
+%endif
+
 %#FLAVOR#_build \
 %{_python_use_flavor #FLAVOR#} \
 %__#FLAVOR# %{py_setup} %{?py_setup_args} build \\\
