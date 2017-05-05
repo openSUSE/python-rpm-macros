@@ -27,29 +27,22 @@ function _python_scan_spec()
     old_python2 = rpm.expand("%python2_prefix") == "python"
     is_called_python = spec_name_prefix == "python"
 
-    -- `current_flavor` is set to "what should we set to evaluate macros"
-    -- `flavor` should always be "what is actually intended for build"
+    -- detect `flavor`, used for evaluating %ifmacros
     if is_called_python then
         if old_python2 then
             -- in old python2, %ifpython2 should be true in "python-"
-            current_flavor = "python2"
-            flavor         = "python2"
+            flavor = "python2"
         else
-            -- otherwise, every %if$flavor should be false in "python-",
-            -- the real flavor is system_python or whatever is present
-            current_flavor = "python"
-
+            -- otherwise, it is either system_python (if found in %pythons)
+            -- or the last entry of %pythons
             for _,py in ipairs(pythons) do
                 flavor = py
-                -- if system_python is found in %pythons, stop the loop and use it
                 if flavor == system_python then break end
             end
-            -- otherwise, flavor is set to the last entry of %pythons
         end
     else
         -- specname is something other than "python-", we use it literally
-        flavor         = spec_name_prefix
-        current_flavor = spec_name_prefix
+        flavor = spec_name_prefix
     end
 
     -- find the spec file
@@ -62,24 +55,14 @@ function _python_scan_spec()
             break
         end
     end
-
-    python_files_flavor = ""
-
-    -- assuming `%files %python_files` is present:
-    if is_called_python and not old_python2 then
-        -- subpackage should be called "python2-foo"
-        -- files sections for "python-foo" should not exist
-        -- %files %python_files is set to "%files -n python2-foo"
-        python_files_flavor = flavor
-    end
-    -- else: not old_python2 and not is_called_python, so
-    -- package is called python3-foo and we generate subpackages
-    -- that don't involve "python-foo" at all.
 end
 
 function python_subpackages()
     rpm.expand("%_python_macro_init")
     _python_subpackages_emitted = true
+
+    local current_flavor  = flavor
+    local original_flavor = rpm.expand("%python_flavor")
 
     -- line processing functions
     local function print_altered(line)
@@ -278,8 +261,6 @@ function python_subpackages()
     local COPIED_SECTIONS = lookup_table {"description", "files",
         "pre", "post", "preun", "postun", "pretrans", "posttrans"}
 
-    local current_flavor_toplevel = current_flavor
-
     -- before we start, print Provides: python2-modname
     if is_called_python and old_python2 then
         print(rpm.expand("Provides: python2-" .. modname .. " = %{version}-%{release}\n"))
@@ -304,6 +285,8 @@ function python_subpackages()
         if not is_current_flavor then
             local spec, err = io.open(specpath, "r")
             if err then print ("bad spec " .. specpath) return end
+
+            rpm.define("python_flavor " .. python)
 
             local section_function = process_package_line
             print(section_headline("package", current_flavor, nil))
@@ -336,7 +319,7 @@ function python_subpackages()
                         print(section_headline("package", current_flavor, param))
                         print_obsoletes(modname .. "-" .. param)
                         section_function = process_package_line
-                    elseif newsection == "files" and current_flavor == python_files_flavor then
+                    elseif newsection == "files" and current_flavor == flavor then
                         section_function = ignore_line
                     elseif COPIED_SECTIONS[newsection] then
                         print(section_headline(newsection, current_flavor, param))
@@ -379,8 +362,8 @@ function python_subpackages()
         end
     end
 
-    -- restore current_flavor for further processing
-    current_flavor = current_flavor_toplevel
+    -- restore %python_flavor for further processing
+    rpm.define("python_flavor " .. original_flavor)
 end
 
 function python_exec(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
@@ -415,19 +398,17 @@ function python_install(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123
 end
 
 function python_files()
+    rpm.expand("%_python_macro_init")
     local nparams = rpm.expand("%#")
     local param = ""
     if tonumber(nparams) > 0 then param = rpm.expand("%1") end
 
-    -- for "re" command, all these things are nil because scan_spec doesn't seem to run?
-    -- checking for validity of python_files_flavor seems to fix this.
-    if _python_subpackages_emitted
-        and python_files_flavor and python_files_flavor ~= "" then
-        print("-n " .. package_name(python_files_flavor, modname, param))
-        current_flavor = python_files_flavor
+    if _python_subpackages_emitted and is_called_python and not old_python2 then
+        print("-n " .. package_name(flavor, modname, param))
     else
         print(param)
     end
+
     if not _python_subpackages_emitted then
         print("\n/%python_subpackages_macro_not_present\n")
         io.stderr:write("%python_subpackages macro not present\n"
