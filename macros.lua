@@ -368,12 +368,12 @@ function python_subpackages()
     rpm.define("python_flavor " .. original_flavor)
 end
 
-function python_exec(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
+function python_exec(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
     local args = rpm.expand("%**")
     print(rpm.expand("%{python_expand %__$python " .. args .. "}"))
 end
 
-function python_expand(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
+function python_expand(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
     -- force spec scan
     rpm.expand("%_python_macro_init")
     local args = rpm.expand("%**")
@@ -385,14 +385,14 @@ function python_expand(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234
     end
 end
 
-function python_build(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
+function python_build(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
     rpm.expand("%_python_macro_init")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%" .. python .. "_build %**"))
     end
 end
 
-function python_install(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-)
+function python_install(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
     rpm.expand("%_python_macro_init")
     for _, python in ipairs(pythons) do
         print(rpm.expand("%" .. python .. "_install %**"))
