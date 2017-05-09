@@ -7,10 +7,9 @@
 
 %_rec_macro_helper %{lua:
     rpm.define("_rec_macro_helper %{nil}")
-    function recurse_macro(name)
+    function expand_macro(name, args)
         local interp = rpm.expand("%python_flavor")
-        local args   = rpm.expand("%**")
-        if args == "%**" then args = "" end
+        local args   = args and rpm.expand(args) or ""
         print(rpm.expand("%{" .. interp .. "_" .. name .. " " .. args .."}"))
     end
     function call_sysconfig(which, interp)
@@ -32,19 +31,19 @@
 
 ##### preferred configuration #####
 
-%python_sitelib          %{python_sysconfig_path purelib}
-%python_sitearch         %{python_sysconfig_path platlib}
-%python_version          %{python_sysconfig_var py_version_short}
-%python_version_nodots   %{python_sysconfig_var py_version_nodot}
+%python_sitelib          %{_python_sysconfig_path %python_flavor purelib}
+%python_sitearch         %{_python_sysconfig_path %python_flavor platlib}
+%python_version          %{_python_sysconfig_var  %python_flavor py_version_short}
+%python_version_nodots   %{_python_sysconfig_var  %python_flavor py_version_nodot}
 
-%python_prefix                  %{_rec_macro_helper}%{lua:recurse_macro("prefix")}
-%python_bin_suffix              %{_rec_macro_helper}%{lua:recurse_macro("bin_suffix")}
+%python_prefix                  %{_rec_macro_helper}%{lua:expand_macro("prefix")}
+%python_bin_suffix              %{_rec_macro_helper}%{lua:expand_macro("bin_suffix")}
 
 %python_sysconfig_path()        %{_rec_macro_helper}%{lua:call_sysconfig("path", "%python_flavor")}
 %python_sysconfig_var()         %{_rec_macro_helper}%{lua:call_sysconfig("var", "%python_flavor")}
 
-%python_alternative()           %{_rec_macro_helper}%{lua:recurse_macro("alternative")}
-%python_install_alternative()   %{_rec_macro_helper}%{lua:recurse_macro("install_alternative")}
-%python_uninstall_alternative() %{_rec_macro_helper}%{lua:recurse_macro("uninstall_alternative")}
+%python_alternative()           %{_rec_macro_helper}%{lua:expand_macro("alternative", "%**")}
+%python_install_alternative()   %{_rec_macro_helper}%{lua:expand_macro("install_alternative", "%**")}
+%python_uninstall_alternative() %{_rec_macro_helper}%{lua:expand_macro("uninstall_alternative", "%**")}
 
 %py_ver  %python_version
