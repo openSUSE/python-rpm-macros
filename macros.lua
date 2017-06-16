@@ -405,11 +405,7 @@ function python_files()
     local param = ""
     if tonumber(nparams) > 0 then param = rpm.expand("%1") end
 
-    if _python_subpackages_emitted and is_called_python and not old_python2 then
-        print("-n " .. package_name(flavor, modname, param))
-    else
-        print(param)
-    end
+    print("-n " .. package_name(flavor, modname, param))
 
     if not _python_subpackages_emitted then
         print("\n/%python_subpackages_macro_not_present\n")
