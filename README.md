@@ -33,29 +33,56 @@ particular flavor, and autogenerate subpackages `%{flavor}-%{modname}` for all t
 Alternately, it is to take package `python-%{modname}` and generate subpackages for all flavors,
 leaving the top-level package empty.
 
+### Build set
+
+The default build set is listed in the __`%pythons`__ macro. Every entry in `%pythons` generates a
+requirement in `%python_module`, a subpackage from `%python_subpackages` (unless the top-level spec
+file is for that flavor), and an additional run of loops like `%python_build`, `_install`, `_exec`
+and `_expand`.
+
+In order to control the build set, you can either completely redefine `%pythons`, or exclude
+particular flavor(s) by defining __`%skip_$flavor`__. For example, if you `%define skip_python2 1`,
+then Python 2 will be excluded from the default build set.
+
+Skip-macros are intended __for per-package use only__. Never define a skip-macro in prjconf or
+in any other sort of global config. Instead, redefine `%pythons`.
+
 ### Macros
 
 The following macros are considered public API:
 
-__`%pythons`__ - list of flavors we are building for.
+__`%pythons`__ - the build set. See above for details.
 
-__`%have_python2`, `%have_python3`, `%have_pypy3`__. Defined as 1 if we are building for that
-flavor. Undefined otherwise.
+__`%have_python2`, `%have_python3`, `%have_pypy3`__. Defined as 1 if the flavor is present in the
+build environment. Undefined otherwise.  
+_Note:_ "present in build environment" does not mean "part of build set". Under some circumstances,
+you can get a python flavor pulled in through dependencies, even if you exclude it from the build
+set. In such case, `%have_$flavor` will be defined but packages will not be generated for it.
+
+__`%skip_python2`, `%skip_python3`, `%skip_pypy3`__. Undefined by default. Define in order to exclude
+a flavor from build set.
 
 __`%{python_module modname [= version]}`__ expands to `$flavor-modname [= version]` for every
 flavor. Intended as: `BuildRequires: %{python_module foo}`.
 
+__`%python_flavor`__ expands to the `%pythons` entry that is currently being processed.  
+Does not apply in `%prep`, `%build`, `%install` and `%check` sections, except when evaluated
+as `%{$python_flavor}` in `%python_expand`.
+
 __`%ifpython2`, `%ifpython3`, `%ifpypy3`__: applies the following section only to subpackages of
 that particular flavor.  
 __`%ifpycache`__: applies the following section only to subpackages of flavors that generate a
-`__pycache__` directory.
+`__pycache__` directory.  
+_Note:_ These are shortcuts for `%if "%python_flavor" == "$flavor"`. Due to how RPM evaluates the
+shortcuts, they will fail when nested with other `%if` conditions. If you need to nest your
+conditions, use the full `%if %python_flavor` spelling.
 
 __`%python2_only`, `%python3_only`, `%pypy3_only`__: applies the contents of the line only to
 subpackages of that particular flavor.  
 __`%pycache_only`__: applies the contents of the line only to subpackages of flavors that generate
 `__pycache__` directories. Useful in filelists: `%pycache_only %{python_sitelib}/__pycache__/*`
 
-__`%python_build`__ expands to build instructions for  all flavors.
+__`%python_build`__ expands to build instructions for all flavors.
 
 __`%python_install`__ expands to install instructions for all flavors.
 
