@@ -2,12 +2,27 @@
 
 FLAVORS="python2 python3 pypy3"
 
-# generate flavors from flavor.in
+# order of BUILDSET is important, it is copied to order of %pythons,
+# and that determines the last installed binary
+BUILDSET="python2 python3"
+
+
+### flavor-specific: generate from flavor.in
 for flavor in $FLAVORS; do
     sed 's/#FLAVOR#/'$flavor'/g' flavor.in > macros/020-flavor-$flavor
 done
 
-# generate automagic from macros.in and macros.lua
+
+### buildset: generate %pythons, %skip_python? and %python_modules
+pythons=""
+for flavor in $BUILDSET; do
+    pythons="${pythons} %{?!skip_$flavor:$flavor}"
+done
+echo "%pythons $pythons" > macros/040-buildset
+cat buildset.in >> macros/040-buildset
+
+
+### Lua: generate automagic from macros.in and macros.lua
 (
     # copy macros.in up to LUA-MACROS
     sed -n -e '1,/^### LUA-MACROS ###$/p' macros.in
@@ -45,9 +60,8 @@ done
 
     # copy rest of macros.in
     sed -n -e '/^### LUA-MACROS ###$/,$p' macros.in
-) > macros/040-automagic
+) > macros/050-automagic
 
-# perl embed-macros.pl macros.in macros.lua > macros/040-automagic.orig
 
-# cat macros/*, but with files separated by additional newlines
+### final step: cat macros/*, but with files separated by additional newlines
 sed -e '$s/$/\n/' -s macros/* > macros.python_all
