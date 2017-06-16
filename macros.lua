@@ -434,3 +434,16 @@ function python_clone(a)
         print(rpm.expand(string.format("%%{prepare_alternative -t %s %s}\n", link, name)))
     end
 end
+
+function python_module()
+    rpm.expand("%_python_macro_init")
+    local params = rpm.expand("%**")
+    for _, python in ipairs(pythons) do
+        if python == "python2" then
+            print(rpm.expand("%python2_prefix") .. "-" .. params)
+        else
+            print(python .. "-" .. params)
+        end
+        print(" ")
+    end
+end
