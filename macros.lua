@@ -86,6 +86,14 @@ function python_subpackages()
 
     local function ignore_line(line) end
 
+    local function files_line(line)
+        -- unexpand %license at start of line
+        if line:startswith("%license") then
+            line = "%" .. line
+        end
+        return print_altered(line)
+    end
+
     local PROPERTY_COPY_UNMODIFIED = lookup_table { "Summary:", "Version:", "BuildArch:" }
     local PROPERTY_COPY_MODIFIED = lookup_table {
         "Requires:", "Provides:",
@@ -337,6 +345,8 @@ function python_subpackages()
                         print(section_headline(newsection, current_flavor, param))
                         if should_expect_alternatives(newsection, param) then
                             section_function = expect_alternatives
+                        elseif newsection == "files" then
+                            section_function = files_line
                         else
                             section_function = print_altered
                         end
