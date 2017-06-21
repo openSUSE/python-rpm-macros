@@ -1,8 +1,18 @@
 function _python_scan_spec()
+    local last_python = rpm.expand("%python_for_executables")
+    local insert_last_python = false
+
     pythons = {}
+    -- make sure that last_python is the last item in the list
     for str in string.gmatch(rpm.expand("%pythons"), "%S+") do
-        table.insert(pythons, str)
+        if str == last_python then
+            insert_last_python = true
+        else
+            table.insert(pythons, str)
+        end
     end
+    -- ...but check that it is actually in the buildset
+    if insert_last_python then table.insert(pythons, last_python) end
 
     modname = rpm.expand("%name")
     local spec_name_prefix = "python"

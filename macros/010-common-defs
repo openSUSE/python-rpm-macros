@@ -1,4 +1,5 @@
 %system_python python2
+%python_for_executables python3
 
 ##### common functionality #####
 

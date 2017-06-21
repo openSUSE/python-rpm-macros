@@ -1,5 +1,9 @@
+
+# This method for generating python_modules gets too deep to expand at about 5 python flavors.
+# It is replaced by a Lua macro in macros.lua
+# However, OBS has a much higher expansion depth, so this works fine.
 %python_module_iter(a:) %{-a*}-%{args} %{expand:%%{?!python_module_iter_%1:%%{python_module_iter -a %*}}}
 %python_module_iter_STOP stop
-
-# this one is for OBS
 %python_module() %{expand:%%define args %{**}} %{expand:%%{python_module_iter -a %{pythons} STOP}}
+
+%add_python() %{expand:%%define pythons %pythons %1}

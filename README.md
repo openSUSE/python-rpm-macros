@@ -51,6 +51,12 @@ in any other sort of global config. Instead, redefine `%pythons`.
 
 The following macros are considered public API:
 
+__`%system_python`__ - flavor that is used for generic unflavored `%python_` macros.
+Currently set to `python2`.
+
+__`%python_for_executables`__ - flavor that is used for installing executables into `%_bindir` and
+other files in non-flavor-specific locations. By default, set to `python3`.
+
 __`%pythons`__ - the build set. See above for details.
 
 __`%have_python2`, `%have_python3`, `%have_pypy3`__. Defined as 1 if the flavor is present in the
