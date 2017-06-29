@@ -39,16 +39,11 @@ function _python_scan_spec()
 
     -- detect `flavor`, used for evaluating %ifmacros
     if is_called_python then
-        if old_python2 then
-            -- in old python2, %ifpython2 should be true in "python-"
-            flavor = "python2"
-        else
-            -- otherwise, it is either system_python (if found in %pythons)
-            -- or the last entry of %pythons
-            for _,py in ipairs(pythons) do
-                flavor = py
-                if flavor == system_python then break end
-            end
+        -- either system_python (if found in %pythons)
+        -- or the last entry of %pythons
+        for _,py in ipairs(pythons) do
+            flavor = py
+            if flavor == system_python then break end
         end
     else
         -- specname is something other than "python-", and it is a valid
