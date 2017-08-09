@@ -53,15 +53,18 @@ function _python_scan_spec()
     end
 
     -- find the spec file
-    specpath = name .. ".spec"
-    local locations = { rpm.expand("%_sourcedir"), rpm.expand("%_specdir"), "." }
-    for _,loc in ipairs(locations) do
-        local filename = loc .. "/" .. specpath
-        if posix.stat(filename, "mode") ~= nil then
-            specpath = filename
-            break
-        end
-    end
+    specpath = rpm.expand("%_specfile")
+
+    -- search possible locations - shouldn't be necessary anymore
+--    local locations = { rpm.expand("%_sourcedir"), rpm.expand("%_specdir"), posix.getcwd(), posix.getcwd() .. "/" .. name }
+--    for _,loc in ipairs(locations) do
+--        local filename = loc .. "/" .. name .. ".spec"
+--        if posix.stat(filename, "mode") ~= nil then
+--            io.stderr:write("could not find spec as " .. filename .. "\n")
+--            specpath = filename
+--            break
+--        end
+--    end
 end
 
 function python_subpackages()
@@ -299,7 +302,7 @@ function python_subpackages()
         -- rescan spec for each flavor
         if not is_current_flavor then
             local spec, err = io.open(specpath, "r")
-            if err then print ("bad spec " .. specpath) return end
+            if err then print ("could not find spec at " .. specpath) return end
 
             rpm.define("python_flavor " .. python)
 
