@@ -29,7 +29,7 @@ In some cases, it is only `%{modname}` though.
 __pkgname__, or __subpackage name__, is internal to a spec file, and is that thing you put after the
 `%package` macro. Pkgname of the package itself is an empty string. Pkgname of a `%package -n
 something` is at this point `-n something`, and denotes that this subpackage should not be handled
-by the generator.
+by the generator.  
 That means, if you want a subpackage to be skipped, rename it from `%package foo` to
 `%package -n %{name}-foo`.
 
@@ -66,7 +66,7 @@ other files in non-flavor-specific locations. By default, set to `python3`.
 * __`%pythons`__ - the build set. See above for details.
 
 * __`%have_python2`, `%have_python3`, `%have_pypy3`__. Defined as 1 if the flavor is present in the
-build environment. Undefined otherwise.
+build environment. Undefined otherwise.  
 _Note:_ "present in build environment" does not mean "part of build set". Under some circumstances,
 you can get a Python flavor pulled in through dependencies, even if you exclude it from the build
 set. In such case, `%have_$flavor` will be defined but packages will not be generated for it.
@@ -82,9 +82,9 @@ Does not apply in `%prep`, `%build`, `%install` and `%check` sections, except wh
 as `%{$python_flavor}` in `%python_expand`.
 
 * __`%ifpython2`, `%ifpython3`, `%ifpypy3`__: applies the following section only to subpackages of
-that particular flavor.
+that particular flavor.  
 __`%ifpycache`__: applies the following section only to subpackages of flavors that generate a
-`__pycache__` directory.
+`__pycache__` directory.  
 _Note:_ These are shortcuts for `%if "%python_flavor" == "$flavor"`. Due to how RPM evaluates the
 shortcuts, they will fail when nested with other `%if` conditions. If you need to nest your
 conditions, use the full `%if %python_flavor` spelling.
@@ -103,17 +103,17 @@ the distutils-generated `build` directory so that you are never running `python2
 python3-generated `build`. This is only useful for distutils/setuptools.
 
 * __`%python_expand something`__ is a more general form of the above. Performs the moving-around for
-distutils' `build` directory, and performs rpm macro expansion of its argument for every flavor.
-Importantly, `$python` is replaced by current flavor name, even in macros. So:
+distutils' `build` directory, and performs rpm macro expansion of its argument for every flavor.  
+Importantly, `$python` is replaced by current flavor name, even in macros. So:  
 `%{python_expand $python generatefile.py %$python_bin_suffix}`
-expands to:
-`python2 generatefile.py %python2_bin_suffix`
+expands to:  
+`python2 generatefile.py %python2_bin_suffix`  
 `python3 generatefile.py %python3_bin_suffix`
 etc.
 
 * __`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
 flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
-to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modified accordingly.
+to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modified accordingly.  
 __`%python_clone -a filename`__ will also invoke __`%prepare_alternative`__ with the appropriate
 arguments.
 
@@ -146,7 +146,7 @@ package, remove `<targetfile>` from a list of alternatives under `<name>`
 Alternative-related, for Python:
 
 * __`%python_alternative <file>`__: expands to filelist entries for `<file>`, its symlink in
-`/etc/alternatives`, and the target file called `<file>-%python_bin_suffix`.
+`/etc/alternatives`, and the target file called `<file>-%python_bin_suffix`.  
 In case the file is a manpage (`file.1.gz`), the target is called `file-%suffix.1.gz`.
 
 * __`%python_install_alternative <name> [<name> <name>...]`__: runs `update-alternatives`
@@ -157,7 +157,7 @@ handled as a manpage and assumed to live in the appropriate `%{_mandir}` subdire
 it is handled as a binary and assumed to live in `%{_bindir}`. You can also supply a full path
 to override this behavior.
 
-* __`%python_uninstall_alternative <name>`__: reverse of the preceding.
+* __`%python_uninstall_alternative <name>`__: reverse of the preceding.  
 Note that if you created a group by specifying multiple arguments to `install_alternative`, only
 the first one applies for `uninstall_alternative`.
 
