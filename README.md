@@ -163,11 +163,7 @@ the first one applies for `uninstall_alternative`.
 
   Each of these has a flavor-specific spelling: `%python2_alternative` etc.
 
-* __`%python2_bin_suffix`, `%python3_bin_suffix`, `%pypy3_bin_suffix`__: what to put after
-a binary name. Binaries for CPython are called `binary-%{python_version}`, for PyPy the name
-is `binary-pp%{pypy3_version}`
-
-  In addition, the following flavor-specific macros are known and supported by the configuration:
+In addition, the following flavor-specific macros are known and supported by the configuration:
 
 * __`%__python2`__: path to the $flavor executable.
 This exists mostly for Fedora compatibility. In SUSE code, it is preferable to use `$flavor`
@@ -180,6 +176,10 @@ directory.
 * __`%python2_version`__: dotted major.minor version. `2.7` for CPython 2.7.
 
 * __`%python2_version_nodots`__: concatenated major.minor version. `27` for CPython 2.7.
+
+* __`%python2_bin_suffix`, `%python3_bin_suffix`, `%pypy3_bin_suffix`__: what to put after
+a binary name. Binaries for CPython are called `binary-%{python_version}`, for PyPy the name
+is `binary-pp%{pypy3_version}`
 
 * __`%python2_prefix`__: prefix of the package name. `python` for old-style distros, `python2` for
 new-style. For other flavors, the value is the same as flavor name.
