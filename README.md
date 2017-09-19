@@ -105,7 +105,7 @@ python3-generated `build`. This is only useful for distutils/setuptools.
 * __`%python_expand something`__ is a more general form of the above. Performs the moving-around for
 distutils' `build` directory, and performs rpm macro expansion of its argument for every flavor.  
 Importantly, `$python` is replaced by current flavor name, even in macros. So:  
-`%{python_expand $python generatefile.py %$python_bin_suffix}`
+`%{python_expand $python generatefile.py %$python_bin_suffix}`  
 expands to:  
 `python2 generatefile.py %python2_bin_suffix`  
 `python3 generatefile.py %python3_bin_suffix`
@@ -151,7 +151,7 @@ In case the file is a manpage (`file.1.gz`), the target is called `file-%suffix.
 
 * __`%python_install_alternative <name> [<name> <name>...]`__: runs `update-alternatives`
 for `<name>-%{python_bin_suffix}`. If more than one argument is present, the remaining ones are
-converted to `--slave` arguments.
+converted to `--slave` arguments. 
 If a `name` is in the form of `something.1` or `something.4.gz` (any number applies), it is
 handled as a manpage and assumed to live in the appropriate `%{_mandir}` subdirectory, otherwise
 it is handled as a binary and assumed to live in `%{_bindir}`. You can also supply a full path
