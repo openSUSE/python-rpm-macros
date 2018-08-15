@@ -302,7 +302,7 @@ function python_subpackages()
         -- rescan spec for each flavor
         if not is_current_flavor then
             local spec, err = io.open(specpath, "r")
-            if err then print ("could not find spec at " .. specpath) return end
+            if err then print ("could not find spec file at path: " .. specpath) return end
 
             rpm.define("python_flavor " .. python)
 
