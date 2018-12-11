@@ -189,8 +189,8 @@ function python_subpackages()
 
     local function print_obsoletes(modname)
         if current_flavor == "python2" then
-            print(rpm.expand("Obsoletes: python-" .. modname .. " < %{?epoch:%{epoch}:}%{version}-%{release}\\n"))\
-            print(rpm.expand("Provides: python-" .. modname .. " = %{?epoch:%{epoch}:}%{version}-%{release}\\n"))\
+            print(rpm.expand("Obsoletes: python-" .. modname .. " < %{?epoch:%{epoch}:}%{version}-%{release}\n"))
+            print(rpm.expand("Provides: python-" .. modname .. " = %{?epoch:%{epoch}:}%{version}-%{release}\n"))
         end
     end
 
@@ -281,7 +281,7 @@ function python_subpackages()
 
     -- before we start, print Provides: python2-modname
     if is_called_python and old_python2 then
-        print(rpm.expand("Provides: python2-" .. modname .. " = %{?epoch:%{epoch}:}%{version}-%{release}\\n"))\
+        print(rpm.expand("Provides: python2-" .. modname .. " = %{?epoch:%{epoch}:}%{version}-%{release}\n"))
     end
 
     for _,python in ipairs(pythons) do
