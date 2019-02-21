@@ -48,3 +48,8 @@
 %python_uninstall_alternative() %{_rec_macro_helper}%{lua:expand_macro("uninstall_alternative", "%**")}
 
 %py_ver  %python_version
+
+##### testing commands #####
+
+%pytest %{python_expand PYTHONPATH=%{buildroot}%{$python_sitelib} py.test-%{$python_bin_suffix} -v}
+%pytest_arch %{python_expand PYTHONPATH=%{buildroot}%{$python_sitearch} py.test-%{$python_bin_suffix} -v}
