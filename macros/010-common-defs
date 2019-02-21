@@ -51,5 +51,5 @@
 
 ##### testing commands #####
 
-%pytest %{python_expand PYTHONPATH=%{buildroot}%{$python_sitelib} py.test-%{$python_bin_suffix} -v}
-%pytest_arch %{python_expand PYTHONPATH=%{buildroot}%{$python_sitearch} py.test-%{$python_bin_suffix} -v}
+%pytest() %{python_expand PYTHONPATH=%{buildroot}%{$python_sitelib} $python -mpytest -v "%**"}
+%pytest_arch() %{python_expand PYTHONPATH=%{buildroot}%{$python_sitearch} $python -mpytest -v "%**"}
