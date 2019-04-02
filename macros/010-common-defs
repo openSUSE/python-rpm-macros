@@ -53,9 +53,9 @@
 
 %pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=) %{lua: \
     local args = rpm.expand("%**")\
-    print(rpm.expand("%{python_expand PYTHONPATH=%{buildroot}%{$python_sitearch} py.test-%{python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}"))\
+    print(rpm.expand("%{python_expand PYTHONPATH=%{buildroot}%{$python_sitearch} py.test-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}"))\
 }
 %pytest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=) %{lua: \
     local args = rpm.expand("%**")\
-    print(rpm.expand("%{python_expand PYTHONPATH=%{buildroot}%{$python_sitelib} py.test-%{python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}"))\
+    print(rpm.expand("%{python_expand PYTHONPATH=%{buildroot}%{$python_sitelib} py.test-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}"))\
 }
