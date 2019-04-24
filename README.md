@@ -112,8 +112,11 @@ expands to:
 etc.
 
 * __`%pytest`__ runs `pytest` in all flavors with appropriate environmental variables
-(names `$PYTHONPATH` set correctly). All paramteres to this macro are passed without change to the
-pytest command. Explicit `BuildRequires` on `%{python_module pytest}` is still required.
+(namely, it sets `$PYTHONPATH` to ``%{python_sitelib}``). All paramteres to this macro are
+passed without change to the pytest command. Explicit `BuildRequires` on `%{python_module pytest}`
+is still required.
+
+* __`%pytest_arch`__ the same as the above, except it sets ``$PYTHONPATH`` to ``%{$python_sitearch}``
 
 * __`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
 flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
