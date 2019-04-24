@@ -111,6 +111,10 @@ expands to:
 `python3 generatefile.py %python3_bin_suffix`
 etc.
 
+* __`%pytest`__ runs `pytest` in all flavors with appropriate environmental variables
+(names `$PYTHONPATH` set correctly). All paramteres to this macro are passed without change to the
+pytest command. Explicit `BuildRequires` on `%{python_module pytest}` is still required.
+
 * __`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
 flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
 to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modified accordingly.  
