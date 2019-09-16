@@ -51,11 +51,11 @@
 
 ##### Pytest macros #####
 
-%pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitearch} py.test-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
-%pytest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitelib} py.test-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
+%pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitearch} py.test-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
+%pytest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitelib} py.test-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
 
 ##### PEP-518 macros #####
-%pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}} --use-pep517 --no-build-isolation --progress-bar off --verbose . " .. args .. "}")) }
+%pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}} --use-pep517 --no-build-isolation --progress-bar off --verbose . " .. args .. "}")) }
 
 # No such option: --strip-file-prefix %%{buildroot} 
-%pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip install --root %{buildroot}  --no-deps  --progress-bar off *.whl " .. args .. "}")) }
+%pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip install --root %{buildroot}  --no-deps  --progress-bar off *.whl " .. args .. "}")) }
