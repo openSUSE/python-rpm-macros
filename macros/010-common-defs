@@ -58,4 +58,6 @@
 %pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}} --use-pep517 --no-build-isolation --progress-bar off --verbose . " .. args .. "}")) }
 
 # No such option: --strip-file-prefix %%{buildroot} 
-%pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip install --root %{buildroot}  --no-deps  --progress-bar off *.whl " .. args .. "}")) }
+%pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip install --root %{buildroot} --no-compile --no-deps  --progress-bar off *.whl " .. args .. "}")) }
+
+#vi:tw=0
