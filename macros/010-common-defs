@@ -60,4 +60,10 @@
 # No such option: --strip-file-prefix %%{buildroot} 
 %pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip install --root %{buildroot} --no-compile --no-deps  --progress-bar off *.whl " .. args .. "}")) }
 
+##### Python dependency generator macros #####
+
+%python_disable_dependency_generator() \
+%undefine __pythondist_requires \
+%{nil}
+
 #vi:tw=0
