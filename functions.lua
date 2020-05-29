@@ -133,7 +133,7 @@ function python_install_alternative(flavor)
     end
 
     local link, name, path = python_alternative_names(params[1], binsuffix)
-    print(string.format("update-alternatives --install %s %s %s %s", link, name, path, prio))
+    print(string.format("update-alternatives --quiet --install %s %s %s %s", link, name, path, prio))
     table.remove(params, 1)
     for _, v in ipairs(params) do
         print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
