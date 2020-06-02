@@ -49,10 +49,68 @@
 
 %py_ver  %python_version
 
+##### Python dependency generator macros #####
+
+# === Macros for Build/Requires tags using Python dist tags ===
+# - https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
+
+# Converts Python dist name to a canonical format
+%python_dist_name() %{lua:\
+        name = rpm.expand("%{?1:%{1}}");\
+        canonical = string.gsub(string.lower(name), "[^%w%.]+", "-");\
+        print(canonical);\
+}
+
+# Creates Python 2 dist tag(s) after converting names to canonical format
+#   Needs to first put all arguments into a list, because invoking a different
+#   macro (%python_dist_name) overwrites them
+%python2_dist() %{lua:\
+        args = {}\
+        arg = 1\
+        while (true) do\
+                name = rpm.expand("%{?" .. arg .. ":%{" .. arg .. "}}");\
+                if (name == nil or name == '') then\
+                        break\
+                end\
+                args[arg] = name\
+                arg = arg + 1\
+        end\
+        for arg, name in ipairs(args) do\
+                canonical = rpm.expand("%python_dist_name " .. name);\
+                print("python" .. rpm.expand("%python2_version") .. "dist(" .. canonical .. ") ");\
+        end\
+}
+
+# Creates Python 3 dist tag(s) after converting names to canonical format
+#   Needs to first put all arguments into a list, because invoking a different
+#   macro (%python_dist_name) overwrites them
+%python3_dist() %{lua:\
+        args = {}\
+        arg = 1\
+        while (true) do\
+                name = rpm.expand("%{?" .. arg .. ":%{" .. arg .. "}}");\
+                if (name == nil or name == '') then\
+                        break\
+                end\
+                args[arg] = name\
+                arg = arg + 1\
+        end\
+        for arg, name in ipairs(args) do\
+                canonical = rpm.expand("%python_dist_name " .. name);\
+                print("python" .. rpm.expand("%python3_version") .. "dist(" .. canonical .. ") ");\
+        end\
+}
+
+# === Macros to control dependency generator ===
+# - https://fedoraproject.org/wiki/Changes/EnablingPythonGenerators
+%python_enable_dependency_generator() \
+%global __pythondist_requires %{_rpmconfigdir}/pythondistdeps.py --requires \
+%{nil}
+
 ##### Pytest macros #####
 
-%pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitearch} pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
-%pytest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitelib} pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
+%pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitearch} PYTHONDONTWRITEBYTECODE=1 pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
+%pytest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand PYTHONPATH=$PYTHONPATH:%{buildroot}%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " .. args .. "}")) }
 
 ##### PEP-518 macros #####
 %pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua: local args = rpm.expand("%**") print(rpm.expand("%{python_expand $python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}} --use-pep517 --no-build-isolation --progress-bar off --verbose . " .. args .. "}")) }

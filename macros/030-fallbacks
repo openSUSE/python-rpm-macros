@@ -16,4 +16,8 @@
 %py2_ver     %python2_version
 %py3_ver     %python3_version
 
+%py_dist_name() %{python_dist_name %{?**}}
+%py2_dist() %{python2_dist %{?**}}
+%py3_dist() %{python3_dist %{?**}}
+
 %python2_prefix   %{?python2_package_prefix}%{?!python2_package_prefix:python}
