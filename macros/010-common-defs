@@ -116,7 +116,7 @@
     path = path .. "$PYTHONPATH:"; \
     end; \
     local intro = "%{python_expand PYTHONPATH=" .. path .. "%{buildroot}%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 "; \
-    intro = intro .. "pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v " \
+    intro = intro .. "pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v "; \
     print(intro .. args .. "}") \
 }
 %pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
