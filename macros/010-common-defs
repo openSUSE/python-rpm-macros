@@ -111,23 +111,15 @@
 
 %pytest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
-    local path = ""; \
-    if posix.getenv("PYTHONPATH") then \
-    path = path .. "$PYTHONPATH:"; \
-    end; \
     local broot = rpm.expand("%buildroot"); \
-    local intro = "%{python_expand PYTHONPATH=" .. path .. broot .. "%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 "; \
+    local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 "; \
     intro = intro .. "pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
 %pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
-    local path = ""; \
-    if posix.getenv("PYTHONPATH") then \
-    path = path .. "$PYTHONPATH:"; \
-    end; \
     local broot = rpm.expand("%buildroot"); \
-    local intro = "%{python_expand PYTHONPATH=" .. path .. broot .. "%{$python_sitearch} PYTHONDONTWRITEBYTECODE=1 "; \
+    local intro = "%{python_expand ${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitearch} PYTHONDONTWRITEBYTECODE=1 "; \
     intro = intro .. "pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
