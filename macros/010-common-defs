@@ -137,14 +137,15 @@
     local args = rpm.expand("%**"); \
     local intro = "%{python_expand $python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}}"; \
     intro = intro .. " --use-pep517 --no-build-isolation --progress-bar off --verbose . "; \
-    print(intro .. args .. "}") \
+    print(rpm.expand(intro .. args .. "}")) \
 }
 
 # No such option: --strip-file-prefix %%{buildroot} 
 %pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
-    local intro = "%{python_expand $python -mpip install --root %{buildroot} --no-compile --no-deps  --progress-bar off *.whl "; \
-    print(intro .. args .. "}") \
+    local broot = rpm.expand("--root %buildroot"); \
+    local intro = "%{python_expand $python -mpip install " .. broot .. " --no-compile --no-deps  --progress-bar off *.whl "; \
+    print(rpm.expand(intro .. args .. "}")) \
 }
 
 #vi:tw=0 nowrap:
