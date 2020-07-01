@@ -116,6 +116,7 @@
     intro = intro .. "pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
+
 %pytest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
     local broot = rpm.expand("%buildroot"); \
