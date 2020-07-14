@@ -107,6 +107,22 @@
 %global __pythondist_requires %{_rpmconfigdir}/pythondistdeps.py --requires \
 %{nil}
 
+##### Python Unittest macros #####
+
+%pyunittest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
+    local args = rpm.expand("%**"); \
+    local broot = rpm.expand("%buildroot"); \
+    local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 -m unittest -v "; \
+    print(rpm.expand(intro .. args .. "}")) \
+}
+
+%pyunittest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
+    local args = rpm.expand("%**"); \
+    local broot = rpm.expand("%buildroot"); \
+    local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitearch} PYTHONDONTWRITEBYTECODE=1 -m unittest -v "; \
+    print(rpm.expand(intro .. args .. "}")) \
+}
+
 ##### Pytest macros #####
 
 %pytest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
