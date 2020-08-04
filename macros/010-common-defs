@@ -112,14 +112,14 @@
 %pyunittest(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
     local broot = rpm.expand("%buildroot"); \
-    local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 -m unittest -v "; \
+    local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 $python -m unittest -v "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
 
 %pyunittest_arch(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
     local broot = rpm.expand("%buildroot"); \
-    local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitearch} PYTHONDONTWRITEBYTECODE=1 -m unittest -v "; \
+    local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitearch} PYTHONDONTWRITEBYTECODE=1 $python -m unittest -v "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
 
