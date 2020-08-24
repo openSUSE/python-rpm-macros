@@ -34,6 +34,44 @@
   --ignore-installed --no-deps \\\
   --no-index --find-links %{_pyproject_wheeldir}
 
+##### pypi_url #####
+
+# Macro to replace overly complicated references to PyPI source files.
+# Expands to the pythonhosted URL for a package
+# Accepts zero to three arguments:
+# 1:  The PyPI project name, defaulting to %srcname if it is defined, then
+#     %pypi_name if it is defined, then just %name.
+# 2:  The PyPI version, defaulting to %version with tildes stripped.
+# 3:  The file extension, defaulting to "tar.gz".  (A period will be added
+#     automatically.)
+
+%__pypi_url https://files.pythonhosted.org/packages/source/
+%__pypi_default_extension tar.gz
+
+%pypi_url() %{lua:
+    local src = rpm.expand('%1')
+    local ver = rpm.expand('%2')
+    local ext = rpm.expand('%3')
+    local url = rpm.expand('%__pypi_url')
+    if src == '%1' then
+        src = rpm.expand('%srcname')
+    end
+    if src == '%srcname' then
+        src = rpm.expand('%pypi_name')
+    end
+    if src == '%pypi_name' then
+        src = rpm.expand('%name')
+    end
+    if ver == '%2' then
+        ver = rpm.expand('%version'):gsub('~', '')
+    end
+    if ext == '%3' then
+        ext = rpm.expand('%__pypi_default_extension')
+    end
+    local first = string.sub(src, 1, 1)
+    print(url .. first .. '/' .. src .. '/' .. src .. '-' .. ver .. '.' .. ext)
+}
+
 ##### fedora compatibility #####
 
 %py_setup setup.py
