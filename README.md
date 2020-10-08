@@ -127,7 +127,10 @@ etc.
 passed without change to the pytest command. Explicit `BuildRequires` on `%{python_module pytest}`
 is still required.
 
-* __`%pytest_arch`__ the same as the above, except it sets ``$PYTHONPATH`` to ``%{$python_sitearch}``
+* __`%pytest_arch`__ the same as the above, except it sets ``$PYTHONPATH`` to ``%{$python_sitearch}``.
+
+* __`%pyunittest`__ and __`%pyunittest_arch`__ run `python -m unittest` on all flavors with
+appropriate environmental variables very similar to `%pytest` and `%pytest_arch`.
 
 * __`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
 flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
