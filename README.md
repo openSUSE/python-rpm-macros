@@ -109,7 +109,10 @@ subpackages of that particular flavor.
 
 * __`%python_install`__ expands to distutils/setuptools install instructions for all flavors.
 
-* __`%pyproject_wheel`__ expands to PEP517 build instructions for all flavors and creates wheels.
+* __`%pyproject_wheel`__ expands to 
+[PEP517](https://www.python.org/dev/peps/pep-0517)/[PEP518](https://www.python.org/dev/peps/pep-0518/)
+build instructions for all flavors and creates wheels. This is useful if the package has a 
+``pyproject.toml`` file but no ``setup.py``
 
 * __`%pyproject_install`__ expands to install instructions for all flavors to install the created wheels.
 
