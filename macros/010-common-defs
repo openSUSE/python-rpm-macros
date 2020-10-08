@@ -155,6 +155,19 @@
     local broot = rpm.expand("--root %buildroot"); \
     local intro = "%{python_expand $python -mpip install " .. broot .. " --no-compile --no-deps  --progress-bar off *.whl "; \
     print(rpm.expand(intro .. args .. "}")) \
+    print(rpm.expand("%python_compileall"))
 }
+
+##### Precompile scripts macro #####
+
+%python_compileall \
+%{python_expand for d in %{buildroot}%{$python_sitelib} %{buildroot}%{$python_sitearch}; do \
+  if [ -d $d ]; then \
+    $python -m compileall $d; \
+    $python -O -m compileall $d; \
+  fi; \
+done \   
+} \
+%{nil}
 
 #vi:tw=0 nowrap:
