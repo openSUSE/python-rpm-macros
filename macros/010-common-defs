@@ -145,7 +145,7 @@
 %pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
     local intro = "%{python_expand $python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}}"; \
-    intro = intro .. " --use-pep517 --no-build-isolation --progress-bar off --verbose . "; \
+    intro = intro .. " --disable-pip-version-check --use-pep517 --no-build-isolation --progress-bar off --verbose . "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
 
@@ -153,7 +153,7 @@
 %pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
     local broot = rpm.expand("--root %buildroot"); \
-    local intro = "%{python_expand $python -mpip install " .. broot .. " --no-compile --no-deps  --progress-bar off *.whl "; \
+    local intro = "%{python_expand $python -mpip install " .. broot .. " --disable-pip-version-check --no-compile --no-deps  --progress-bar off *.whl "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
 
