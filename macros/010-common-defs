@@ -169,5 +169,3 @@
 done \   
 } \
 %{nil}
-
-#vi:tw=0 nowrap:
