@@ -163,6 +163,7 @@
 %python_compileall \
 %{python_expand for d in %{buildroot}%{$python_sitelib} %{buildroot}%{$python_sitearch}; do \
   if [ -d $d ]; then \
+    find $d -name '*.pyc' -delete; \
     $python -m compileall $d; \
     $python -O -m compileall $d; \
   fi; \
