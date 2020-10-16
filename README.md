@@ -122,6 +122,11 @@ expands to:
 `python3 generatefile.py %python3_bin_suffix`
 etc.
 
+* __`%python_compileall`__ precompiles all python source files in `%{python_sitelib}` and `%{python_sitearch}`
+for all flavors. Generally Python 2 creates the cached byte-code `.pyc` files directly in the script directories, while
+newer flavors generate `__pycache__` directories. Use this if you have modified the source files in `%buildroot` after
+`%python_install` or `%pyproject_install` has compiled the files the first time.
+
 * __`%pytest`__ runs `pytest` in all flavors with appropriate environmental variables
 (namely, it sets `$PYTHONPATH` to ``%{python_sitelib}``). All paramteres to this macro are
 passed without change to the pytest command. Explicit `BuildRequires` on `%{python_module pytest}`
