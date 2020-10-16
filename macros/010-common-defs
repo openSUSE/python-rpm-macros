@@ -167,6 +167,7 @@
     $python -m compileall $d; \
     $python -O -m compileall $d; \
   fi; \
-done \   
+done \
 } \
 %{nil}
+
