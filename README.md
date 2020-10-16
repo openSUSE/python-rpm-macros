@@ -105,9 +105,16 @@ subpackages of that particular flavor.
 * __`%pycache_only`__: applies the contents of the line only to subpackages of flavors that generate
 `__pycache__` directories. Useful in filelists: `%pycache_only %{python_sitelib}/__pycache__/*`
 
-* __`%python_build`__ expands to build instructions for all flavors.
+* __`%python_build`__ expands to distutils/setuptools build instructions for all flavors.
 
-* __`%python_install`__ expands to install instructions for all flavors.
+* __`%python_install`__ expands to distutils/setuptools install instructions for all flavors.
+
+* __`%pyproject_wheel`__ expands to 
+[PEP517](https://www.python.org/dev/peps/pep-0517)/[PEP518](https://www.python.org/dev/peps/pep-0518/)
+build instructions for all flavors and creates wheels. This is useful if the package has a 
+``pyproject.toml`` file but no ``setup.py``
+
+* __`%pyproject_install`__ expands to install instructions for all flavors to install the created wheels.
 
 * __`%python_exec something.py`__ expands to `$flavor something.py` for all flavors, and moves around
 the distutils-generated `build` directory so that you are never running `python2` script with a
