@@ -24,24 +24,23 @@
 %py_setup setup.py
 %py_shbang_opts -s
 
-##### binary suffixes for flavors #####
+##### non-standard binary suffixes for flavors #####
 
-%python2_bin_suffix %python2_version
-%python3_bin_suffix %python3_version
-%pypy3_bin_suffix   pp%{pypy3_version}
+%_pypy3_bin_suffix   pp%{pypy3_version}
+
 
 ##### preferred configuration #####
 
-%python_sitelib          %{_python_sysconfig_path %python_flavor purelib}
-%python_sitearch         %{_python_sysconfig_path %python_flavor platlib}
-%python_version          %{_python_sysconfig_var  %python_flavor py_version_short}
-%python_version_nodots   %{_python_sysconfig_var  %python_flavor py_version_nodot}
+%python_sitelib          %{_python_sysconfig_path %{__%python_flavor} purelib}
+%python_sitearch         %{_python_sysconfig_path %{__%python_flavor} platlib}
+%python_version          %{_python_sysconfig_var  %{__%python_flavor} py_version_short}
+%python_version_nodots   %{_python_sysconfig_var  %{__%python_flavor} py_version_nodot}
 
 %python_prefix                  %{_rec_macro_helper}%{lua:expand_macro("prefix")}
 %python_bin_suffix              %{_rec_macro_helper}%{lua:expand_macro("bin_suffix")}
 
-%python_sysconfig_path()        %{_rec_macro_helper}%{lua:call_sysconfig("path", "%python_flavor")}
-%python_sysconfig_var()         %{_rec_macro_helper}%{lua:call_sysconfig("var", "%python_flavor")}
+%python_sysconfig_path()        %{_rec_macro_helper}%{lua:call_sysconfig("path", "%{__%python_flavor}")}
+%python_sysconfig_var()         %{_rec_macro_helper}%{lua:call_sysconfig("var", "%{__%python_flavor}")}
 
 %python_alternative()           %{_rec_macro_helper}%{lua:expand_macro("alternative", "%**")}
 %python_install_alternative()   %{_rec_macro_helper}%{lua:expand_macro("install_alternative", "%**")}

@@ -1,17 +1,19 @@
 ##### macro definitions for flavor "#FLAVOR#" #####
 
-%__#FLAVOR#               /usr/bin/#FLAVOR#
-
 %#FLAVOR#_shbang_opts     %py_shbang_opts
 
-%#FLAVOR#_prefix          #FLAVOR#
-%#FLAVOR#_sitelib         %{_python_sysconfig_path #FLAVOR# purelib}
-%#FLAVOR#_sitearch        %{_python_sysconfig_path #FLAVOR# platlib}
-%#FLAVOR#_version         %{_python_sysconfig_var #FLAVOR# py_version_short}
-%#FLAVOR#_version_nodots  %{_python_sysconfig_var #FLAVOR# py_version_nodot}
+%__#FLAVOR#               /usr/bin/%{lua: print((string.gsub("#FLAVOR#", "(%w+%d)(%d)", "%1.%2")))}
 
-%#FLAVOR#_sysconfig_path() %{_rec_macro_helper}%{lua:call_sysconfig("path", "#FLAVOR#")}
-%#FLAVOR#_sysconfig_var()  %{_rec_macro_helper}%{lua:call_sysconfig("var", "#FLAVOR#")}
+%#FLAVOR#_prefix          #FLAVOR#
+%#FLAVOR#_sitelib         %{_python_sysconfig_path %__#FLAVOR# purelib}
+%#FLAVOR#_sitearch        %{_python_sysconfig_path %__#FLAVOR# platlib}
+%#FLAVOR#_version         %{_python_sysconfig_var  %__#FLAVOR# py_version_short}
+%#FLAVOR#_version_nodots  %{_python_sysconfig_var  %__#FLAVOR# py_version_nodot}
+
+%#FLAVOR#_bin_suffix      %{?!_#FLAVOR#_bin_suffix:%#FLAVOR#_version}%{?_#FLAVOR#_bin_suffix}
+
+%#FLAVOR#_sysconfig_path() %{_rec_macro_helper}%{lua:call_sysconfig("path", rpm.expand("%__#FLAVOR#"))}
+%#FLAVOR#_sysconfig_var()  %{_rec_macro_helper}%{lua:call_sysconfig("var", rpm.expand("%__#FLAVOR#"))}
 
 %if#FLAVOR#      %if "%{python_flavor}" == "#FLAVOR#"
 
