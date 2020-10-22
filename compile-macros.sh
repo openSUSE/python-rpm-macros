@@ -1,10 +1,10 @@
 #!/bin/bash
 
-FLAVORS="python2 python3 pypy3"
+FLAVORS="python2 python3 python36 python38 pypy3"
 
 # order of BUILDSET is important, it is copied to order of %pythons,
 # and that determines the last installed binary
-BUILDSET="python2 python3"
+BUILDSET="python2 python3 python36 python38"
 
 
 ### flavor-specific: generate from flavor.in
