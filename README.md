@@ -9,34 +9,42 @@ autogenerate subpackages for all the other flavors.
 
 ### Terminology
 
-__flavor__ is a kind of python interpreter. At this point, we recognize the following flavors:
-`python2`, `python3` and `pypy3`.
+__``<flavor>``__ is a kind of python interpreter. At this point, we recognize the following flavors:
+`python2`, `python3`, `python36`, `python38` and `pypy3`. `python3` points to the default of
+coinstallable flavors `python3<M>` where `<M>` is the minor version number.
+
+The flavor is used as a prefix for all flavor-specific macros.
+Some macros are redefined with "short" flavor for compatibility
+reasons, such as `py3` for `python3`. All of them have a "long" form too.
 
 For compatibility reasons you see sometimes `python`. In most places,
 using `python` is either a redefinition of `python2`, or an alternative for
 "flavor-agnostic". Conditionals are in place to switch `python` to mean `python3` in the future.
 
-The name of the flavor is the name of the binary in `/usr/bin`. It is also used as a prefix
-for all flavor-specific macros. Some macros are redefined with "short" flavor for compatibility
-reasons, such as `py2` for `python2`. All of them have a "long" form too.
+The name of the binary in `%_bindir` (`/usr/bin`) is the name of the flavor with an addtional `.`
+between the major and minor version number, in case the latter is part of the flavor name:
+
+-  `/usr/bin/python2`
+-  `/usr/bin/python3`
+-  `/usr/bin/python3.8`
+- ...
 
 __modname__ is the PyPI name, or, if the package in question is not on PyPI, the moniker that we
 chose to stand in for it.
 
-Packages adhering to the SUSE Python module naming policy are usually called `%{flavor}-%{modname}`.
-In some cases, it is only `%{modname}` though.
+Packages adhering to the SUSE Python module naming policy are usually called `<flavor>-modname`.
+In some cases, it is only `modname` though.
 
-__pkgname__, or __subpackage name__, is internal to a spec file, and is that thing you put after the
-`%package` macro. Pkgname of the package itself is an empty string. Pkgname of a `%package -n
-something` is at this point `-n something`, and denotes that this subpackage should not be handled
-by the generator.  
-That means, if you want a subpackage to be skipped, rename it from `%package foo` to
-`%package -n %{name}-foo`.
+__pkgname__, or __subpackage name__, is internal to a spec file, and is that thing you put after
+the `%package` macro. Pkgname of the package itself is an empty string. Pkgname of a 
+`%package -n something`  is at this point `-n something`, and denotes that this subpackage should
+not be handled by the generator. That means, if you want a subpackage to be skipped, rename it
+from `%package foo` to `%package -n %{name}-foo`.
 
-The purpose of the singlespec system is to take a package called `%{flavor}-%{modname}` for a
+The purpose of the singlespec system is to take a package called `<flavor>-modname` for a
 particular flavor, and autogenerate subpackages for all the other flavors.
 
-Alternately, it is to take package `python-%{modname}` and generate subpackages for all flavors,
+Alternately, it is to take package `python-modname` and generate subpackages for all flavors,
 leaving the top-level package empty.
 
 ### Build Set
@@ -47,7 +55,7 @@ file is for that flavor), and an additional run of loops like `%python_build`, `
 and `_expand`.
 
 To control the build set, you can either completely redefine `%pythons`, or exclude
-particular flavor(s) by defining __`%skip_$flavor`__. For example, if you `%define skip_python2 1`,
+particular flavor(s) by defining __`%skip_<flavor>`__. For example, if you `%define skip_python2 1`,
 then Python 2 will be excluded from the default build set.
 
 Skip-macros are intended __for per-package use only__. Never define a skip-macro in prjconf or
@@ -65,16 +73,20 @@ other files in non-flavor-specific locations. By default, set to `python3`.
 
 * __`%pythons`__ - the build set. See above for details.
 
-* __`%have_python2`, `%have_python3`, `%have_pypy3`__. Defined as 1 if the flavor is present in the
-build environment. Undefined otherwise.  
-_Note:_ "present in build environment" does not mean "part of build set". Under some circumstances,
-you can get a Python flavor pulled in through dependencies, even if you exclude it from the build
-set. In such case, `%have_$flavor` will be defined but packages will not be generated for it.
+* __`%have_<flavor`__. Defined as 1 if the flavor is present in the build environment.
+  Undefined otherwise.
+  
+  _Note:_ "present in build environment" does not mean "part of build set". Under some
+  circumstances, you can get a Python flavor pulled in through dependencies, even if you exclude it 
+  from the build set. In such case, `%have_<flavor>` will be defined but packages will not be 
+  generated for it.
 
-* __`%skip_python2`, `%skip_python3`, `%skip_pypy3`__. Undefined by default. Define in order to exclude
-a flavor from build set.
+* __`%skip_<flavor>`__. Undefined by default. Define in order to exclude a flavor from build set.
 
-* __`%{python_module modname [= version]}`__ expands to `$flavor-modname [= version]` for every
+  _Note:_ You do not need to define `%skip_python2` for Tumbleweed. Only define, if you need to skip it
+  for older distributions.
+
+* __`%{python_module modname [= version]}`__ expands to `<flavor>-modname [= version]` for every
 flavor. Intended as: `BuildRequires: %{python_module foo}`.
 
 * __`%{python_dist_name modname}`__. Given a standardized name (i.e. dist name, name on PyPI) of `modname`,
@@ -89,21 +101,68 @@ it will convert it to a canonical format, and evaluates to python3.Ydist(CANONIC
 when listing dependencies. Intended as `(Build)Requires: %{python3_dist foo}`.
 
 * __`%python_flavor`__ expands to the `%pythons` entry that is currently being processed.  
-Does not apply in `%prep`, `%build`, `%install` and `%check` sections, except when evaluated
-as `%{$python_flavor}` in `%python_expand`.
+Does not apply in `%prep`, `%build`, `%install` and `%check` sections. For those, check for the
+expansion of `$python_` inside the `%python_expand` macro.
 
-* __`%ifpython2`, `%ifpython3`, `%ifpypy3`__: applies the following section only to subpackages of
-that particular flavor.  
-__`%ifpycache`__: applies the following section only to subpackages of flavors that generate a
-`__pycache__` directory.  
-_Note:_ These are shortcuts for `%if "%python_flavor" == "$flavor"`. Due to how RPM evaluates the
+* __`%python_subpackages`__ expands to the autogenerated subpackages. This should go at the end of the
+main headers section.
+
+* __`%python_enable_dependency_generator`__ expands to a define to enable automatic requires generation
+of Python module dependencies using egg-info/dist-info metadata. This should go above the
+`%python_subpackages` macro, preferably closer to the top of the spec. Intended usage:
+`%{?python_enable_dependency_generator}`. This macro will eventually be removed when the generator
+is configured to automatically run, hence the `?` at the beginning of the macro invocation.
+
+
+#### Conditionals
+
+These are shortcuts for `%if "%python_flavor" == "<flavor>"`. Due to how RPM evaluates the
 shortcuts, they will fail when nested with other `%if` conditions. If you need to nest your
-conditions, use the full `%if %python_flavor` spelling.
+conditions, use the full `%if "%python_flavor"` spelling.
 
-* __`%python2_only`, `%python3_only`, `%pypy3_only`__: applies the contents of the line only to
-subpackages of that particular flavor.
+* __`%if<flavor>`__: applies the following section only to subpackages of that particular flavor.
+
+* __`%ifpycache`__: applies the following section only to subpackages of flavors that generate a
+`__pycache__` directory.  
+
+* __`%<flavor>_only`__: applies the contents of the line only to subpackages of that particular flavor.
+
 * __`%pycache_only`__: applies the contents of the line only to subpackages of flavors that generate
 `__pycache__` directories. Useful in filelists: `%pycache_only %{python_sitelib}/__pycache__/*`
+
+
+#### Flavor expansion
+
+The following macros expand to command lists for all flavors and move around the distutils-generated
+`build` directory so that you are never running a `python2` command with a python3-generated `build`
+and vice versa.
+
+##### General command expansion macros
+
+* __`%python_exec something.py`__ expands to `$python something.py` for all flavors, where `$python`
+is the path to the flavor executable.
+
+* __`%python_expand something`__ is a more general form of the above. It performs rpm macro expansion
+  of its arguments for every flavor. Importantly, `$python` is not expanded by the shell, but replaced
+  beforehand for the current flavor, even in macros:
+  
+  - When used as command delimited by space or one of `"'\)&|;<>`, it is replaced by the path to the executable
+  - When used as part of a macro name or other string, it is replaced by the current flavor name.
+
+  So:
+  `%{python_expand $python generatefile.py %{$python_bin_suffix}`
+  expands to:
+  
+  ```
+  /usr/bin/python2 generatefile.py %python2_bin_suffix`  
+  /usr/bin/python3.6 generatefile.py %python36_bin_suffix`
+  /usr/bin/python3.8 generatefile.py %python38_bin_suffix`
+  ```
+  
+  etc. (plus the moving around of the `build` directory in between).
+
+
+##### Install macros
 
 * __`%python_build`__ expands to distutils/setuptools build instructions for all flavors.
 
@@ -116,33 +175,10 @@ build instructions for all flavors and creates wheels. This is useful if the pac
 
 * __`%pyproject_install`__ expands to install instructions for all flavors to install the created wheels.
 
-* __`%python_exec something.py`__ expands to `$flavor something.py` for all flavors, and moves around
-the distutils-generated `build` directory so that you are never running `python2` script with a
-python3-generated `build`. This is only useful for distutils/setuptools.
-
-* __`%python_expand something`__ is a more general form of the above. Performs the moving-around for
-distutils' `build` directory, and performs rpm macro expansion of its argument for every flavor.  
-Importantly, `$python` is replaced by current flavor name, even in macros. So:  
-`%{python_expand $python generatefile.py %$python_bin_suffix}`  
-expands to:  
-`python2 generatefile.py %python2_bin_suffix`  
-`python3 generatefile.py %python3_bin_suffix`
-etc.
-
 * __`%python_compileall`__ precompiles all python source files in `%{python_sitelib}` and `%{python_sitearch}`
 for all flavors. Generally Python 2 creates the cached byte-code `.pyc` files directly in the script directories, while
 newer flavors generate `__pycache__` directories. Use this if you have modified the source files in `%buildroot` after
 `%python_install` or `%pyproject_install` has compiled the files the first time.
-
-* __`%pytest`__ runs `pytest` in all flavors with appropriate environmental variables
-(namely, it sets `$PYTHONPATH` to ``%{python_sitelib}``). All paramteres to this macro are
-passed without change to the pytest command. Explicit `BuildRequires` on `%{python_module pytest}`
-is still required.
-
-* __`%pytest_arch`__ the same as the above, except it sets ``$PYTHONPATH`` to ``%{$python_sitearch}``.
-
-* __`%pyunittest`__ and __`%pyunittest_arch`__ run `python -m unittest` on all flavors with
-appropriate environmental variables very similar to `%pytest` and `%pytest_arch`.
 
 * __`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
 flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
@@ -150,22 +186,22 @@ to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modif
 __`%python_clone -a filename`__ will also invoke __`%prepare_alternative`__ with the appropriate
 arguments.
 
-* __`%python2_build`, `%python3_build`, `%pypy3_build`__ expands to build instructions for the
-particular flavor.
 
-* __`%python2_install`, `%python3_install`, `%pypy3_install`__ expands to install
-instructions for the particular flavor.
+##### Unit testing
 
-* __`%python_subpackages`__ expands to the autogenerated subpackages. This should go at the end of the
-main headers section.
+* __`%pytest`__ runs `pytest` in all flavors with appropriate environmental variables
+(namely, it sets `$PYTHONPATH` to ``%{$python_sitelib}``). All paramteres to this macro are
+passed without change to the pytest command. Explicit `BuildRequires` on `%{python_module pytest}`
+is still required.
 
-* __`%python_enable_dependency_generator`__ expands to a define to enable automatic requires generation
-of Python module dependencies using egg-info/dist-info metadata. This should go above the
-`%python_subpackages` macro, preferably closer to the top of the spec. Intended usage:
-`%{?python_enable_dependency_generator}`. This macro will eventually be removed when the generator
-is configured to automatically run, hence the `?` at the beginning of the macro invocation.
+* __`%pytest_arch`__ the same as the above, except it sets ``$PYTHONPATH`` to ``%{$python_sitearch}``.
 
-Alternative-related, general:
+* __`%pyunittest`__ and __`%pyunittest_arch`__ run `$python -m unittest` on all flavors with
+appropriate environmental variables very similar to `%pytest` and `%pytest_arch`.
+
+
+
+#### Alternative-related, general:
 
 * __`%prepare_alternative [-t <targetfile> ] <name>`__  replaces `<targetfile>` with a symlink to
 `/etc/alternatives/<name>`, plus related housekeeping. If no `<targetfile>` is given, it is
@@ -182,7 +218,8 @@ package, remove `<targetfile>` from a list of alternatives under `<name>`
 * __`%alternative_to <file>`__ generates a filelist entry for `<file>` and a ghost entry for
 `basename <file>` in `/etc/alternatives`
 
-Alternative-related, for Python:
+
+#### Alternative-related, for Python:
 
 * __`%python_alternative <file>`__: expands to filelist entries for `<file>`, its symlink in
 `/etc/alternatives`, and the target file called `<file>-%python_bin_suffix`.  
@@ -202,33 +239,49 @@ the first one applies for `uninstall_alternative`.
 
   Each of these has a flavor-specific spelling: `%python2_alternative` etc.
 
+#### Flavor-specific macros  
+
 In addition, the following flavor-specific macros are known and supported by the configuration:
 
-* __`%__python2`__: path to the $flavor executable.
-This exists mostly for Fedora compatibility. In SUSE code, it is preferable to use `$flavor`
-directly, as it is specified to be the name in `/usr/bin`, and we don't support multiple competing
-binaries (in the OBS environment at least).
+* __`%__<flavor>`__: path to the ``<flavor>`` executable.
 
-* __`%python2_sitelib`, `%python2_sitearch`__: path to noarch and arch-dependent `site-packages`
+* __`%<flavor>_build`__ expands to build instructions for the particular flavor.
+
+* __`%<flavor>_install`__ expands to install instructions for the particular flavor.
+
+* __`%<flavor>_sitelib`, `%<flavor>_sitearch`__: path to noarch and arch-dependent `site-packages`
 directory.
 
-* __`%python2_version`__: dotted major.minor version. `2.7` for CPython 2.7.
+* __`%<flavor>_version`__: dotted major.minor version. `2.7` for CPython 2.7.
 
-* __`%python2_version_nodots`__: concatenated major.minor version. `27` for CPython 2.7.
+* __`%<flavor>_version_nodots`__: concatenated major.minor version. `27` for CPython 2.7.
 
-* __`%python2_bin_suffix`, `%python3_bin_suffix`, `%pypy3_bin_suffix`__: what to put after
+* __`%<flavor>_bin_suffix`__: what to put after
 a binary name. Binaries for CPython are called `binary-%{python_version}`, for PyPy the name
 is `binary-pp%{pypy3_version}`
 
-* __`%python2_prefix`__: prefix of the package name. `python` for old-style distros, `python2` for
+* __`%<flavor>_prefix`__: prefix of the package name. `python` for old-style distros, `python2` for
 new-style. For other flavors, the value is the same as flavor name.
 
-  For reasons of preferred-flavor-agnosticity, aliases `python_*` are available for all of these.
+For reasons of preferred-flavor-agnosticity, aliases `python_*` are available for all of these. 
 
-  We recognize `%py_ver`, `%py2_ver` and `%py3_ver` as deprecated spellings of `%flavor_version`. No
+We recognize `%py_ver`, `%py2_ver` and `%py3_ver` as deprecated spellings of `%<flavor>_version`. No
 such shortcut is in place for `pypy3`. Furthermore, `%py2_build`, `_install` and `_shbang_opts`, as
 well as `py3` variants, are recognized for Fedora compatibility.
 
+### `%files` section
+
+* __`%files %{python_files}`__ expands the `%files` section for all generated flavor packages of
+  `<flavor>-modname`.
+  
+* __`%files %{python_files foo}`__ expands the `%files` section for all generated flavor subpackages
+  of `<flavor>-modname-foo`
+  
+Always use the flavor-agnostic macro versions `%python_*` inside `%python_files` marked `%files` sections.
+
+See also the Filelists section of the 
+[openSUSE:Packaging Python](https://en.opensuse.org/openSUSE:Packaging_Python#Filelists)
+guidelines
 
 ### Files in Repository
 
@@ -244,13 +297,16 @@ configuration etc.
 
 * __`macros/030-fallbacks`__: compatibility and deprecated spellings for some macros.
 
-* __`compile-macros.sh`__: the compile script. Builds flavor-specific macros, Lua script definition,
-and concatenates all of it into `macros.python_all`.
-
 * __`apply-macros.sh`__: compile macros and run `rpmspec` against first argument. Useful for examining
 what is going on with your spec file.
 
-* __`flavor.in`__: template for flavor-specific macros. Generates `macros/020-flavor-$flavor` for
+* __`buildset.in`__: template to generate `macros/040-buildset` for the `%pythons`, `%skip_<flavor>` and
+  `%python_module` macros.
+
+* __`compile-macros.sh`__: the compile script. Builds flavor-specific macros, Lua script definition,
+and concatenates all of it into `macros.python_all`.
+
+* __`flavor.in`__: template for flavor-specific macros. Generates `macros/020-flavor-<flavor>` for
 every flavor listed in `compile-macros.sh`.
 
 * __`functions.lua`__: Lua function definitions used in `macros.lua` and elsewhere. In the compile
@@ -268,13 +324,5 @@ pure Lua functions that won't be available as Lua macros, use the `functions.lua
 * __`macros-default-pythons`__: macro definitions for `%have_python2` and `%have_python3` for systems
 where this is not provided by your Python installation. The spec file uses this for SUSE <= Leap 42.3.
 `apply-macros` also uses it implicitly (for now).
-
-* __`embed-macros.pl`__: takes care of slash-escaping and wrapping the Lua functions and inserting
-them into the `macros.in` file in order to generate the resulting macros.
-
-* __`python-rpm-macros.spec`__: spec file for the `python-rpm-macros` package generated from this
-GitHub repository.
-
-* __`process-spec.pl`__: Simple regexp-based converter into the singlespec format.
 
 * __`README.md`__: This file. As if you didn't know.
