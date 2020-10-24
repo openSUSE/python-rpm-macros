@@ -399,7 +399,7 @@ function python_expand(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123
         print(rpm.expand("%{_python_use_flavor " .. python .. "}\n"))
         local cmd = replace_macros(args, python)
         -- when used as call of the executable
-        cmd = cmd:gsub("$python%f[%s]", rpm.expand("%__" .. python))
+        cmd = cmd:gsub("$python%f[%s\"\'\\%)&|;<>]", rpm.expand("%__" .. python))
         -- when used as flavor expansion for a custom macro
         cmd = cmd:gsub("$python", python)
         print(rpm.expand(cmd .. "\n"))
