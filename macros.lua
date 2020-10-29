@@ -388,7 +388,7 @@ end
 
 function python_exec(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
     local args = rpm.expand("%**")
-    print(rpm.expand("%{python_expand %__$python " .. args .. "}"))
+    print(rpm.expand("%{python_expand $python "  .. args .. "}"))
 end
 
 function python_expand(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
