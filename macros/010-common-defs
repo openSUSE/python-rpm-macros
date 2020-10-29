@@ -31,10 +31,10 @@
 
 ##### preferred configuration #####
 
-%python_sitelib          %{_python_sysconfig_path %{__%python_flavor} purelib}
-%python_sitearch         %{_python_sysconfig_path %{__%python_flavor} platlib}
-%python_version          %{_python_sysconfig_var  %{__%python_flavor} py_version_short}
-%python_version_nodots   %{_python_sysconfig_var  %{__%python_flavor} py_version_nodot}
+%python_sitelib          %{_python_sysconfig_path %{expand:%__%{python_flavor}} purelib}
+%python_sitearch         %{_python_sysconfig_path %{expand:%__%{python_flavor}} platlib}
+%python_version          %{_python_sysconfig_var  %{expand:%__%{python_flavor}} py_version_short}
+%python_version_nodots   %{_python_sysconfig_var  %{expand:%__%{python_flavor}} py_version_nodot}
 
 %python_prefix                  %{_rec_macro_helper}%{lua:expand_macro("prefix")}
 %python_bin_suffix              %{_rec_macro_helper}%{lua:expand_macro("bin_suffix")}
