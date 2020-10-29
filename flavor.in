@@ -2,7 +2,7 @@
 
 %#FLAVOR#_shbang_opts     %py_shbang_opts
 
-%__#FLAVOR#               /usr/bin/%{lua: print((string.gsub("#FLAVOR#", "(%w+%d)(%d)", "%1.%2")))}
+%__#FLAVOR#               %{_bindir}/%{lua: print((string.gsub("#FLAVOR#", "(%w+%d)(%d)", "%1.%2")))}
 
 %#FLAVOR#_prefix          #FLAVOR#
 %#FLAVOR#_sitelib         %{_python_sysconfig_path %__#FLAVOR# purelib}
@@ -14,6 +14,16 @@
 
 %#FLAVOR#_sysconfig_path() %{_rec_macro_helper}%{lua:call_sysconfig("path", rpm.expand("%__#FLAVOR#"))}
 %#FLAVOR#_sysconfig_var()  %{_rec_macro_helper}%{lua:call_sysconfig("var", rpm.expand("%__#FLAVOR#"))}
+
+# Check if there is a major version symlink to our flavor in the current build system. If so, we are the primary provider.
+%#FLAVOR#_provides %(provides=""; \
+for flavorbin in %{_bindir}/python?; do \
+  if [ $flavorbin != %__#FLAVOR# -a $(realpath $flavorbin) = %__#FLAVOR# ]; then \
+    provides+=" $(basename $flavorbin)"; \
+  fi; \
+done; \
+echo ${provides# }; \
+)
 
 %if#FLAVOR#      %if "%{python_flavor}" == "#FLAVOR#"
 

@@ -187,10 +187,11 @@ function python_subpackages()
     end
     -- end line processing functions
 
-    local function print_obsoletes(modname)
-        if current_flavor == "python2" then
-            print(rpm.expand("Obsoletes: python-" .. modname .. " < %{?epoch:%{epoch}:}%{version}-%{release}\n"))
-            print(rpm.expand("Provides: python-" .. modname .. " = %{?epoch:%{epoch}:}%{version}-%{release}\n"))
+    local function print_provided_flavor(modname)
+        for provided_flavor in string.gmatch(rpm.expand("%{?" .. current_flavor .. "_provides}"), "%S+" ) do
+            local pkg = provided_flavor .. "-" .. modname
+            print(rpm.expand("Obsoletes: " .. pkg .. " < %{?epoch:%{epoch}:}%{version}-%{release}\n"))
+            print(rpm.expand("Provides: " .. pkg .. " = %{?epoch:%{epoch}:}%{version}-%{release}\n"))
         end
     end
 
@@ -308,7 +309,7 @@ function python_subpackages()
 
             local section_function = process_package_line
             print(section_headline("package", current_flavor, nil))
-            print_obsoletes(modname)
+            print_provided_flavor(modname)
 
             while true do
                 -- collect lines until braces match. it's what rpm does, kind of.
@@ -335,7 +336,7 @@ function python_subpackages()
                         section_function = ignore_line
                     elseif newsection == "package" then
                         print(section_headline("package", current_flavor, param))
-                        print_obsoletes(modname .. "-" .. param)
+                        print_provided_flavor(modname .. "-" .. param)
                         section_function = process_package_line
                     elseif newsection == "files" and current_flavor == flavor then
                         section_function = ignore_line

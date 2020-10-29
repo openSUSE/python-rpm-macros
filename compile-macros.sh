@@ -10,6 +10,10 @@ BUILDSET="python2 python3 python36 python38"
 ### flavor-specific: generate from flavor.in
 for flavor in $FLAVORS; do
     sed 's/#FLAVOR#/'$flavor'/g' flavor.in > macros/020-flavor-$flavor
+    if [ "$flavor" = "python2" ]; then
+        # special old-style package provides and obsoletes for python2
+        echo "%${flavor}_provides python" >> macros/020-flavor-$flavor
+    fi
 done
 
 
