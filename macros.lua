@@ -388,7 +388,7 @@ end
 
 function python_exec(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
     local args = rpm.expand("%**")
-    print(rpm.expand("%{python_expand %__$python " .. args .. "}"))
+    print(rpm.expand("%{python_expand $python "  .. args .. "}"))
 end
 
 function python_expand(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-=)
@@ -445,7 +445,7 @@ function python_clone(a)
         local binsuffix = rpm.expand("%" .. python .. "_bin_suffix")
         link,name,path = python_alternative_names(param, binsuffix, true)
         print(rpm.expand(string.format("cp %s %s\n", param, path)))
-        print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!/usr/bin/%s@' %s\n", python, path)))
+        print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!%s@' %s\n", "%__" .. python, path)))
     end
 
     -- %python_clone -a
