@@ -64,7 +64,7 @@ function package_name(flavor, modname, subpkg, append)
         name = name .. "-" .. subpkg
     end
     if append and append ~= "" then
-        name = name .. " " .. append
+        name = name .. " " .. replace_macros(append, flavor)
     end
     return name
 end
