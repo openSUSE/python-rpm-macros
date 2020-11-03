@@ -186,6 +186,10 @@ to `/usr/bin/foo-%{python_bin_suffix}` for all flavors, and the shebang is modif
 __`%python_clone -a filename`__ will also invoke __`%prepare_alternative`__ with the appropriate
 arguments.
 
+* __`%python_find_lang foo`__ calls `%find_lang foo` for all flavors and creates flavor specific
+  files `%{python_prefix}-foo.lang`. Additional arguments of `%find_lang` are supported. The filelist
+  can then be used as `%files %{python_files} -f %{python_prefix}-foo.lang` in the `%files` section header.
+
 
 ##### Unit testing
 
