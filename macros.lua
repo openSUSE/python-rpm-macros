@@ -52,6 +52,12 @@ function _python_scan_spec()
         flavor = spec_name_prefix
     end
 
+    subpackage_only = rpm.expand("0%{?python_subpackage_only}") ~= "0"
+    if subpackage_only then
+        is_called_python = false
+        modname = ""
+    end
+
     -- find the spec file
     specpath = rpm.expand("%_specfile")
 
@@ -281,7 +287,7 @@ function python_subpackages()
         "pre", "post", "preun", "postun", "pretrans", "posttrans"}
 
     -- before we start, print Provides: python2-modname
-    if is_called_python and old_python2 then
+    if is_called_python and old_python2 and not subpackage_only then
         print(rpm.expand("Provides: python2-" .. modname .. " = %{?epoch:%{epoch}:}%{version}-%{release}\n"))
     end
 
@@ -307,9 +313,15 @@ function python_subpackages()
 
             rpm.define("python_flavor " .. python)
 
-            local section_function = process_package_line
-            print(section_headline("package", current_flavor, nil))
-            print_provided_flavor(modname)
+            local section_function
+
+            if subpackage_only then
+                section_function = ignore_line
+            else
+                section_function = process_package_line
+                print(section_headline("package", current_flavor, nil))
+                print_provided_flavor(modname)
+            end
 
             while true do
                 -- collect lines until braces match. it's what rpm does, kind of.
@@ -331,8 +343,27 @@ function python_subpackages()
 
                 if KNOWN_SECTIONS[newsection] then
                     -- enter new section
-                    if param and param:startswith("-n") then
-                        -- ignore named section
+                    local submodname
+                    local subparam
+                    local ignore_section = false
+                    if subpackage_only then
+                        ignore_section = true
+                        if param then
+                            if newsection == "files" then
+                                submodname, subparam = param:match("%%{python_files%s+(%S+)%s*(.*)}")
+                            else
+                                submodname, subparam = param:match("^%-n%s+%%{python_flavor}%-(%S+)%s*(.*)$")
+                            end
+                            if submodname then
+                                modname = submodname
+                                param = subparam
+                                ignore_section = false
+                            end
+                        end
+                    elseif (param and param:startswith("-n")) then
+                        ignore_section = true
+                    end
+                    if ignore_section then
                         section_function = ignore_line
                     elseif newsection == "package" then
                         print(section_headline("package", current_flavor, param))
@@ -426,6 +457,11 @@ function python_files()
     local nparams = rpm.expand("%#")
     local param = ""
     if tonumber(nparams) > 0 then param = rpm.expand("%1") end
+
+    if subpackage_only then
+        modname = param
+        param = ""
+    end
 
     print("-n " .. package_name(flavor, modname, param))
 

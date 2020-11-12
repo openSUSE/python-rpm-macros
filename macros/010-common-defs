@@ -170,3 +170,13 @@ done \
 } \
 %{nil}
 
+##### Find language files #####
+
+%python_find_lang() \
+%find_lang %{**} \
+langfile=%{?2}%{!?2:%1.lang} \
+%{python_expand # \
+grep -v 'python.*site-packages' ${langfile} > %{$python_prefix}-${langfile} \
+grep -F %{$python_sitelib} ${langfile} >> %{$python_prefix}-${langfile} \
+} \
+%{nil}
