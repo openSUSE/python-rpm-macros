@@ -343,20 +343,20 @@ function python_subpackages()
 
                 if KNOWN_SECTIONS[newsection] then
                     -- enter new section
-                    local submodname
-                    local subparam
                     local ignore_section = false
                     if subpackage_only then
                         ignore_section = true
                         if param then
+                            local subparam
                             if newsection == "files" then
-                                submodname, subparam = param:match("%%{python_files%s+(%S+)%s*(.*)}")
+                                subparam = param:match("%%{python_files%s+(.*)}")
                             else
-                                submodname, subparam = param:match("^%-n%s+%%{python_flavor}%-(%S+)%s*(.*)$")
+                                subparam = param:match("^%-n%s+%%{python_flavor}%-(.*)$")
                             end
-                            if submodname then
+                            if subparam then
+                                local submodname, subsubparam = rpm.expand(subparam):match("^(%S+)%s*(.*)$")
                                 modname = submodname
-                                param = subparam
+                                param = subsubparam
                                 ignore_section = false
                             end
                         end
