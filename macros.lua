@@ -83,7 +83,9 @@ function python_subpackages()
     -- line processing functions
     local function print_altered(line)
         -- set %name macro to proper flavor-name
-        line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
+        if not subpackage_only then
+            line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
+        end
         -- print expanded
         print(rpm.expand(replace_macros(line, current_flavor)) .. "\n")
     end
@@ -158,7 +160,9 @@ function python_subpackages()
             print_altered(line)
         elseif PROPERTY_COPY_MODIFIED[property] then
             -- specifically handle %name macro before expansion
-            line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
+            if not subpackage_only then
+                line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
+            end
             -- convert value using the appropriate function
             if value:startswith("packageand") then
                 value = fix_packageand(value, flavor)
