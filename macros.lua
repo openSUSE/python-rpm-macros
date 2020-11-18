@@ -110,6 +110,9 @@ function python_subpackages()
         "Requires(pre):", "Requires(preun):", "Requires(post):", "Requires(postun):",
         "Requires(pretrans):", "Requires(posttrans):",
     }
+    local PROPERTY_COPY_DEFAULT_PROVIDER = lookup_table {
+        "Conflicts:", "Obsoletes:", "Provides:", "Supplements:", "Enhances:",
+    }
 
     local function process_package_line(line)
         -- This function processes lines like "Requires: something something".
@@ -163,14 +166,26 @@ function python_subpackages()
             if not subpackage_only then
                 line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
             end
-            -- convert value using the appropriate function
-            if value:startswith("packageand") then
-                value = fix_packageand(value, flavor)
-            else
-                value = rename_package(value, flavor)
+            local function print_property_copy_modified(value)
+                -- convert value using the appropriate function
+                if value:startswith("packageand") then
+                    value = fix_packageand(value, flavor)
+                else
+                    value = rename_package(value, flavor)
+                end
+                -- rely on print_altered to perform expansion on the result
+                print_altered(string.format("%s %s", property, value))
             end
-            -- rely on print_altered to perform expansion on the result
-            print_altered(string.format("%s %s", property, value))
+            if PROPERTY_COPY_DEFAULT_PROVIDER[property] then
+                -- print renamed lines for all flavors which the current_flavor provides.
+                for iflavor in string.gmatch(rpm.expand("%{?" .. current_flavor .. "_provides}") .. " " .. current_flavor, "%S+" ) do
+                    current_flavor = iflavor -- make sure to process the main current_flavor last for final reset.
+                    print_property_copy_modified(value)
+                end
+            else
+                print_property_copy_modified(value)
+            end
+
         end
     end
 
