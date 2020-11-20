@@ -128,7 +128,8 @@
     local args = rpm.expand("%**"); \
     local broot = rpm.expand("%buildroot"); \
     local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitelib} PYTHONDONTWRITEBYTECODE=1 "; \
-    intro = intro .. "pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v "; \
+    local ignore_build = "--ignore=_build." .. rpm.expand("%pythons"):gsub("%s+", " --ignore=_build."); \
+    intro = intro .. "pytest-%{$python_bin_suffix} " .. ignore_build .. " -v "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
 
@@ -136,7 +137,8 @@
     local args = rpm.expand("%**"); \
     local broot = rpm.expand("%buildroot"); \
     local intro = "%{python_expand PYTHONPATH=${PYTHONPATH:+$PYTHONPATH:}" .. broot .. "%{$python_sitearch} PYTHONDONTWRITEBYTECODE=1 "; \
-    intro = intro .. "pytest-%{$python_bin_suffix} --ignore=_build.python2 --ignore=_build.python3 --ignore=_build.pypy3 -v "; \
+    local ignore_build = "--ignore=_build." .. rpm.expand("%pythons"):gsub("%s+", " --ignore=_build."); \
+    intro = intro .. "pytest-%{$python_bin_suffix} " .. ignore_build .. " -v "; \
     print(rpm.expand(intro .. args .. "}")) \
 }
 
