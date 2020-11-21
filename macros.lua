@@ -326,7 +326,7 @@ function python_subpackages()
         current_flavor = python
 
         -- rescan spec for each flavor
-        if not is_current_flavor then
+        if not is_current_flavor or subpackage_only then
             local spec, err = io.open(specpath, "r")
             if err then print ("could not find spec file at path: " .. specpath) return end
 
@@ -370,7 +370,7 @@ function python_subpackages()
                             if newsection == "files" then
                                 subparam = param:match("%%{python_files%s+(.*)}")
                             else
-                                subparam = param:match("^%-n%s+%%{python_flavor}%-(.*)$")
+                                subparam = param:match("^%-n%s+python%-(.*)$")
                             end
                             if subparam then
                                 local submodname, subsubparam = rpm.expand(subparam):match("^(%S+)%s*(.*)$")

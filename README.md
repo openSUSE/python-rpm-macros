@@ -113,7 +113,7 @@ main headers section.
 
 * __`%python_subpackage_only`__. Undefined by default. If you want to generate `<flavor>-modname`
 subpackages for a non-python main package, make sure to `%define python_subpackage_only 1` before
-`%python_subpackages` and use `-n %{python_flavor}-modname` for section headers.
+`%python_subpackages` and use `-n python-modname` for section headers (except for `%files`, see below).
 
 * __`%python_enable_dependency_generator`__ expands to a define to enable automatic requires generation
 of Python module dependencies using egg-info/dist-info metadata. This should go above the
