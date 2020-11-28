@@ -38,6 +38,7 @@
 
 %python_prefix                  %{_rec_macro_helper}%{lua:expand_macro("prefix")}
 %python_bin_suffix              %{_rec_macro_helper}%{lua:expand_macro("bin_suffix")}
+%python_provides                %{_rec_macro_helper}%{lua:expand_macro("provides")}
 
 %python_sysconfig_path()        %{_rec_macro_helper}%{lua:call_sysconfig("path", "%{__%python_flavor}")}
 %python_sysconfig_var()         %{_rec_macro_helper}%{lua:call_sysconfig("var", "%{__%python_flavor}")}
