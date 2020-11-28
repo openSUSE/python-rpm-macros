@@ -34,7 +34,7 @@ SHORT_FLAVORS = {
 function replace_macros(str, targetflavor)
     local LONG_MACROS = { "sitelib", "sitearch",
         "alternative", "install_alternative", "uninstall_alternative",
-        "version", "version_nodots", "bin_suffix", "prefix"}
+        "version", "version_nodots", "bin_suffix", "prefix", "provides"}
     local SHORT_MACROS = { "ver" }
     for _, srcflavor in ipairs({flavor, "python"}) do
         str = str:gsub("%%__" .. srcflavor, "%%__" .. targetflavor)
