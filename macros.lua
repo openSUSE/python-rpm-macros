@@ -386,7 +386,7 @@ function python_subpackages()
                         section_function = ignore_line
                     elseif newsection == "package" then
                         print(section_headline("package", current_flavor, param))
-                        print_provided_flavor(modname .. "-" .. param)
+                        print_provided_flavor(modname)
                         section_function = process_package_line
                     elseif newsection == "files" and current_flavor == flavor then
                         section_function = ignore_line
