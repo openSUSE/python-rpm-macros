@@ -79,7 +79,7 @@ other files in non-flavor-specific locations. By default, set to `python3`.
 
 * __`%have_<flavor`__. Defined as 1 if the flavor is present in the build environment.
   Undefined otherwise.
-  
+
   _Note:_ "present in build environment" does not mean "part of build set". Under some
   circumstances, you can get a Python flavor pulled in through dependencies, even if you exclude it 
   from the build set. In such case, `%have_<flavor>` will be defined but packages will not be 
@@ -153,41 +153,41 @@ is the basename of the flavor executable. Make sure it is in `$PATH`.
 * __`%python_expand something`__ is a more general form of the above. It performs rpm macro expansion
   of its arguments for every flavor. Importantly, `$python` is not expanded by the shell, but replaced
   beforehand for the current flavor, even in macros:
-  
-  - When used as command delimited by space or one of `"'\)&|;<>`, it is replaced by the basename of the executable
+
+  - When used as command delimited by space or one of `"'\)&|;<>`, it is replaced by the path to the executable
   - When used as part of a macro name or other string, it is replaced by the current flavor name.
 
   So:
   `%{python_expand $python generatefile.py %{$python_bin_suffix}}`
   expands to:
-  
+
   ```
-  python2 generatefile.py %python2_bin_suffix`  
-  python3.6 generatefile.py %python36_bin_suffix`
-  python3.8 generatefile.py %python38_bin_suffix`
+  python2 generatefile.py 2.7
+  python3.6 generatefile.py 3.6
+  python3.8 generatefile.py 3.8
   ```
-  
+
   etc. (plus the moving around of the `build` directory in between).
 
   If you want to check for the current python flavor inside `%python_expand` use something like
-  
+
   ```spec
   %{python_expand #
-  %if "$python_" == "python3_"
-  command
-  %endif
+  if [ $python_ = python36_ ]; then
+  $python command-for-py-36-only (we have %{$python_version})
+  fi
   }
   ```
-  
+
   which expands to
-    
-  ```spec
+
+  ```sh
   #
-  %if "python3_" == "python3_"
-  command
-  %endif
+  if [ python38_ = python36_ ]; then
+  python3.8 command-for-py-36-only (we have 3.8)
+  fi
   ```
-  
+
   and so on for all flavors.
 
 ##### Install macros
@@ -305,7 +305,7 @@ well as `py3` variants, are recognized for Fedora compatibility.
 
 * __`%files %{python_files}`__ expands the `%files` section for all generated flavor packages of
   `<flavor>-modname`.
-  
+
 * __`%files %{python_files foo}`__ expands the `%files` section for all generated flavor subpackages
   of `<flavor>-modname-foo`.
 
