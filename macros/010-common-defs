@@ -9,13 +9,9 @@
 %_rec_macro_helper %{lua:
     rpm.define("_rec_macro_helper %{nil}")
     function expand_macro(name, args)
-        local interp = rpm.expand("%python_flavor")
+        local pflavor = rpm.expand("%python_flavor")
         local args   = args and rpm.expand(args) or ""
-        print(rpm.expand("%{" .. interp .. "_" .. name .. " " .. args .."}"))
-    end
-    function call_sysconfig(which, interp)
-        local arg = rpm.expand("%1")
-        print(rpm.expand("%{_python_sysconfig_" .. which .. " " .. interp .. " " .. arg .. "}"))
+        print(rpm.expand("%{" .. pflavor .. "_" .. name .. " " .. args .."}"))
     end
 }
 
@@ -36,12 +32,13 @@
 %python_version          %{_python_sysconfig_var  %{expand:%__%{python_flavor}} py_version_short}
 %python_version_nodots   %{_python_sysconfig_var  %{expand:%__%{python_flavor}} py_version_nodot}
 
+%python_sysconfig_path()        %{_python_sysconfig_path %{expand:%__%{python_flavor}} %1}
+%python_sysconfig_var()         %{_python_sysconfig_var  %{expand:%__%{python_flavor}} %1}
+
 %python_prefix                  %{_rec_macro_helper}%{lua:expand_macro("prefix")}
 %python_bin_suffix              %{_rec_macro_helper}%{lua:expand_macro("bin_suffix")}
 %python_provides                %{_rec_macro_helper}%{lua:expand_macro("provides")}
 
-%python_sysconfig_path()        %{_rec_macro_helper}%{lua:call_sysconfig("path", "%{__%python_flavor}")}
-%python_sysconfig_var()         %{_rec_macro_helper}%{lua:call_sysconfig("var", "%{__%python_flavor}")}
 
 %python_alternative()           %{_rec_macro_helper}%{lua:expand_macro("alternative", "%**")}
 %python_install_alternative()   %{_rec_macro_helper}%{lua:expand_macro("install_alternative", "%**")}
