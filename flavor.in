@@ -10,10 +10,10 @@
 %#FLAVOR#_version         %{_python_sysconfig_var  %__#FLAVOR# py_version_short}
 %#FLAVOR#_version_nodots  %{_python_sysconfig_var  %__#FLAVOR# py_version_nodot}
 
-%#FLAVOR#_bin_suffix      %{?!_#FLAVOR#_bin_suffix:%#FLAVOR#_version}%{?_#FLAVOR#_bin_suffix}
+%#FLAVOR#_sysconfig_path()  %{_python_sysconfig_path %__#FLAVOR# %1}
+%#FLAVOR#_sysconfig_var()   %{_python_sysconfig_var %__#FLAVOR# %1}
 
-%#FLAVOR#_sysconfig_path() %{_rec_macro_helper}%{lua:call_sysconfig("path", rpm.expand("%__#FLAVOR#"))}
-%#FLAVOR#_sysconfig_var()  %{_rec_macro_helper}%{lua:call_sysconfig("var", rpm.expand("%__#FLAVOR#"))}
+%#FLAVOR#_bin_suffix      %{?!_#FLAVOR#_bin_suffix:%#FLAVOR#_version}%{?_#FLAVOR#_bin_suffix}
 
 # Check if there is a major version symlink to our flavor in the current build system. If so, we are the primary provider.
 %#FLAVOR#_provides %(provides=""; \
