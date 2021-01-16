@@ -3,8 +3,8 @@
 
 ##### common functionality #####
 
-%_python_sysconfig_path() %(%1 -c "import sysconfig as s; print(s.get_paths().get('%2'))")
-%_python_sysconfig_var()  %(%1 -c "import sysconfig as s; print(s.get_config_var('%2'))")
+%_python_sysconfig_path() %([ -x %1 ] && %1 -c "import sysconfig as s; print(s.get_paths().get('%2'))" || echo "!!%1 not installed!!")
+%_python_sysconfig_var()  %([ -x %1 ] && %1 -c "import sysconfig as s; print(s.get_config_var('%2'))"  || echo "!!%1 not installed!!")
 
 %_rec_macro_helper %{lua:
     rpm.define("_rec_macro_helper %{nil}")
