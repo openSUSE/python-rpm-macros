@@ -519,13 +519,8 @@ end
 
 function python_module()
     rpm.expand("%_python_macro_init")
-    local params = rpm.expand("%**")
     for _, python in ipairs(pythons) do
-        if python == "python2" then
-            print(rpm.expand("%python2_prefix") .. "-" .. params)
-        else
-            print(python .. "-" .. params)
-        end
-        print(" ")
+        rpm.define("python %" .. python .. "_prefix")
+        print(rpm.expand("%python-%**") .. " ")
     end
 end
