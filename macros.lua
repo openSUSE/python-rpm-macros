@@ -517,15 +517,12 @@ function python_clone(a)
     end
 end
 
-function python_module()
+-- called by %python_module, see buildset.in
+function python_module_lua()
     rpm.expand("%_python_macro_init")
     local params = rpm.expand("%**")
     for _, python in ipairs(pythons) do
-        if python == "python2" then
-            print(rpm.expand("%python2_prefix") .. "-" .. params)
-        else
-            print(python .. "-" .. params)
-        end
-        print(" ")
+        local python_prefix = rpm.expand("%" .. python .. "_prefix")
+        print("(" .. python_prefix .. "-" .. string.gsub(params, "%%python", python_prefix) .. ") ")
     end
 end
