@@ -1,11 +1,8 @@
 #!/bin/bash
 
-FLAVORS="python2 python3 python36 python38 pypy3"
-
-# order of BUILDSET is important, it is copied to order of %pythons,
-# and that determines the last installed binary
-BUILDSET="python2 python3 python36 python38"
-
+# The set of flavors for which we produce macros. Not identical to
+# the buildset predefined for specific distributions (see below)
+FLAVORS="python2 python3 python36 python38 python39 pypy3"
 
 ### flavor-specific: generate from flavor.in
 for flavor in $FLAVORS; do
@@ -17,13 +14,9 @@ for flavor in $FLAVORS; do
 done
 
 
-### buildset: generate %pythons, %skip_python? and %python_modules
-pythons=""
-for flavor in $BUILDSET; do
-    pythons="${pythons} %{?!skip_$flavor:$flavor}"
-done
-echo "%pythons $pythons" > macros/040-buildset
-cat buildset.in >> macros/040-buildset
+### buildset: %pythons, %python_module and %add_python, usually overidden
+# by the distribution's prjconf
+cat buildset.in > macros/040-buildset
 
 
 ### Lua: generate automagic from macros.in and macros.lua

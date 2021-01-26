@@ -1,4 +1,14 @@
-# prjconf definitions for python-rpm-macros
+# buildset.in: prjconf definitions for python-rpm-macros.
+#
+# This is usually overridden by the distribution's prjconf, landing in ~/.rpmmacros.
+# This file provides the default definition from Factory (Tumbleweed) for pure rpmbuild packaging.
+
+# order of %pythons is important: The last flavor overrides any operation on conflicting files and definitions during expansions,
+# making it the "default" in many cases --> keep the primary python3 provider at the end.
+%pythons %{?!skip_python3:%{?!skip_python36:python36} %{?!skip_python38:python38}}
+%skip_python2 1
+%_without_python2 1
+
 # This method for generating python_modules gets too deep to expand for rpm at about 5 python flavors.
 # Hence, python_module_iter is replaced by python_module_lua in macros.lua.
 # However, OBS cannot expand lua, but has a much higher expansion depth, so this works fine for the server side resolver.
