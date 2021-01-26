@@ -90,8 +90,13 @@ other files in non-flavor-specific locations. By default, set to `python3`.
   _Note:_ You do not need to define `%skip_python2` for Tumbleweed. Only define, if you need to skip it
   for older distributions.
 
-* __`%{python_module modname [= version]}`__ expands to `<flavor>-modname [= version]` for every
-flavor. Intended as: `BuildRequires: %{python_module foo}`.
+* __`%{python_module modname args}`__ expands to `(<flavor>-modname args)` for every
+  flavor. Intended as: `BuildRequires: %{python_module foo >= version}`. Supports 
+  [rpm boolean dependencies](https://rpm.org/user_doc/boolean_dependencies.html).
+  If the package needs a module only for a specific Python version, you can use the special pseudo-macro
+  `%python` for expansion of the python-flavor within the requirement, e.g.
+  `BuildRequires: %{python_module python-aiocontextvars >= 0.2.2 if %python-base < 3.7}`.
+  (Don't define `%python` anywhere else.)
 
 * __`%{python_dist_name modname}`__. Given a standardized name (i.e. dist name, name on PyPI) of `modname`,
 it will convert it to a canonical format.
