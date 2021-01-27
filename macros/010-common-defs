@@ -148,7 +148,7 @@
     buildwheel = buildwheel .. " --disable-pip-version-check --use-pep517 --no-build-isolation --progress-bar off --verbose . -w build/ "; \
     -- remove abi and platform tags from filename in case the package does define them incorrectly (see PEP427 for valid filenames) \
     -- single percent for shell out of four percent by rpm.expand \
-    local renamewheel = "fn=(build/*.whl); mv $fn ${fn%%%%-*-*.whl}-none-any.whl"; \
+    local renamewheel = "fn=(build/*.whl); mv -n $fn ${fn%%%%-*-*.whl}-none-any.whl"; \
     local pyexpandend = "}"; \
     print(rpm.expand(pyexpandstart .. buildwheel .. args .. "; " .. renamewheel .. pyexpandend)) \
 }
@@ -157,7 +157,7 @@
 %pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
     local broot = rpm.expand("--root %buildroot"); \
-    local intro = "%{python_expand $python -mpip install " .. broot .. " --disable-pip-version-check --no-compile --no-deps  --progress-bar off build/*-none-any.whl"; \
+    local intro = "%{python_expand $python -mpip install " .. broot .. " --disable-pip-version-check --no-compile --no-deps  --progress-bar off build/*.whl"; \
     print(rpm.expand(intro .. args .. "}")) \
     print(rpm.expand("%python_compileall"))
 }
