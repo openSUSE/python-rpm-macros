@@ -52,12 +52,6 @@ function _python_scan_spec()
         flavor = spec_name_prefix
     end
 
-    subpackage_only = rpm.expand("0%{?python_subpackage_only}") ~= "0"
-    if subpackage_only then
-        is_called_python = false
-        modname = ""
-    end
-
     -- find the spec file
     specpath = rpm.expand("%_specfile")
 
@@ -79,6 +73,12 @@ function python_subpackages()
 
     local current_flavor  = flavor
     local original_flavor = rpm.expand("%python_flavor")
+
+    subpackage_only = rpm.expand("%{python_subpackage_only}") == "1"
+    if subpackage_only then
+        is_called_python = false
+        modname = ""
+    end
 
     -- line processing functions
     local function print_altered(line)
