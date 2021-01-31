@@ -54,17 +54,6 @@ function _python_scan_spec()
 
     -- find the spec file
     specpath = rpm.expand("%_specfile")
-
-    -- search possible locations - shouldn't be necessary anymore
---    local locations = { rpm.expand("%_sourcedir"), rpm.expand("%_specdir"), posix.getcwd(), posix.getcwd() .. "/" .. name }
---    for _,loc in ipairs(locations) do
---        local filename = loc .. "/" .. name .. ".spec"
---        if posix.stat(filename, "mode") ~= nil then
---            io.stderr:write("could not find spec as " .. filename .. "\n")
---            specpath = filename
---            break
---        end
---    end
 end
 
 function python_subpackages()
