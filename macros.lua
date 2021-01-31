@@ -52,25 +52,8 @@ function _python_scan_spec()
         flavor = spec_name_prefix
     end
 
-    subpackage_only = rpm.expand("0%{?python_subpackage_only}") ~= "0"
-    if subpackage_only then
-        is_called_python = false
-        modname = ""
-    end
-
     -- find the spec file
     specpath = rpm.expand("%_specfile")
-
-    -- search possible locations - shouldn't be necessary anymore
---    local locations = { rpm.expand("%_sourcedir"), rpm.expand("%_specdir"), posix.getcwd(), posix.getcwd() .. "/" .. name }
---    for _,loc in ipairs(locations) do
---        local filename = loc .. "/" .. name .. ".spec"
---        if posix.stat(filename, "mode") ~= nil then
---            io.stderr:write("could not find spec as " .. filename .. "\n")
---            specpath = filename
---            break
---        end
---    end
 end
 
 function python_subpackages()
@@ -79,6 +62,12 @@ function python_subpackages()
 
     local current_flavor  = flavor
     local original_flavor = rpm.expand("%python_flavor")
+
+    subpackage_only = rpm.expand("%{python_subpackage_only}") == "1"
+    if subpackage_only then
+        is_called_python = false
+        modname = ""
+    end
 
     -- line processing functions
     local function print_altered(line)
