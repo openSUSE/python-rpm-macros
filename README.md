@@ -77,7 +77,7 @@ other files in non-flavor-specific locations. By default, set to `python3`.
 
 * __`%pythons`__ - the build set. See above for details.
 
-* __`%have_<flavor`__. Defined as 1 if the flavor is present in the build environment.
+* __`%have_<flavor>`__. Defined as 1 if the flavor is present in the build environment.
   Undefined otherwise.
 
   _Note:_ "present in build environment" does not mean "part of build set". Under some
