@@ -1,17 +1,16 @@
-# buildset.in: prjconf definitions for python-rpm-macros.
+# default-prjconf: buildset definitions for python-rpm-macros.
 #
 # This is usually overridden by the distribution's prjconf, landing in ~/.rpmmacros.
 # This file provides the default definition from Factory (Tumbleweed) for pure rpmbuild packaging.
 
+# Macros:
+## PYTHON MACROS BEGIN
 # order of %pythons is important: The last flavor overrides any operation on conflicting files and definitions during expansions,
 # making it the "default" in many cases --> keep the primary python3 provider at the end.
 %pythons %{?!skip_python3:%{?!skip_python36:python36} %{?!skip_python38:python38}}
 %add_python() %{expand:%%define pythons %1 %pythons}
 
-# Factory also defines these, but for cases where they are not defined at all (SLE, Leap) we cannot define them here, because they
-# would not be overridden.
-#%%skip_python2 1
-#%%_without_python2 1
+%_without_python2 1
 
 # This method for generating python_modules gets too deep to expand for rpm at about 5 python flavors.
 # Hence, python_module_iter is replaced by python_module_lua in macros.lua.
@@ -20,4 +19,5 @@
 # pseudo-undefine for obs: reset for the next expansion within the next call of python_module
 %python_module_iter_STOP %global python %%%%python
 %python_module() %{?!python_module_lua:%{expand:%%define args %{**}} %{expand:%%{python_module_iter -a %{pythons} STOP}}}%{?python_module_lua:%python_module_lua %{**}}
-
+## PYTHON MACROS END
+# :Macros
