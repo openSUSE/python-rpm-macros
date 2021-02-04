@@ -218,11 +218,14 @@ is the basename of the flavor executable. Make sure it is in `$PATH`.
 * __`%python_install`__ expands to distutils/setuptools install instructions for all flavors.
 
 * __`%pyproject_wheel`__ expands to 
-[PEP517](https://www.python.org/dev/peps/pep-0517)/[PEP518](https://www.python.org/dev/peps/pep-0518/)
-build instructions for all flavors and creates wheels. This is useful if the package has a 
-``pyproject.toml`` file but no ``setup.py``
+  [PEP517](https://www.python.org/dev/peps/pep-0517)/[PEP518](https://www.python.org/dev/peps/pep-0518/)
+  build instructions for all flavors, creates wheels and places them into the flavor's `build/` directories.
+  This is useful if the package has a ``pyproject.toml`` file but no ``setup.py``.
 
-* __`%pyproject_install`__ expands to install instructions for all flavors to install the created wheels.
+* __`%pyproject_install [wheelfile]`__ expands to install instructions for all flavors to install the created wheels.
+  You can also use this without `%pyproject_wheel`, if you place a pre-existing wheel into the current working dir
+  (deprecated), the `build/` directory of the current flavor (what `%pyproject_wheel` does), or specify
+  the path to the wheel file explicitly as argument to the macro (preferred), e.g `%pyproject_install %{SOURCE0}`.
 
 * __`%python_compileall`__ precompiles all python source files in `%{python_sitelib}` and `%{python_sitearch}`
 for all flavors. Generally Python 2 creates the cached byte-code `.pyc` files directly in the script directories, while
