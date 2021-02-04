@@ -14,10 +14,22 @@ for flavor in $FLAVORS; do
 done
 
 
-### buildset: %pythons, %python_module and %add_python, usually overidden
-# by the distribution's prjconf
-cat buildset.in > macros/040-buildset
-
+### buildset: %pythons, %python_module and %add_python, coming from
+# the current build target's prjconf
+echo "Setting buildset:"
+echo "## Python Buildset Begin" | tee macros/040-builset-start
+# First try to find the block from Factory
+sed -n '/## PYTHON MACROS BEGIN/,/## PYTHON MACROS END/ p' ~/.rpmmacros | tee macros/041-buildset
+# If that fails, find the old definitions (SUSE:SLE-15-SP?:GA, openSUSE:Leap:15.?)
+if [ ! -s macros/041-buildset ]; then
+    sed -n '/%pythons/,/%add_python/ p' ~/.rpmmacros | tee macros/041-buildset
+fi
+# If we still have nothing (different distro, custom prjconf, building
+# python-rpm-macros outside of obs), use the default file
+if [ ! -s macros/041-buildset ]; then
+    tee macros/041-buildset < default-prjconf
+fi
+echo "## Python Buildset End" | tee macros/042-builset-end
 
 ### Lua: generate automagic from macros.in and macros.lua
 (
