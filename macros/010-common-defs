@@ -148,7 +148,7 @@
     buildwheel = buildwheel .. " --disable-pip-version-check --use-pep517 --no-build-isolation --progress-bar off --verbose . -w build/ "; \
     -- remove abi and platform tags from filename in case the package does define them incorrectly (see PEP427 for valid filenames) \
     -- single percent for shell out of four percent by rpm.expand \
-    local renamewheel = "fn=(build/*.whl); mv -n $fn ${fn%%%%-*-*.whl}-none-any.whl"; \
+    local renamewheel = "fn=(build/*.whl); fn2=${fn%%%%-*-*.whl}-none-any.whl"; if [ ! $fn -ef $fn2 ]; then mv $fn $fn2; fi" \
     local pyexpandend = "}"; \
     print(rpm.expand(pyexpandstart .. buildwheel .. args .. "; " .. renamewheel .. pyexpandend)) \
 }
