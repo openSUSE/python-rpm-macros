@@ -143,14 +143,14 @@
 ##### PEP-518 macros #####
 %pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
     local args = rpm.expand("%**"); \
-    local pyexpandstart = "%{python_expand "; \
+    local pyexpandstart = "%{python_expand # \\n"; \
     local buildwheel = "$python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}}"; \
     buildwheel = buildwheel .. " --disable-pip-version-check --use-pep517 --no-build-isolation --progress-bar off --verbose . -w build/ "; \
     -- remove abi and platform tags from filename in case the package does define them incorrectly (see PEP427 for valid filenames) \
     -- single percent for shell out of four percent by rpm.expand \
-    local renamewheel = "fn=(build/*.whl); fn2=${fn%%%%-*-*.whl}-none-any.whl"; if [ ! $fn -ef $fn2 ]; then mv $fn $fn2; fi" \
+    local renamewheel = "fn=(build/*.whl); fn2=${fn%%%%-*-*.whl}-none-any.whl; if [ ! $fn -ef $fn2 ]; then mv $fn $fn2; fi"; \
     local pyexpandend = "}"; \
-    print(rpm.expand(pyexpandstart .. buildwheel .. args .. "; " .. renamewheel .. pyexpandend)) \
+    print(rpm.expand(pyexpandstart .. buildwheel .. args .. "\\n " .. renamewheel .. pyexpandend)) \
 }
 
 # No such option: --strip-file-prefix %%{buildroot} 
