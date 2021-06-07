@@ -122,6 +122,12 @@ function python_install_alternative(flavor)
     local prio      = rpm.expand("%" .. flavor .. "_version_nodots")
     local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
 
+    -- increase priority for primary python3 flavor
+    local provides = rpm.expand("%" .. flavor .. "_provides") .. " "
+    if provides:match("python3%s") then
+        prio = prio + 1000
+    end
+
     local params = {}
     for p in string.gmatch(rpm.expand("%*"), "%S+") do
         table.insert(params, p)
