@@ -104,48 +104,39 @@ function python_subpackages()
     }
 
     local function process_package_line(line)
-        -- This function processes lines like "Requires: something something".
+        -- This function processes package tags like requirements and capabilities.
+        -- It supports the python- prefix for plain packages, packageand(python-a:python-b:...), and boolean dependencies.
         -- "Requires: python-foo" -> "Requires: python3-foo"
         -- "Requires: %{name} = %{version}" -> "Requires: python3-modname = %{version}"
-        -- "Supplements: packageand(python-a:python-b)" -> "Supplements: packageand(python3-a:python3-b)"
-        -- you get the idea.
-        -- TODO implement %$flavor_only support here?
 
         -- first split Property: value
         local property, value = line:match("^([A-Z%%]%S+)%s*(.*)$")
 
-        -- "python-foo" -> "python3-foo"
-        local function rename_package(package, flavor)
-            if package == "python" or package == flavor then
-                -- specialcase plain "python"
-                package = current_flavor
-            else
-                package = package:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
-                package = package:gsub("^python(%W)", current_flavor .. "%1")
+        -- split and rewrite every package value either plain or inside boolean dependencies and packageand() -- recursive
+        local function replace_prefix(value, flavor)
+            local function replace_prefix_r(ivalue)
+                return replace_prefix(ivalue, flavor)
             end
-            return package
-        end
-
-        -- split and rewrite "packageand(a:b:c)", using rename_package() for each of a, b, c
-        local function fix_packageand(packageand, flavor)
-            local inner = packageand:match("^packageand%((.*)%)$")
-            if not inner then return packageand end
-            local eat = inner
-            local result = "packageand("
-            while eat do
-                local idx = eat:find(":")
-                local n = ""
-                if idx then
-                    n = eat:sub(1, idx)
-                    eat = eat:sub(idx+1)
+            local function rename_package(package)
+                if package == "python" or package == flavor then
+                    -- specialcase plain "python"
+                    package = current_flavor
                 else
-                    n = eat
-                    eat = nil
+                    package = package:gsub("^" .. flavor .. "(%W)", current_flavor .. "%1")
+                    package = package:gsub("^python(%W)", current_flavor .. "%1")
                 end
-                n = n:gsub("^%s*", "")
-                result = result .. rename_package(n, flavor)
+                return package
             end
-            return result .. ")"
+            local before, inner, remainder
+            inner, remainder = value:match("^packageand(%b())%s*(.*)$")
+            if inner then
+                return "packageand(" .. inner:sub(2,-2):gsub("[^:]+", rename_package) .. ") " .. replace_prefix_r(tostring(remainder))
+            end
+            before, inner, remainder = value:match("^([^()]*)(%b())%s*(.*)$")
+            if inner then
+                return replace_prefix_r(tostring(before)) .. " (".. replace_prefix_r(inner:sub(2, -2)) ..  ") " .. replace_prefix_r(tostring(remainder))
+            end            
+            return value:gsub("%S+", rename_package)
         end
 
         if PROPERTY_COPY_UNMODIFIED[property] then
@@ -156,12 +147,7 @@ function python_subpackages()
                 line = line:gsub("%%{?name}?", current_flavor .. "-" .. modname)
             end
             local function print_property_copy_modified(value)
-                -- convert value using the appropriate function
-                if value:startswith("packageand") then
-                    value = fix_packageand(value, flavor)
-                else
-                    value = rename_package(value, flavor)
-                end
+                value = replace_prefix(value, flavor)
                 -- rely on print_altered to perform expansion on the result
                 print_altered(string.format("%s %s", property, value))
             end
