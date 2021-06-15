@@ -68,6 +68,17 @@
 # this is by convention hardcoded python2
 %py_ver  %(python -c "import sys; v=sys.version_info[:2]; print '%%d.%%d'%%v" 2>/dev/null || echo PYTHON-NOT-FOUND)
 
+%python_sitelib_module() %{lua:\
+        name = rpm.expand("%{?1:%{1}}");\
+        print("%{python_sitelib}/" .. name .."\n" .. "%{python_sitelib}/" .. name .. "-%{version}*-info");\
+}
+
+%python_sitearch_module() %{lua:\
+        name = rpm.expand("%{?1:%{1}}");\
+        print("%{python_sitearch}/" .. name .."\n" .. "%{python_sitearch}/" .. name .. "-%{version}*-info");\
+}
+
+
 ##### Python dependency generator macros #####
 
 # === Macros for Build/Requires tags using Python dist tags ===
