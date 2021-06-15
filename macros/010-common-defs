@@ -46,6 +46,17 @@
 
 %py_ver  %python_version
 
+%python_sitelib_module() %{lua:\
+        name = rpm.expand("%{?1:%{1}}");\
+        print("%{python_sitelib}/" .. name .."\n" .. "%{python_sitelib}/" .. name .. "-%{version}-py*.egg-info");\
+}
+
+%python_sitearch_module() %{lua:\
+        name = rpm.expand("%{?1:%{1}}");\
+        print("%{python_sitearch}/" .. name .."\n" .. "%{python_sitearch}/" .. name .. "-%{version}-py*.egg-info");\
+}
+
+
 ##### Python dependency generator macros #####
 
 # === Macros for Build/Requires tags using Python dist tags ===
