@@ -127,15 +127,15 @@ function python_subpackages()
                 end
                 return package
             end
-            local before, inner, remainder
-            inner, remainder = value:match("^packageand(%b())%s*(.*)$")
+            local before, inner, space, remainder
+            inner, space, remainder = value:match("^packageand(%b())(%s*)(.*)$")
             if inner then
-                return "packageand(" .. inner:sub(2,-2):gsub("[^:]+", rename_package) .. ") " .. replace_prefix_r(tostring(remainder))
+                return "packageand(" .. inner:sub(2,-2):gsub("[^:]+", rename_package) .. ")" .. space .. replace_prefix_r(tostring(remainder))
             end
-            before, inner, remainder = value:match("^([^()]*)(%b())%s*(.*)$")
+            before, inner, space, remainder = value:match("^([^()]*)(%b())(%s*)(.*)$")
             if inner then
-                return replace_prefix_r(tostring(before)) .. " (".. replace_prefix_r(inner:sub(2, -2)) ..  ") " .. replace_prefix_r(tostring(remainder))
-            end            
+                return replace_prefix_r(tostring(before)) .. "(".. replace_prefix_r(inner:sub(2, -2)) ..  ")" .. space .. replace_prefix_r(tostring(remainder))
+            end
             return value:gsub("%S+", rename_package)
         end
 
