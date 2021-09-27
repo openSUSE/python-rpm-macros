@@ -43,7 +43,15 @@ echo ${provides# }; \
 
 %#FLAVOR#_alternative() %{_python_macro_init} \
 %{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \
+local libalternatives = rpm.expand("%{with libalternatives}") \
+if libalternatives == "1" then \
+print(rpm.expand("%ghost %dir %{_datadir}/libalternatives\\\n")) \
+print(rpm.expand("%ghost %dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
+print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/%python_version_nodots.conf\\\n")) \
+print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/10%python_version_nodots.conf\\\n")) \
+else \
 print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
+end \
 print(link .. "\\\n") \
 print(path .. "\\\n") }
 
@@ -52,3 +60,6 @@ print(path .. "\\\n") }
 
 %#FLAVOR#_uninstall_alternative() \
 %{uninstall_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix}
+
+%#FLAVOR#_reset_alternative() \
+%{reset_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix}
