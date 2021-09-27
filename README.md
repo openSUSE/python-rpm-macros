@@ -1,4 +1,4 @@
-# Multi-Python, Single-Spec Macro System
+# Multi-Python, Single-Spec MacroSystem
 
 This repository contains a work-in-progress macro system generator for the singlespec Python initiative.
 The macro system can be used in spec files for building RPM packages.
