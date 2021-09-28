@@ -45,15 +45,20 @@ echo ${provides# }; \
 %{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \
 local libalternatives = rpm.expand("%{with libalternatives}") \
 if libalternatives == "1" then \
-print(rpm.expand("%ghost %dir %{_datadir}/libalternatives\\\n")) \
-print(rpm.expand("%ghost %dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
-print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/%python_version_nodots.conf\\\n")) \
-print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/10%python_version_nodots.conf\\\n")) \
+  if not link:startswith(rpm.expand("%{_mandir}")) then \
+    print(rpm.expand("%ghost %dir %{_datadir}/libalternatives\\\n")) \
+    print(rpm.expand("%ghost %dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
+    print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/%python_version_nodots.conf\\\n")) \
+    print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/10%python_version_nodots.conf\\\n")) \
+    print(link .. "\\\n") \
+  end \
+  print(path .. "\\\n") \
 else \
-print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
+  print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
+  print(link .. "\\\n") \
+  print(path .. "\\\n")
 end \
-print(link .. "\\\n") \
-print(path .. "\\\n") }
+}
 
 %#FLAVOR#_install_alternative() %{_python_macro_init} \
 %{lua:python_install_alternative("#FLAVOR#")}

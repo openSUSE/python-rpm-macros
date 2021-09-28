@@ -7,7 +7,9 @@ if [[ "$alternative_target" == %{_mandir}* ]]; then \
     rm -f %{buildroot}%{alternative_target}%{ext_man} \
 fi \
 if [ %{with libalternatives} -eq 1 ] ; then \
-ln -sf %{_bindir}/alts %{buildroot}%{alternative_target}  \
+if [[ "$alternative_target" != %{_mandir}* ]]; then \
+ln -sf %{_bindir}/alts %{buildroot}%{alternative_target} \
+fi \
 else \
 mkdir -p %{buildroot}%{_sysconfdir}/alternatives \
 touch %{buildroot}%{_sysconfdir}/alternatives/%1 \
