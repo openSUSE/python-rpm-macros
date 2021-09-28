@@ -329,7 +329,7 @@ spec file:
   # removing old update-alternatives entries
   %python_libalternatives_reset_alternative <name>
   ```
-  The argument *name* is the same used for calling *%python_uninstall_alternative*.
+  The argument *<name>* is the same used for calling *%python_uninstall_alternative*.
 
 #### Flavor-specific macros  
 
