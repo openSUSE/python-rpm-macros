@@ -56,7 +56,7 @@ if libalternatives == "1" then \
 else \
   print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
   print(link .. "\\\n") \
-  print(path .. "\\\n")
+  print(path .. "\\\n") \
 end \
 }
 
