@@ -166,9 +166,16 @@ function python_install_alternative(flavor)
 	        local bindir = rpm.expand("%_bindir")
 	        local datadir = rpm.expand("%_datadir")
                 print(string.format("mkdir -p %s/libalternatives/%s\n", datadir, v))
-                print(string.format(
-	            "echo 'binary=%s/%s-%s \nman=%s\ngroup=%s' >%s/libalternatives/%s/%s.conf \n",
-		    bindir, v, binsuffix, man, group, datadir, v, prio))
+                print(string.format("echo binary=%s/%s-%s >%s/libalternatives/%s/%s.conf \\n",
+		    bindir, v, binsuffix, datadir, v, prio))
+		if man:len() > 0 then
+                    print(string.format("echo man=%s >>%s/libalternatives/%s/%s.conf \\n",
+	                man, datadir, v, prio))
+		end
+                if group:len() > 0 then
+                    print(string.format("echo group=%s >>%s/libalternatives/%s/%s.conf \\n",
+	                group, datadir, v, prio))
+		end
 	    end
         end
     else

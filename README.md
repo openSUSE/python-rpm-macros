@@ -311,7 +311,7 @@ spec file:
   %bcond_with libalternatives
   %endif
   ```
-  This example shows that *libalterntive* is available for TW only.
+  This example shows that *libalternatives* is available for TW only.
 
 * Requiring needed packages:
   ```spec
