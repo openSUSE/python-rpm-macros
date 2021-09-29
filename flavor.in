@@ -46,12 +46,7 @@ echo ${provides# }; \
 local libalternatives = rpm.expand("%{with libalternatives}") \
 if libalternatives == "1" then \
   if not link:startswith(rpm.expand("%{_mandir}")) then \
-    local prio = rpm.expand("%" .. "#FLAVOR#" .. "_version_nodots") \
-    -- increase priority for primary python3 flavor \
-    local provides = rpm.expand("%" .. "#FLAVOR#" .. "_provides") .. " " \
-    if provides:match("python3%s") then \
-       prio = prio + 1000 \
-    end \
+    local prio = alternative_prio("#FLAVOR#") \
     print(rpm.expand("%ghost %dir %{_datadir}/libalternatives\\\n")) \
     print(rpm.expand("%ghost %dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
     print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/" .. prio .. ".conf\\\n")) \

@@ -117,16 +117,19 @@ function python_alternative_names(arg, binsuffix, keep_path_unmangled)
     end
     return link, name, path
 end
-
-function python_install_alternative(flavor)
+function alternative_prio(flavor)
     local prio      = rpm.expand("%" .. flavor .. "_version_nodots")
-    local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
-    local libalternatives = rpm.expand("%{with libalternatives}")
     -- increase priority for primary python3 flavor
     local provides = rpm.expand("%" .. flavor .. "_provides") .. " "
     if provides:match("python3%s") then
         prio = prio + 1000
     end
+    return prio
+end
+function python_install_alternative(flavor)
+    local prio      = alternative_prio(flavor)
+    local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
+    local libalternatives = rpm.expand("%{with libalternatives}")
 
     local params = {}
     for p in string.gmatch(rpm.expand("%*"), "%S+") do
@@ -166,14 +169,14 @@ function python_install_alternative(flavor)
 	        local bindir = rpm.expand("%_bindir")
 	        local datadir = rpm.expand("%_datadir")
                 print(string.format("mkdir -p %s/libalternatives/%s\n", datadir, v))
-                print(string.format("echo binary=%s/%s-%s >%s/libalternatives/%s/%s.conf \\n",
+                print(string.format("echo binary=%s/%s-%s >%s/libalternatives/%s/%s.conf\n",
 		    bindir, v, binsuffix, datadir, v, prio))
 		if man:len() > 0 then
-                    print(string.format("echo man=%s >>%s/libalternatives/%s/%s.conf \\n",
+                    print(string.format("echo man=%s >>%s/libalternatives/%s/%s.conf\n",
 	                man, datadir, v, prio))
 		end
                 if group:len() > 0 then
-                    print(string.format("echo group=%s >>%s/libalternatives/%s/%s.conf \\n",
+                    print(string.format("echo group=%s >>%s/libalternatives/%s/%s.conf\n",
 	                group, datadir, v, prio))
 		end
 	    end
