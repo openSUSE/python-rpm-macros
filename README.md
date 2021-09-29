@@ -317,6 +317,7 @@ spec file:
   ```spec
   %if %{with libalternatives}
   Requires:       alts
+  BuildRequires:  alts
   %else
   Requires(post): update-alternatives
   Requires(postun):update-alternatives
