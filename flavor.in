@@ -43,12 +43,28 @@ echo ${provides# }; \
 
 %#FLAVOR#_alternative() %{_python_macro_init} \
 %{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \
-print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
-print(link .. "\\\n") \
-print(path .. "\\\n") }
+local libalternatives = rpm.expand("%{with libalternatives}") \
+if libalternatives == "1" then \
+  if not link:startswith(rpm.expand("%{_mandir}")) then \
+    local prio = alternative_prio("#FLAVOR#") \
+    print(rpm.expand("%ghost %dir %{_datadir}/libalternatives\\\n")) \
+    print(rpm.expand("%ghost %dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
+    print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/" .. prio .. ".conf\\\n")) \
+    print(link .. "\\\n") \
+  end \
+  print(path .. "\\\n") \
+else \
+  print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
+  print(link .. "\\\n") \
+  print(path .. "\\\n") \
+end \
+}
 
 %#FLAVOR#_install_alternative() %{_python_macro_init} \
 %{lua:python_install_alternative("#FLAVOR#")}
 
 %#FLAVOR#_uninstall_alternative() \
 %{uninstall_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix}
+
+%#FLAVOR#_reset_alternative() \
+%{reset_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix}

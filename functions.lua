@@ -33,7 +33,7 @@ SHORT_FLAVORS = {
 
 function replace_macros(str, targetflavor)
     local LONG_MACROS = { "sitelib", "sitearch",
-        "alternative", "install_alternative", "uninstall_alternative",
+        "alternative", "install_alternative", "uninstall_alternative", "reset_alternative",
         "version", "version_nodots", "bin_suffix", "prefix", "provides"}
     local SHORT_MACROS = { "ver" }
     for _, srcflavor in ipairs({flavor, "python"}) do
@@ -117,16 +117,19 @@ function python_alternative_names(arg, binsuffix, keep_path_unmangled)
     end
     return link, name, path
 end
-
-function python_install_alternative(flavor)
+function alternative_prio(flavor)
     local prio      = rpm.expand("%" .. flavor .. "_version_nodots")
-    local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
-
     -- increase priority for primary python3 flavor
     local provides = rpm.expand("%" .. flavor .. "_provides") .. " "
     if provides:match("python3%s") then
         prio = prio + 1000
     end
+    return prio
+end
+function python_install_alternative(flavor)
+    local prio      = alternative_prio(flavor)
+    local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
+    local libalternatives = rpm.expand("%{with libalternatives}")
 
     local params = {}
     for p in string.gmatch(rpm.expand("%*"), "%S+") do
@@ -138,10 +141,52 @@ function python_install_alternative(flavor)
         return
     end
 
-    local link, name, path = python_alternative_names(params[1], binsuffix)
-    print(string.format("update-alternatives --quiet --install %s %s %s %s", link, name, path, prio))
-    table.remove(params, 1)
-    for _, v in ipairs(params) do
-        print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
+    if libalternatives == "1" then
+        for _, v in ipairs(params) do
+	    local link, name, path = python_alternative_names(v, binsuffix)
+            if not v:match(".+%.%d") then
+                local group = ""
+	        local man = ""
+                for _, v2 in ipairs(params) do
+	           local man_match = v2:match(".+%.%d")
+	           if man_match then
+		      if string.sub(man_match,1,-3) == v then
+		        local man_entry = v .. "-" .. binsuffix .. "." .. string.sub(man_match,man_match:len())
+                        if man:len() > 0 then
+		           man = man .. ", " .. man_entry
+		        else
+                           man = man_entry
+		        end
+		      end
+		   else
+		      if group:len() > 0 then
+		         group = group .. ", " .. v2
+		      else
+                         group = v2
+		      end
+		   end
+	        end
+	        local bindir = rpm.expand("%_bindir")
+	        local datadir = rpm.expand("%_datadir")
+                print(string.format("mkdir -p %s/libalternatives/%s\n", datadir, v))
+                print(string.format("echo binary=%s/%s-%s >%s/libalternatives/%s/%s.conf\n",
+		    bindir, v, binsuffix, datadir, v, prio))
+		if man:len() > 0 then
+                    print(string.format("echo man=%s >>%s/libalternatives/%s/%s.conf\n",
+	                man, datadir, v, prio))
+		end
+                if group:len() > 0 then
+                    print(string.format("echo group=%s >>%s/libalternatives/%s/%s.conf\n",
+	                group, datadir, v, prio))
+		end
+	    end
+        end
+    else
+        local link, name, path = python_alternative_names(params[1], binsuffix)
+        print(string.format("update-alternatives --quiet --install %s %s %s %s", link, name, path, prio))
+        table.remove(params, 1)
+        for _, v in ipairs(params) do
+            print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
+        end
     end
 end

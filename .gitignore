@@ -2,5 +2,8 @@
 /macros/020-flavor-*
 /macros/035-default-pythons
 /macros/040-buildset
+/macros/041-buildset
+/macros/040-builset-start
+/macros/042-builset-end
 /macros/050-automagic
 *.swp

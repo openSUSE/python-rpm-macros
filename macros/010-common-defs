@@ -43,6 +43,7 @@
 %python_alternative()           %{_rec_macro_helper}%{lua:expand_macro("alternative", "%**")}
 %python_install_alternative()   %{_rec_macro_helper}%{lua:expand_macro("install_alternative", "%**")}
 %python_uninstall_alternative() %{_rec_macro_helper}%{lua:expand_macro("uninstall_alternative", "%**")}
+%python_libalternatives_reset_alternative() %{_rec_macro_helper}%{lua:expand_macro("reset_alternative", "%**")}
 
 %py_ver  %python_version
 
