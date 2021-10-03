@@ -60,11 +60,23 @@ else \
 end \
 }
 
-%#FLAVOR#_install_alternative() %{_python_macro_init} \
-%{lua:python_install_alternative("#FLAVOR#")}
+%#FLAVOR#_install_alternative() \
+%{_python_macro_init} \
+%{lua:python_install_alternative("#FLAVOR#")} \
+%{nil}
 
 %#FLAVOR#_uninstall_alternative() \
-%{uninstall_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix}
+%if ! %{with libalternatives} \
+%{uninstall_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix} \
+%else \
+: \# no uninstall action for libalternatives \
+%endif \
+%{nil}
 
 %#FLAVOR#_reset_alternative() \
-%{reset_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix}
+%if %{with libalternatives} \
+%{reset_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix} \
+%else \
+: \# reset action only for libalternatives \
+%endif \
+%{nil}
