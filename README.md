@@ -328,7 +328,7 @@ spec file:
   ```spec
   %pre
   # removing old update-alternatives entries
-  %python_reset_alternative <name>
+  %python_libalternatives_reset_alternative <name>
   ```
   The argument *\<name\>* is the same used for calling *%python_uninstall_alternative*.
 
