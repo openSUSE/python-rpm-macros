@@ -47,7 +47,7 @@ local libalternatives = rpm.expand("%{with libalternatives}") \
 if libalternatives == "1" then \
   if not link:startswith(rpm.expand("%{_mandir}")) then \
     local prio = alternative_prio("#FLAVOR#") \
-    print(rpm.expand("%ghost %dir %{_datadir}/libalternatives\\\n")) \
+    print(rpm.expand("%dir %{_datadir}/libalternatives\\\n")) \
     print(rpm.expand("%ghost %dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
     print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/" .. prio .. ".conf\\\n")) \
     print(link .. "\\\n") \
