@@ -7,6 +7,7 @@ if [[ "$alternative_target" == %{_mandir}* ]]; then \
     rm -f %{buildroot}%{alternative_target}%{ext_man} \
 fi \
 if [ %{with libalternatives} -eq 1 ] ; then \
+mkdir -p %{buildroot}%{_datadir}/libalternatives \
 if [[ "$alternative_target" != %{_mandir}* ]]; then \
 ln -sf %{_bindir}/alts %{buildroot}%{alternative_target} \
 fi \
@@ -31,18 +32,16 @@ update-alternatives --install \\\
 %uninstall_alternative(n:t:) \
 %define alternative_name %{-n:%{-n*}}%{!-n:%1} \
 %define alternative_target %{-t:%{-t*}}%{!-t:%2} \
-if [ ! -e "%{alternative_target}" ] && [ -f %{_sbindir}/update-alternatives ]; then \
+if [ ! -e "%{alternative_target}" ]; then \
     update-alternatives --quiet --remove "%{alternative_name}" "%{alternative_target}" \
 fi \
 %{nil}
 
 %reset_alternative(n:t:) \
-if [ %{with libalternatives} -eq 1 ] ; then \
 %define alternative_name %{-n:%{-n*}}%{!-n:%1} \
 %define alternative_target %{-t:%{-t*}}%{!-t:%2} \
 if [ "$1" -gt 0 ] && [ -f %{_sbindir}/update-alternatives ]; then \
     update-alternatives --quiet --remove "%{alternative_name}" "%{alternative_target}" \
-fi \
 fi \
 %{nil}
 
