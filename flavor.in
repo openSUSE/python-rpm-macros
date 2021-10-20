@@ -62,8 +62,7 @@ end \
 
 %#FLAVOR#_install_alternative() \
 %{_python_macro_init} \
-%{lua:python_install_alternative("#FLAVOR#")} \
-%{nil}
+%{lua:python_install_alternative("#FLAVOR#")}
 
 %#FLAVOR#_uninstall_alternative() \
 %if ! %{with libalternatives} \
