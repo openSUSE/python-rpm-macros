@@ -292,7 +292,7 @@ to override this behavior.
 Note that if you created a group by specifying multiple arguments to `install_alternative`, only
 the first one applies for `uninstall_alternative`.
 
-  Each of these has a flavor-specific spelling: `%python2_alternative` etc.
+Each of these has a flavor-specific spelling: `%python2_alternative` etc.
 
 
 #### Libalternatives-related:
@@ -331,6 +331,23 @@ spec file:
   %python_libalternatives_reset_alternative <name>
   ```
   The argument *\<name\>* is the same used for calling *%python_uninstall_alternative*.
+
+#### Building and testing with flavored alternatives
+
+* __`%python_flavored_alternatives`__: If a build tool or a test
+  suite calls commands, which exist in several alternatives, and
+  you need them to call the command in the alternative of the
+  current flavor within an `%python_expand` block, this macro
+
+  - creates the appropriate update-alternatives symlinks in the
+    shuffled `build/flavorbin` directory and sets `$PATH`
+    accordingly, and
+  - selects the libalternatives priority of all installed commands
+    with a `libalternatives.conf` in
+    `XDG_CONFIG_HOME=$PWD/build/xdgflavorconfig`.
+
+  The `%pytest(_arch)` and `%pyunittest(_arch)` macros include a call
+  of this macro before expanding to the test suite execution.
 
 #### Flavor-specific macros  
 

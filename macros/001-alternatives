@@ -48,3 +48,29 @@ fi \
 %alternative_for() \
 %1 \
 %ghost %{_sysconfdir}/alternatives/%{basename:%1}
+
+%python_flavored_alternatives \
+%{python_expand # provide libalternatives and update-alternatives in the current flavor version when shuffling the build dir \
+mkdir -p build/xdgflavorconfig \
+export XDG_CONFIG_HOME=$PWD/build/xdgflavorconfig \
+if [ -d /usr/share/libalternatives/ ]; then \
+  for b in /usr/share/libalternatives/*; do \
+    if [ -e "${b}/%{$python_version_nodots}.conf" ]; then \
+        alts -n $(basename ${b}) -p %{$python_version_nodots} \
+    fi \
+  done \
+fi \
+mkdir -p build/flavorbin \
+for bin in %{_bindir}/*-%{$python_bin_suffix} %{buildroot}%{_bindir}/*-%{$python_bin_suffix}; do \
+  if [ -x "${bin}" ]; then \
+    # four percent into 1 by rpm/python expansions \
+    mainbin="${bin%%%%-%{$python_bin_suffix}}" \
+    basemain="$(basename ${mainbin})" \
+    if [ "$(readlink ${mainbin})" = "/etc/alternatives/${basemain}" ]; then \
+      ln -sf "${bin}" "build/flavorbin/${basemain}" \
+    fi \
+  fi \
+done \
+} \
+export PATH=$PWD/build/flavorbin:$PATH \
+%{nil}
