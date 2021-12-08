@@ -2,7 +2,7 @@
 
 %#FLAVOR#_shbang_opts     %py_shbang_opts
 
-%__#FLAVOR#               %{_bindir}/%{lua: print((string.gsub("#FLAVOR#", "(%w+%d)(%d)", "%1.%2")))}
+%__#FLAVOR#               %{_bindir}/%{lua: print((string.gsub("#FLAVOR#", "(%a+%d)(%d+)", "%1.%2")))}
 
 %#FLAVOR#_prefix          #FLAVOR#
 %#FLAVOR#_sitelib         %{_python_sysconfig_path %__#FLAVOR# purelib}
