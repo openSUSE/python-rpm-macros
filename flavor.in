@@ -19,7 +19,7 @@
 %#FLAVOR#_provides %(provides=""; \
 for flavorbin in %{_bindir}/python?; do \
   if [ $flavorbin != %__#FLAVOR# -a $(realpath $flavorbin) = %__#FLAVOR# ]; then \
-    provides+=" $(basename $flavorbin)"; \
+    provides="$provides $(basename $flavorbin)"; \
   fi; \
 done; \
 echo ${provides# }; \
