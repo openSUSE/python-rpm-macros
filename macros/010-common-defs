@@ -45,7 +45,8 @@
 %python_uninstall_alternative() %{_rec_macro_helper}%{lua:expand_macro("uninstall_alternative", "%**")}
 %python_libalternatives_reset_alternative() %{_rec_macro_helper}%{lua:expand_macro("reset_alternative", "%**")}
 
-%py_ver  %python_version
+# this is by convention hardcoded python2
+%py_ver  %(python -c "import sys; v=sys.version_info[:2]; print '%%d.%%d'%%v" 2>/dev/null || echo PYTHON-NOT-FOUND)
 
 ##### Python dependency generator macros #####
 
