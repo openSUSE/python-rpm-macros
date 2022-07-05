@@ -126,10 +126,9 @@ function alternative_prio(flavor)
     end
     return prio
 end
-function python_install_alternative(flavor)
+function python_install_ualternative(flavor)
     local prio      = alternative_prio(flavor)
     local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")
-    local libalternatives = rpm.expand("%{with libalternatives}")
 
     local params = {}
     for p in string.gmatch(rpm.expand("%*"), "%S+") do
@@ -141,52 +140,27 @@ function python_install_alternative(flavor)
         return
     end
 
-    if libalternatives == "1" then
-        for _, v in ipairs(params) do
-	    local link, name, path = python_alternative_names(v, binsuffix)
-            if not v:match(".+%.%d") then
-                local group = ""
-	        local man = ""
-                for _, v2 in ipairs(params) do
-	           local man_match = v2:match(".+%.%d")
-	           if man_match then
-		      if string.sub(man_match,1,-3) == v then
-		        local man_entry = v .. "-" .. binsuffix .. "." .. string.sub(man_match,man_match:len())
-                        if man:len() > 0 then
-		           man = man .. ", " .. man_entry
-		        else
-                           man = man_entry
-		        end
-		      end
-		   else
-		      if group:len() > 0 then
-		         group = group .. ", " .. v2
-		      else
-                         group = v2
-		      end
-		   end
-	        end
-	        local bindir = rpm.expand("%_bindir")
-	        local datadir = rpm.expand("%_datadir")
-                print(string.format("mkdir -p %s/libalternatives/%s\n", datadir, v))
-                print(string.format("echo binary=%s/%s-%s >%s/libalternatives/%s/%s.conf\n",
-		    bindir, v, binsuffix, datadir, v, prio))
-		if man:len() > 0 then
-                    print(string.format("echo man=%s >>%s/libalternatives/%s/%s.conf\n",
-	                man, datadir, v, prio))
-		end
-                if group:len() > 0 then
-                    print(string.format("echo group=%s >>%s/libalternatives/%s/%s.conf\n",
-	                group, datadir, v, prio))
-		end
-	    end
-        end
-    else
-        local link, name, path = python_alternative_names(params[1], binsuffix)
-        print(string.format("update-alternatives --quiet --install %s %s %s %s", link, name, path, prio))
-        table.remove(params, 1)
-        for _, v in ipairs(params) do
-            print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
-        end
+    local link, name, path = python_alternative_names(params[1], binsuffix)
+    print(string.format("update-alternatives --quiet --install %s %s %s %s", link, name, path, prio))
+    table.remove(params, 1)
+    for _, v in ipairs(params) do
+        print(string.format(" \\\n   --slave %s %s %s", python_alternative_names(v, binsuffix)))
     end
+end
+function python_install_libalternative(flavor, target)
+    local prio      = alternative_prio(flavor)
+    local binsuffix = rpm.expand("%" .. flavor .. "_bin_suffix")    
+    local ldir = rpm.expand("%{buildroot}%{_datadir}/libalternatives")
+    local link, name, path = python_alternative_names(target, binsuffix)
+    local man_ending = name:match(ext_man_expr)
+    local entry, lname
+    if man_ending then
+        lname=name:sub(1,-ext_man:len()-3)
+        entry="man=" .. path:basename():sub(1,-ext_man:len()-1)
+    else
+        entry="binary=" .. path
+        lname=name
+    end
+    print(string.format("mkdir -p %s/%s\n", ldir, lname))
+    print(string.format("echo %s >> %s/%s/%s.conf\n", entry, ldir, lname, prio))
 end

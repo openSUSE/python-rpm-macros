@@ -47,9 +47,8 @@ local libalternatives = rpm.expand("%{with libalternatives}") \
 if libalternatives == "1" then \
   if not link:startswith(rpm.expand("%{_mandir}")) then \
     local prio = alternative_prio("#FLAVOR#") \
-    print(rpm.expand("%dir %{_datadir}/libalternatives\\\n")) \
-    print(rpm.expand("%ghost %dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
-    print(rpm.expand("%ghost %{_datadir}/libalternatives/" .. name .. "/" .. prio .. ".conf\\\n")) \
+    print(rpm.expand("%dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
+    print(rpm.expand("%{_datadir}/libalternatives/" .. name .. "/" .. prio .. ".conf\\\n")) \
     print(link .. "\\\n") \
   end \
   print(path .. "\\\n") \
@@ -60,15 +59,23 @@ else \
 end \
 }
 
+# Commands for RPM scriptlets: These must not be empty even if there is no op for
+# either update-alternatives or libalternatives
+
 %#FLAVOR#_install_alternative() \
+%if ! %{with libalternatives} \
 %{_python_macro_init} \
-%{lua:python_install_alternative("#FLAVOR#")}
+%{lua:python_install_ualternative("#FLAVOR#")} \
+%else \
+: \# no install scriptlet action for libalternatives \
+%endif \
+%{nil}
 
 %#FLAVOR#_uninstall_alternative() \
 %if ! %{with libalternatives} \
 %{uninstall_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix} \
 %else \
-: \# no uninstall action for libalternatives \
+: \# no uninstall scriptlet action for libalternatives \
 %endif \
 %{nil}
 

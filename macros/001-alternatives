@@ -74,3 +74,14 @@ done \
 } \
 export PATH=$PWD/build/flavorbin:$PATH \
 %{nil}
+
+%python_group_libalternatives() \
+if [ %{with libalternatives} -eq 1 ] ; then \
+  group="%{**}" \
+  for f in %{buildroot}%{_datadir}/libalternatives/%1/*.conf; do \
+    for name in %{**}; do \
+        sed -n -i -e '/^group=/!p' -e '$'"a group=${group// /, }" ${f/\\/%{1}\\//\\/$name\\/} \
+    done \
+  done \
+fi \
+%{nil}
