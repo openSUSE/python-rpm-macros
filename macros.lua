@@ -489,6 +489,11 @@ function python_clone(a)
         local buildroot = rpm.expand("%{buildroot}")
         if link:startswith(buildroot) then link = link:sub(buildroot:len() + 1) end
         print(rpm.expand(string.format("%%{prepare_alternative -t %s %s}\n", link, name)))
+        if rpm.expand("%{with libalternatives}") == "1" then
+            for _, python in ipairs(pythons) do
+                python_install_libalternative(python, link)
+            end
+        end
     end
 end
 
