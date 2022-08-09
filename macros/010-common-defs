@@ -173,7 +173,7 @@
       findwheel = findwheel .. "for a in " .. args .. "; do if [ -f $a -a ${a: -3} = 'whl' ]; then wheelinargs=1; break; fi; done \\n"; \
     end \
     findwheel = findwheel .. "if [ $wheelinargs -eq 0 ]; then if [ -f build/*.whl ]; then wheelname=build/*.whl; else wheelname=*.whl; fi; fi \\n"; \
-    local installwheel = "$python -mpip install " .. broot .. " --disable-pip-version-check --no-compile --no-deps  --progress-bar off " .. args .. " $wheelname"; \
+    local installwheel = "$python -mpip install " .. broot .. " --ignore-installed --disable-pip-version-check --no-compile --no-deps  --progress-bar off " .. args .. " $wheelname"; \
     local pyexpandend = "}"; \
     print(rpm.expand(pyexpandstart .. findwheel .. installwheel .. pyexpandend)) \
     print(rpm.expand("%python_compileall")) \
