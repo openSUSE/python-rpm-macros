@@ -64,7 +64,7 @@ end \
 
 %#FLAVOR#_install_alternative() \# #FLAVOR#_install_alternative: \
 %if ! %{with libalternatives} \
-%{_python_macro_init} %{lua:python_install_ualternative("#FLAVOR#")} \\\
+%{_python_macro_init} %{lua:python_install_ualternative("#FLAVOR#")} \
 %else \
 : \# no install scriptlet action for libalternatives \
 %endif \
