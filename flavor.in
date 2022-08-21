@@ -41,6 +41,50 @@ echo ${provides# }; \
 %__#FLAVOR# %{py_setup} %{?py_setup_args} install \\\
     -O1 --skip-build --force --root %{buildroot} --prefix %{_prefix}
 
+##### PEP517/PEP518 macros #####
+
+%#FLAVOR#_pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
+%{_python_use_flavor #FLAVOR#} \
+myargs="%{**}" \
+if [ -f %{_pyproject_anywheeldir}/*-none-any.whl ]; then \
+  echo "Already found a compatible wheel in %{_pyproject_anywheeldir}" \
+  mkdir -p %{_pyproject_wheeldir} \
+  cp %{_pyproject_anywheeldir}/*-none-any.whl %{_pyproject_wheeldir}/ \
+else \
+  %__#FLAVOR# -mpip wheel %{pyproject_wheel_args} ${myargs:-.}\
+  if [ -f %{_pyproject_wheeldir}/*-none-any.whl ]; then \
+    mkdir -p %{_pyproject_anywheeldir} \
+    cp %{_pyproject_wheeldir}/*-none-any.whl %{_pyproject_anywheeldir}/ \
+  fi \
+fi
+
+%#FLAVOR#_pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
+%{_python_use_flavor #FLAVOR#} \
+myargs="%{**}" \
+havereq=0 \
+if [ -n "${myargs}" ]; then \
+  for a in ${myargs}; do \
+    pep440req=$(echo $(basename -- ${a}) | sed -E 's/([^-]+)-([^-]+)-.+\\.whl/\\1==\\2/') \
+    if [ -f ${a} -a $(basename -- ${a}) != "${pep440req}" ]; then \
+      myargs=$(echo ${myargs} | sed "s|${a}|${pep440req}|") \
+      mkdir -p %{_pyproject_wheeldir} \
+      cp $a %{_pyproject_wheeldir} \
+      havereq=1 \
+    fi \
+  done \
+fi \
+if [ $havereq -eq 0 ]; then \
+  # Fallback for old macro usages which expect a wheel in the current directory \
+  ls %{_pyproject_wheeldir}/*.whl || (mkdir -p {_pyproject_wheeldir}/; cp *.whl %{_pyproject_wheeldir}/) \
+  for w in %{_pyproject_wheeldir}/*.whl; do \
+    myargs="$myargs $(echo $(basename ${w}) | sed -E 's/([^-]+)-([^-]+)-.+\\.whl/\\1==\\2/')" \
+  done \
+fi \
+%__#FLAVOR# -mpip install %{pyproject_install_args} $myargs \
+%python_compileall
+
+# Alternative entries in file section
+
 %#FLAVOR#_alternative() %{_python_macro_init} \
 %{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \
 local libalternatives = rpm.expand("%{with libalternatives}") \
