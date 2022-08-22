@@ -195,35 +195,30 @@ function python_subpackages()
         end
     end
 
-    local function files_headline(flavor, param)
-        if not param then param = "" end
-        local append = param:match("(%-f%s+%S+)")
-        local nof = param:gsub("%-f%s+%S+%s*", "")
-        local python_files = param:match("%%{?python_files}?")
-        local subpkg = param:match("%%{python_files%s*(.-)}")
-        if subpkg then python_files = true end
-
-        if is_called_python and not python_files then
-            -- kingly hack. but RPM's native %error does not work.
-            local errmsg =
-                'error: Package with "python-" prefix must not contain unmarked "%files" sections.\n' ..
-                'error: Use "%files %python_files" or "%files %{python_files foo} instead.\n'
-            io.stderr:write(errmsg)
-            print(errmsg)
-            error('Invalid spec file')
-        end
-
-        local mymodname = nof
-        if python_files then mymodname = subpkg end
-        return "%files -n " .. package_name(flavor, modname, mymodname, append) .. "\n"
-    end
-
     local function section_headline(section, flavor, param)
-        if section == "files" then
-            return files_headline(flavor, param)
-        else
-            return "%" .. section .. " -n " .. package_name(flavor, modname, param) .. "\n"
+        if not param then param = "" end
+        local subpkg = " " .. param; local flags = ""
+        for flag in subpkg:gmatch("(%s%-[flp]%s+%S+)") do
+            flags = flags .. flag
         end
+        subpkg = subpkg:gsub("(%s%-[flp]%s+%S+)", "")
+        subpkg = subpkg:gsub("^%s*(.-)%s*$", "%1")
+        if section == "files" then
+            local python_files = param:match("%%{?python_files}?")
+            local filessubpkg = param:match("%%{python_files%s*(.-)}")
+            if filessubpkg then python_files = true end
+            if is_called_python and not python_files then
+                -- kingly hack. but RPM's native %error does not work.
+                local errmsg =
+                    'error: Package with "python-" prefix must not contain unmarked "%files" sections.\n' ..
+                    'error: Use "%files %python_files" or "%files %{python_files foo} instead.\n'
+                io.stderr:write(errmsg)
+                print(errmsg)
+                error('Invalid spec file')
+            end
+            if python_files then subpkg = filessubpkg end
+        end
+        return "%" .. section .. " -n " .. package_name(flavor, modname, subpkg, flags) .. "\n"
     end
 
     local python2_binsuffix = rpm.expand("%python2_bin_suffix")
