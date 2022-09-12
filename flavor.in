@@ -103,29 +103,17 @@ else \
 end \
 }
 
-# Commands for RPM scriptlets: These must not be empty even if there is no op for
-# either update-alternatives or libalternatives
+# Commands for RPM scriptlets: These must not be empty even if there is no operation for
+# either update-alternatives or libalternatives.
 
 %#FLAVOR#_install_alternative() \# #FLAVOR#_install_alternative: \
-%if ! %{with libalternatives} \
-%{_python_macro_init} %{lua:python_install_ualternative("#FLAVOR#")} \\\
-%else \
-: \# no install scriptlet action for libalternatives \
-%endif \
-%{nil}
+%{?!with_libalternatives:%{_python_macro_init}%{lua:python_install_ualternative("#FLAVOR#") \
+}}%{?with_libalternatives:\: \# no install scriptlet action for libalternatives}
 
 %#FLAVOR#_uninstall_alternative() \# #FLAVOR#_uninstall_alternative: \
-%if ! %{with libalternatives} \
-%{uninstall_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix} \
-%else \
-: \# no uninstall scriptlet action for libalternatives \
-%endif \
-%{nil}
+%{?!with_libalternatives:%{uninstall_alternative -n %1 -t %{_bindir}/%1-%{#FLAVOR#_bin_suffix} \
+}}%{?with_libalternatives:\: \# no uninstall scriptlet action for libalternatives}
 
 %#FLAVOR#_reset_alternative() \# #FLAVOR#_reset_alternative: \
-%if %{with libalternatives} \
-%{reset_alternative -n %1 -t %{_bindir}/%1-%#FLAVOR#_bin_suffix} \
-%else \
-: \# reset action only for libalternatives \
-%endif \
-%{nil}
+%{?!with_libalternatives:\: \# reset action only for libalternatives \
+}%{?with_libalternatives:%{reset_alternative -n %1 -t %{_bindir}/%1-%{#FLAVOR#_bin_suffix}}}
