@@ -10,8 +10,9 @@ autogenerate subpackages for all the other flavors.
 ### Terminology
 
 __``<flavor>``__ is a kind of python interpreter. At this point, we recognize the following flavors:
-`python2`, `python3`, `python36`, `python38` and `pypy3`. `python3` points to the default of
-coinstallable flavors `python3<M>` where `<M>` is the minor version number.
+`python2`, `python3`, `python38`, `python39`, `python310`, `python311` and `pypy3`. `python3` points to the default of
+coinstallable flavors `python3<M>` where `<M>` is the minor version number. The default is
+specified not by python-rpm-macros but by the obs project definition in `%primary_python`.
 
 The flavor is used as a prefix for all flavor-specific macros.
 Some macros are redefined with "short" flavor for compatibility
@@ -27,6 +28,7 @@ between the major and minor version number, in case the latter is part of the fl
 -  `/usr/bin/python2`
 -  `/usr/bin/python3`
 -  `/usr/bin/python3.8`
+-  `/usr/bin/python3.10`
 - ...
 
 __modname__ is the PyPI name, or, if the package in question is not on PyPI, the moniker that we
@@ -60,7 +62,8 @@ and `_expand`.
 
 To control the build set, you can either completely redefine `%pythons`, or exclude
 particular flavor(s) by defining __`%skip_<flavor>`__. For example, if you `%define skip_python2 1`,
-then Python 2 will be excluded from the default build set.
+then Python 2 will be excluded from the default build set. (Python 2 is not in the default
+build set of Tumbleweed and SLE/Leap >= 15.4)
 
 Skip-macros are intended __for per-package use only__. Never define a skip-macro in prjconf or
 in any other sort of global config. Instead, redefine `%pythons`.
@@ -148,7 +151,7 @@ conditions, use the full `%if "%python_flavor"` spelling.
 #### Flavor expansion
 
 The following macros expand to command lists for all flavors and move around the distutils-generated
-`build` directory so that you are never running a `python2` command with a python3-generated `build`
+`build` directory so that you are never running a `python39` command with a python310-generated `build`
 and vice versa.
 
 ##### General command expansion macros
@@ -168,9 +171,9 @@ is the basename of the flavor executable. Make sure it is in `$PATH`.
   expands to:
 
   ```
-  python2 generatefile.py /usr/lib/python2.7/site-packages
-  python3.6 generatefile.py /usr/lib/python3.6/site-packages
   python3.8 generatefile.py /usr/lib/python3.8/site-packages
+  python3.9 generatefile.py /usr/lib/python3.9/site-packages
+  python3.10 generatefile.py /usr/lib/python3.10/site-packages
   ```
 
   etc. (plus the moving around of the `build` directory in between).
@@ -181,31 +184,33 @@ is the basename of the flavor executable. Make sure it is in `$PATH`.
 
   ```spec
   %{python_expand # expanded-body:
-  if [ ${python_flavor} = python38 ]; then
-  $python command-for-py-38-only
-  echo "We have version %{$python_version}, because we are in $python_flavor."
-  echo "%{$python_flavor} has not enough levels of expansion and %{python_flavor} is always the default."
+  if [ ${python_flavor} = python310 ]; then
+    $python command-for-py-310-only
   fi
-  if [ $python_ = python36_ ]; then
-  echo "This also works."
+  echo "We have version %{$python_version}, because we are in $python_flavor."
+  echo "Cannot use %{$python_flavor} because it has not enough levels of expansion."
+  echo "And %{python_flavor} is expanded early to the global default."
+  if [ $python_ = python310_ ]; then
+    echo "A suffix_ works as intended."
   fi
   }
   ```
 
-  which expands to
+  which expands during the python39 flavor iteration to
 
   ```sh
   # (.. moving build dirs ..)
-  python_flavor=python36
+  python_flavor=python39
 
   # expanded-body:
-  if [ ${python_flavor} = python38 ]; then
-  python3.6 command-for-py-38-only
-  echo "We have version 3.6, because we are in python36_flavor."
-  echo "%{python36_flavor} has not enough levels of expansion and python38 is always the default."
+  if [ ${python_flavor} = python310 ]; then
+    python3.9 command-for-py-310-only
   fi
-  if [ python36_ = python36_ ]; then
-  echo "This also works."
+  echo "We have version 3.9, because we are in python39_flavor."
+  echo "Cannot use %{python39_flavor} because it has not enough levels of expansion."
+  echo "And python310 is expanded early to the global default."
+  if [ python39_ = python310_ ]; then
+    echo "A suffix_ works as intended."
   fi
   ```
 
