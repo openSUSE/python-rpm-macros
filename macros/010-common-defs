@@ -15,6 +15,26 @@
     end
 }
 
+# put wheels into python_expand shuffled wheeldir by default
+%_pyproject_wheeldir ./build
+
+# put flavor-agnostic wheels into a common dir. Dist is the default destination of pytnon -m build
+%_pyproject_anywheeldir ./dist
+
+%pyproject_wheel_args \\\
+  --verbose --progress-bar off --disable-pip-version-check \\\
+  %{?py_setup_args:--build-option %{py_setup_args}} \\\
+  --use-pep517 --no-build-isolation \\\
+  --no-deps \\\
+  --wheel-dir %{_pyproject_wheeldir}
+
+%pyproject_install_args \\\
+  --verbose --progress-bar off --disable-pip-version-check \\\
+  --root %{buildroot} \\\
+  --no-compile \\\
+  --ignore-installed --no-deps \\\
+  --no-index --find-links %{_pyproject_wheeldir}
+
 ##### fedora compatibility #####
 
 %py_setup setup.py
@@ -148,35 +168,6 @@
     local ignore_build = "--ignore=_build." .. rpm.expand("%pythons"):gsub("%s+", " --ignore=_build."); \
     intro = intro .. "pytest-%{$python_bin_suffix} " .. ignore_build .. " -v "; \
     print(rpm.expand(intro .. args .. "}")) \
-}
-
-##### PEP-518 macros #####
-%pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
-    local args = rpm.expand("%**"); \
-    local pyexpandstart = "%{python_expand # \\n"; \
-    local buildwheel = "$python -mpip wheel --no-deps %{?py_setup_args:--build-option %{py_setup_args}}"; \
-    buildwheel = buildwheel .. " --disable-pip-version-check --use-pep517 --no-build-isolation --progress-bar off --verbose . -w build/ "; \
-    -- remove abi and platform tags from filename in case the package does define them incorrectly (see PEP427 for valid filenames) \
-    -- single percent for shell out of four percent by rpm.expand \
-    local renamewheel = "fn=(build/*.whl); fn2=${fn%%%%-*-*.whl}-none-any.whl; if [ ! $fn -ef $fn2 ]; then mv $fn $fn2; fi"; \
-    local pyexpandend = "}"; \
-    print(rpm.expand(pyexpandstart .. buildwheel .. args .. "\\n " .. renamewheel .. pyexpandend)) \
-}
-
-# No such option: --strip-file-prefix %%{buildroot} 
-%pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) %{lua:\
-    local args = rpm.expand("%**"); \
-    local broot = rpm.expand("--root %buildroot"); \
-    local pyexpandstart = "%{python_expand # \\n"; \
-    local findwheel = "wheelinargs=0 \\n"; \
-    if args ~= "" then \
-      findwheel = findwheel .. "for a in " .. args .. "; do if [ -f $a -a ${a: -3} = 'whl' ]; then wheelinargs=1; break; fi; done \\n"; \
-    end \
-    findwheel = findwheel .. "if [ $wheelinargs -eq 0 ]; then if [ -f build/*.whl ]; then wheelname=build/*.whl; else wheelname=*.whl; fi; fi \\n"; \
-    local installwheel = "$python -mpip install " .. broot .. " --ignore-installed --disable-pip-version-check --no-compile --no-deps  --progress-bar off " .. args .. " $wheelname"; \
-    local pyexpandend = "}"; \
-    print(rpm.expand(pyexpandstart .. findwheel .. installwheel .. pyexpandend)) \
-    print(rpm.expand("%python_compileall")) \
 }
 
 ##### Precompile scripts macro #####

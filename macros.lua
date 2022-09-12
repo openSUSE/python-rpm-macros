@@ -451,6 +451,20 @@ function python_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012
     end
 end
 
+function pyproject_wheel(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=)
+    rpm.expand("%_python_macro_init")
+    for _, python in ipairs(pythons) do
+        print(rpm.expand("%" .. python .. "_pyproject_wheel %**"))
+    end
+end
+
+function pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=)
+    rpm.expand("%_python_macro_init")
+    for _, python in ipairs(pythons) do
+        print(rpm.expand("%" .. python .. "_pyproject_install %**"))
+    end
+end
+
 function python_files()
     rpm.expand("%_python_macro_init")
     local nparams = rpm.expand("%#")

@@ -213,14 +213,12 @@ is the basename of the flavor executable. Make sure it is in `$PATH`.
 
 ##### Install macros
 
-* __`%python_build`__ expands to distutils/setuptools build instructions for all flavors.
-
-* __`%python_install`__ expands to distutils/setuptools install instructions for all flavors.
-
 * __`%pyproject_wheel`__ expands to 
   [PEP517](https://www.python.org/dev/peps/pep-0517)/[PEP518](https://www.python.org/dev/peps/pep-0518/)
-  build instructions for all flavors, creates wheels and places them into the flavor's `build/` directories.
-  This is useful if the package has a ``pyproject.toml`` file but no ``setup.py``.
+  build instructions for all flavors, creates wheels and places them into the flavor's `./build/` directories
+  (specified by `%_pyproject_wheeldir`). In case of pure wheels only one wheel is created by the first flavor,
+  placed into `./dist/` (`%_pyproject_anywheeldir`) and copied over to `%_pyproject_wheeldir` for all other
+  flavors.
 
 * __`%pyproject_install [wheelfile]`__ expands to install instructions for all flavors to install the created wheels.
   You can also use this without `%pyproject_wheel`, if you place a pre-existing wheel into the current working dir
@@ -231,6 +229,12 @@ is the basename of the flavor executable. Make sure it is in `$PATH`.
 for all flavors. Generally Python 2 creates the cached byte-code `.pyc` files directly in the script directories, while
 newer flavors generate `__pycache__` directories. Use this if you have modified the source files in `%buildroot` after
 `%python_install` or `%pyproject_install` has compiled the files the first time.
+
+* __`%python_build`__ expands to distutils/setuptools build instructions for all flavors using `setup.py`.
+
+* __`%python_install`__ expands to legacy distutils/setuptools install instructions for all flavors using `setup.py`.
+  Note that `python setup.py install` has been deprecated by setuptools and distutils is deprecated entirely.
+  Consider using the PEP517 install procedure using the `%pyproject_*` macros if the package sources support it.
 
 * __`%python_clone filename`__ creates a copy of `filename` under a flavor-specific name for every
 flavor. This is useful for packages that install unversioned executables: `/usr/bin/foo` is copied
@@ -367,9 +371,13 @@ In addition, the following flavor-specific macros are known and supported by the
 
 * __`%__<flavor>`__: path to the ``<flavor>`` executable.
 
-* __`%<flavor>_build`__ expands to build instructions for the particular flavor.
+* __`%<flavor>_pyproject_wheel`__ expands to PEP517 instructions to build a wheel using the particular flavor.
 
-* __`%<flavor>_install`__ expands to install instructions for the particular flavor.
+* __`%<flavor>_pyproject_install`__ expands to PEP517 install instructions for the particular flavor.
+
+* __`%<flavor>_build`__ expands to `setup.py` build instructions for the particular flavor.
+
+* __`%<flavor>_install`__ expands to legacy `setup.py` install instructions for the particular flavor.
 
 * __`%<flavor>_sitelib`, `%<flavor>_sitearch`__: path to noarch and arch-dependent `site-packages`
 directory.
