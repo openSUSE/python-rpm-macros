@@ -69,16 +69,6 @@ function package_name(flavor, modname, subpkg, append)
     return name
 end
 
-function pkgname_from_param(param)
-    if param == modname then
-        return ""
-    elseif param:startswith(modname .. "-") then
-        return param:sub(modname:len() + 2)
-    else
-        return "-n " .. param
-    end
-end
-
 -- alternative-related
 local bindir = rpm.expand("%{_bindir}")
 local mandir = rpm.expand("%{_mandir}")
