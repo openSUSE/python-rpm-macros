@@ -75,7 +75,7 @@ if [ -n "${myargs}" ]; then \
 fi \
 if [ $havereq -eq 0 ]; then \
   # Fallback for old macro usages which expect a wheel in the current directory \
-  ls %{_pyproject_wheeldir}/*.whl || (mkdir -p {_pyproject_wheeldir}/; cp *.whl %{_pyproject_wheeldir}/) \
+  ls %{_pyproject_wheeldir}/*.whl || (mkdir -p %{_pyproject_wheeldir}/; cp *.whl %{_pyproject_wheeldir}/) \
   for w in %{_pyproject_wheeldir}/*.whl; do \
     myargs="$myargs $(echo $(basename ${w}) | sed -E 's/([^-]+)-([^-]+)-.+\\.whl/\\1==\\2/')" \
   done \
