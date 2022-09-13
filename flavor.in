@@ -81,7 +81,13 @@ if [ $havereq -eq 0 ]; then \
   done \
 fi \
 %__#FLAVOR# -mpip install %{pyproject_install_args} $myargs \
-%python_compileall
+for d in %{buildroot}%{#FLAVOR#_sitelib} %{buildroot}%{#FLAVOR#_sitearch}; do \
+  if [ -d $d ]; then \
+    find $d -name '*.pyc' -delete \
+    %__#FLAVOR# -m compileall $d \
+    %__#FLAVOR# -O -m compileall $d \
+  fi \
+done
 
 # Alternative entries in file section
 
