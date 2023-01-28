@@ -460,6 +460,13 @@ function pyproject_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
     end
 end
 
+function python_compileall()
+    rpm.expand("%_python_macro_init")
+    for _, python in ipairs(pythons) do
+        print(rpm.expand("%" .. python .. "_compile"))
+    end
+end
+
 function python_files()
     rpm.expand("%_python_macro_init")
     local nparams = rpm.expand("%#")
