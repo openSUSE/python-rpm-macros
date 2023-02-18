@@ -384,8 +384,13 @@ In addition, the following flavor-specific macros are known and supported by the
 
 * __`%<flavor>_install`__ expands to legacy `setup.py` install instructions for the particular flavor.
 
-* __`%<flavor>_sitelib`, `%<flavor>_sitearch`__: path to noarch and arch-dependent `site-packages`
-directory.
+* __`%<flavor>_fix_shebang`__ rewrites the script interpreter line in python scripts
+  installed into `%_bindir` to use the particular flavor. In multi-flavor expansions
+  the call of this macro is not required, as the script interpreter line is already
+  taken care of by the alternatives setup `%python_clone -a`.
+
+* __`%<flavor>_sitelib`, `%<flavor>_sitearch`__: path to noarch (purelib) and
+  arch-dependent `site-packages` (platlib) directory.
 
 * __`%<flavor>_version`__: dotted major.minor version. `2.7` for CPython 2.7.
 
