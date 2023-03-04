@@ -81,7 +81,8 @@ if [ $havereq -eq 0 ]; then \
   done \
 fi \
 %__#FLAVOR# -mpip install %{pyproject_install_args} $myargs \
-%#FLAVOR#_compile
+%#FLAVOR#_compile \
+%#FLAVOR#_fix_shebang
 
 %#FLAVOR#_compile \
 for d in %{buildroot}%{#FLAVOR#_sitelib} %{buildroot}%{#FLAVOR#_sitearch}; do \
@@ -90,6 +91,11 @@ for d in %{buildroot}%{#FLAVOR#_sitelib} %{buildroot}%{#FLAVOR#_sitearch}; do \
     find $d -iname '*.py' -printf 'Generating cached byte-code for %%P\\n' -exec %__#FLAVOR# -c \\\
        'import py_compile; f="{}"; [py_compile.compile(f, dfile=f[len("%{buildroot}"):], optimize=o) for o in [0, 1]]' ';' \
   fi \
+done
+
+%#FLAVOR#_fix_shebang \
+for f in %{buildroot}%{_bindir}/*; do \
+  [ -f $f ] && sed -i "1s@#!.*python.*@#!$(realpath %__#FLAVOR#)@" $f \
 done
 
 # Alternative entries in file section
