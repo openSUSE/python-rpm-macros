@@ -28,7 +28,13 @@ function _python_scan_spec()
     -- try to match "python-"
     if name == modname and name:find("python%-") == 1 then
         spec_name_prefix = "python"
-        modname = name:sub(8)
+
+        local suffix = name:find("%-py3")
+        if suffix then
+            modname = name:sub(8, suffix - 1)
+        else
+            modname = name:sub(8)
+        end
     end
     -- if not found, modname == %name, spec_name_prefix == "python"
 
