@@ -29,7 +29,8 @@ function _python_scan_spec()
     if name == modname and name:find("python%-") == 1 then
         spec_name_prefix = "python"
 
-        local suffix = name:find("%-py3")
+        -- Support packages with name python-foo-py3
+        local suffix = name:find("%-py%d+$")
         if suffix then
             modname = name:sub(8, suffix - 1)
         else
@@ -540,9 +541,9 @@ function python_module_lua()
     end
 end
 
-function name_without_py3_suffix()
+function name_without_pyX_suffix()
     local name = rpm.expand("%name")
-    local suffix = name:find("%-py3")
+    local suffix = name:find("%-py%d+$")
     if suffix then
         print(name:sub(0, suffix - 1))
     else
