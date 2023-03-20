@@ -539,3 +539,13 @@ function python_module_lua()
         print(lpar .. python_prefix .. "-" .. string.gsub(params, "%%python", python_prefix) .. rpar .. " ")
     end
 end
+
+function name_without_py3_suffix()
+    local name = rpm.expand("%name")
+    local suffix = name:find("%-py3")
+    if suffix then
+        print(name:sub(0, suffix - 1))
+    else
+        print(name)
+    end
+end
