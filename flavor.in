@@ -88,8 +88,14 @@ fi \
 for d in %{buildroot}%{#FLAVOR#_sitelib} %{buildroot}%{#FLAVOR#_sitearch}; do \
   if [ -d $d ]; then \
     find $d -iname '*.pyc' -delete \
-    find $d -iname '*.py' -printf 'Generating cached byte-code for %%P\\n' -exec %__#FLAVOR# -c \\\
-       'import py_compile; f="{}"; [py_compile.compile(f, dfile=f[len("%{buildroot}"):], optimize=o) for o in [0, 1]]' ';' \
+    find $d -iname '*.py' -print0 | xargs -0 %__#FLAVOR# -c ' \
+import sys, py_compile \
+for f in sys.argv[1:]: \
+  fp=f[len("%{buildroot}"):] \
+  print(f"Generating cached byte-code for {fp}") \
+  for o in [0, 1]: \
+    py_compile.compile(f, dfile=fp, optimize=o) \
+' \
   fi \
 done
 
