@@ -102,6 +102,9 @@ done
 %#FLAVOR#_fix_shebang \
 for f in %{buildroot}%{_bindir}/*; do \
   [ -f $f ] && sed -i "1s@#!.*python.*@#!$(realpath %__#FLAVOR#)@" $f \
+done; \
+for f in %{buildroot}%{_sbindir}/*; do \
+  [ -f $f ] && sed -i "1s@#!.*python.*@#!$(realpath %__#FLAVOR#)@" $f \
 done
 
 # Alternative entries in file section
