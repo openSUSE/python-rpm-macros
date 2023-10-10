@@ -39,9 +39,7 @@ echo ${provides# }; \
 %#FLAVOR#_install \
 %{_python_use_flavor #FLAVOR#} \
 %__#FLAVOR# %{py_setup} %{?py_setup_args} install \\\
-    -O1 --skip-build --force --root %{buildroot} --prefix %{_prefix} \
-%#FLAVOR#_compile \
-%#FLAVOR#_fix_shebang
+    -O1 --skip-build --force --root %{buildroot} --prefix %{_prefix}
 
 ##### PEP517/PEP518 macros #####
 
