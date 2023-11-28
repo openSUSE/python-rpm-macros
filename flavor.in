@@ -103,8 +103,7 @@ for f in sys.argv[1:]: \
 done
 
 %#FLAVOR#_fix_shebang \
-%#FLAVOR#_fix_shebang_path %{buildroot}%{_bindir}/* \
-%#FLAVOR#_fix_shebang_path %{buildroot}%{_sbindir}/*
+%#FLAVOR#_fix_shebang_path %{buildroot}%{_bindir}/*  %{buildroot}%{_sbindir}/*
 
 %#FLAVOR#_fix_shebang_path(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
 myargs="%{**}" \
