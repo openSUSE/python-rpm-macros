@@ -389,6 +389,11 @@ In addition, the following flavor-specific macros are known and supported by the
   the call of this macro is not required, as the script interpreter line is already
   taken care of by the alternatives setup `%python_clone -a`.
 
+* __`%<flavor>_fix_shebang_path path`__ rewrites the script interpreter
+  line in python scripts installed into `path` to use the
+  particular flavor. A glob like `*` can be used in the path parameter
+  to fix the shebang for all files in a directory.
+
 * __`%<flavor>_sitelib`, `%<flavor>_sitearch`__: path to noarch (purelib) and
   arch-dependent `site-packages` (platlib) directory.
 

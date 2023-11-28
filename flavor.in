@@ -103,11 +103,13 @@ for f in sys.argv[1:]: \
 done
 
 %#FLAVOR#_fix_shebang \
-for f in %{buildroot}%{_bindir}/*; do \
-  [ -f $f ] && sed -i "1s@#!.*python.*@#!$(realpath %__#FLAVOR#)@" $f \
-done; \
-for f in %{buildroot}%{_sbindir}/*; do \
-  [ -f $f ] && sed -i "1s@#!.*python.*@#!$(realpath %__#FLAVOR#)@" $f \
+%#FLAVOR#_fix_shebang_path %{buildroot}%{_bindir}/* \
+%#FLAVOR#_fix_shebang_path %{buildroot}%{_sbindir}/*
+
+%#FLAVOR#_fix_shebang_path(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
+myargs="%{**}" \
+for f in ${myargs}; do \
+  [ -f $f ] && sed -i "1s@#\\!.*python.*@#\\!$(realpath %__#FLAVOR#)@" $f \
 done
 
 # Alternative entries in file section
