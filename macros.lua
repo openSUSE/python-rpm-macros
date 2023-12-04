@@ -497,7 +497,7 @@ function python_clone(a)
         local binsuffix = rpm.expand("%" .. python .. "_bin_suffix")
         link,name,path = python_alternative_names(param, binsuffix, true)
         print(rpm.expand(string.format("cp %s %s\n", param, path)))
-        print(rpm.expand(string.format("sed -ri '1s@#!.*python.*@#!%s@' %s\n", "%__" .. python, path)))
+        print(rpm.expand(string.format("sed -ri \"1s@#!.*python.*@#!%s@\" %s\n", "$(realpath %__" .. python .. ")", path)))
     end
 
     -- %python_clone -a

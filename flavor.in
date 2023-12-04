@@ -36,10 +36,13 @@ echo ${provides# }; \
 %__#FLAVOR# %{py_setup} %{?py_setup_args} build \\\
     --executable="%__#FLAVOR# %#FLAVOR#_shbang_opts"
 
-%#FLAVOR#_install \
+%#FLAVOR#_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
 %{_python_use_flavor #FLAVOR#} \
+myargs="%{**}" \
 %__#FLAVOR# %{py_setup} %{?py_setup_args} install \\\
-    -O1 --skip-build --force --root %{buildroot} --prefix %{_prefix}
+    -O1 --skip-build --force --root %{buildroot} --prefix %{_prefix} $myargs \
+%#FLAVOR#_compile \
+%#FLAVOR#_fix_shebang
 
 ##### PEP517/PEP518 macros #####
 
@@ -100,11 +103,12 @@ for f in sys.argv[1:]: \
 done
 
 %#FLAVOR#_fix_shebang \
-for f in %{buildroot}%{_bindir}/*; do \
-  [ -f $f ] && sed -i "1s@#!.*python.*@#!$(realpath %__#FLAVOR#)@" $f \
-done; \
-for f in %{buildroot}%{_sbindir}/*; do \
-  [ -f $f ] && sed -i "1s@#!.*python.*@#!$(realpath %__#FLAVOR#)@" $f \
+%#FLAVOR#_fix_shebang_path %{buildroot}%{_bindir}/*  %{buildroot}%{_sbindir}/*
+
+%#FLAVOR#_fix_shebang_path(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
+myargs="%{**}" \
+for f in ${myargs}; do \
+  [ -f $f ] && sed -i "1s@#\\!.*python.*@#\\!$(realpath %__#FLAVOR#)@" $f \
 done
 
 # Alternative entries in file section
