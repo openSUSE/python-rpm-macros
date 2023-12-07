@@ -95,7 +95,7 @@ for d in %{buildroot}%{#FLAVOR#_sitelib} %{buildroot}%{#FLAVOR#_sitearch}; do \
 import sys, py_compile \
 for f in sys.argv[1:]: \
   fp=f[len("%{buildroot}"):] \
-  print(f"Generating cached byte-code for {fp}") \
+  print("Generating cached byte-code for " + str(fp)) \
   for o in [0, 1]: \
     py_compile.compile(f, dfile=fp, optimize=o) \
 ' \
