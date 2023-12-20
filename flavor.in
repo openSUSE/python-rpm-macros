@@ -96,8 +96,11 @@ import sys, py_compile \
 for f in sys.argv[1:]: \
   fp=f[len("%{buildroot}"):] \
   print("Generating cached byte-code for " + str(fp)) \
-  for o in [0, 1]: \
-    py_compile.compile(f, dfile=fp, optimize=o) \
+  if sys.version[0] == "2": \
+    py_compile.compile(f, dfile=fp) \
+  else: \
+    for o in [0, 1]: \
+      py_compile.compile(f, dfile=fp, optimize=o) \
 ' \
   fi \
 done
