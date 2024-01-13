@@ -7,7 +7,7 @@
 ## PYTHON MACROS BEGIN
 # order of %pythons is important: The last flavor overrides any operation on conflicting files and definitions during expansions,
 # making it the "default" in many cases --> keep the primary python3 provider at the end.
-%pythons %{?!skip_python3:%{?!skip_python310:python310} %{?!skip_python311:python311}}
+%pythons %{?!skip_python3:%{?!skip_python310:python310} %{?!skip_python310:python312} %{?!skip_python311:python311}}
 %add_python() %{expand:%%define pythons %1 %pythons}
 
 %_without_python2 1
