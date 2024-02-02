@@ -2,7 +2,7 @@
 
 # The set of flavors for which we produce macros. Not identical to
 # the buildset predefined for specific distributions (see below)
-FLAVORS="python2 python3 python310 python311 python312 pypy3"
+FLAVORS="python2 python3 python38 python39 python310 python311 python312 pypy3"
 
 ### flavor-specific: generate from flavor.in
 for flavor in $FLAVORS; do
