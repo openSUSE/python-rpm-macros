@@ -45,25 +45,40 @@ echo "## Python Buildset End" | tee macros/042-builset-end
     echo "}"
 
     INFUNC=0
+    INMULTILINE_MACRO=0
     # brute line-by-line read of macros.lua
     IFS=""
     while read -r line; do
-        if echo "$line" | grep -q '^function '; then
-            # entering top-level Lua function
-            INFUNC=1;
-            echo "$line" | sed -r -e 's/^function (.*)\((.*)\)$/%\1(\2) %{lua: \\/'
-        elif [ "$line" == "end" ]; then
-            # leaving top-level Lua function
-            INFUNC=0;
-            echo '}'
-        elif [ $INFUNC == 1 ]; then
-            # inside function
-            # double backslashes and add backslash to end of line
-            echo "$line" | sed -e 's/\\/\\\\/g' -e 's/$/\\/'
+        if [ $INFUNC = 0 ] ; then
+            if [ $INMULTILINE_MACRO = 1 ]  ;then
+                if echo "$line" | grep -qE '^.*\]\]' ; then
+                    INMULTILINE_MACRO=0
+                fi
+                echo "# $line"
+            elif echo "$line" | grep -qE -- '--\[\[' ; then
+                INMULTILINE_MACRO=1
+                echo "# $line"
+            elif echo "$line" | grep -qE -- '^--' ; then
+                echo "# $line"
+            elif echo "$line" | grep -q '^function '; then
+                # entering top-level Lua function
+                INFUNC=1;
+                echo "$line" | sed -r -e 's/^function (.*)\((.*)\)$/%\1(\2) %{lua: \\/'
+            else
+                # outside function, copy
+                # (usually this is newline)
+                echo "$line"
+            fi
         else
-            # outside function, copy
-            # (usually this is newline)
-            echo "$line"
+            if [ "$line" = "end" ]; then
+                # leaving top-level Lua function
+                INFUNC=0;
+                echo '}'
+            else
+                # inside function
+                # double backslashes and add backslash to end of line
+                echo "$line" | sed -e 's/\\/\\\\/g' -e 's/$/\\/'
+            fi
         fi
     done < macros.lua
 
