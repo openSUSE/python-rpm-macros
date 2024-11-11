@@ -131,7 +131,7 @@ done
 %#FLAVOR#_fix_shebang_path(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
 myargs="%{**}" \
 for f in ${myargs}; do \
-  [ -f "$f" -a  -x "$f" ] && sed -i "1s@#\\!.*python\\S*@#\\!$(realpath %__#FLAVOR#)@" "$f" \
+  [ -f "$f" -a  -x "$f" ] && sed -i --follow-symlinks "1s@#\\!.*python\\S*@#\\!$(realpath %__#FLAVOR#)@" "$f" \
 done
 
 # Alternative entries in file section
