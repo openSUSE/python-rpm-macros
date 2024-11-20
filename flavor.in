@@ -131,7 +131,14 @@ done
 %#FLAVOR#_fix_shebang_path(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
 myargs="%{**}" \
 for f in ${myargs}; do \
-  [ -f "$f" -a  -x "$f" -a -w "$f" ] && sed -i --follow-symlinks "1s@#\\!.*python\\S*@#\\!$(realpath %__#FLAVOR#)@" "$f" \
+  if [ -f "$f" -a  -x "$f" -a -w "$f" ] \
+  then \
+    # in i586 sed fails when following symlinks to long paths, so \
+    # changing to the target directory avoid this problem \
+    pushd $(dirname $f) \
+    sed -i --follow-symlinks "1s@#\\!.*python\\S*@#\\!$(realpath %__#FLAVOR#)@" "$(basename $f)" \
+    popd \
+  fi \
 done
 
 # Alternative entries in file section
