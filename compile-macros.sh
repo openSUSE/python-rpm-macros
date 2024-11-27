@@ -19,7 +19,7 @@ done
 echo "Setting buildset:"
 echo "## Python Buildset Begin" | tee macros/040-builset-start
 # First try to find the block from Factory
-sed -n '/## PYTHON MACROS BEGIN/,/## PYTHON MACROS END/ p' ~/.rpmmacros | tee macros/041-buildset
+sed -n '/## PYTHON MACROS BEGIN/,/## PYTHON MACROS END\|^### from/ p' ~/.rpmmacros | tee macros/041-buildset
 # If that fails, find the old definitions (SUSE:SLE-15-SP?:GA, openSUSE:Leap:15.?)
 if [ ! -s macros/041-buildset ]; then
     sed -n '/%pythons/,/%add_python/ p' ~/.rpmmacros | tee macros/041-buildset
