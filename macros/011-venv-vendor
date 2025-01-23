@@ -1,0 +1,37 @@
+##### macro definitions for venv vendoring #####
+
+# First argument is the venv path
+# The rest of the parameters are the package names to vendor. These
+# packages should be added as BuildRequires to the package
+%python_venv_vendor(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
+myargs="%{**}" \
+PYTHON_RPM_VENV="${myargs%%%% *}" \
+PYTHON_RPM_VENV_PACKAGES="${myargs#* }" \
+# Creating venv if it doesn't exists \
+mkdir -p %{buildroot}$PYTHON_RPM_VENV \
+mkdir -p %{buildroot}$PYTHON_RPM_VENV/lib{,64}/python%{python3_bin_suffix}/site-packages \
+# install python symlink \
+ln -s %{__python3} %{buildroot}${PYTHON_RPM_VENV}/bin/ \
+\
+# Install all packages in the venv \
+for p in ${PYTHON_RPM_VENV_PACKAGES}; do \
+    rpm -v --dbpath=/tmp --root=%{buildroot} --force --noscripts --badreloc --nodeps -i /.build.binaries/${p}.rpm --relocate=/usr/lib/python%{python3_bin_suffix}/site-packages=${PYTHON_RPM_VENV}/lib/python%{python3_bin_suffix}/site-packages --relocate=/usr/lib64/python%{python3_bin_suffix}/site-packages=${PYTHON_RPM_VENV}/lib64/python%{python3_bin_suffix}/site-packages --relocate=%{_bindir}=${PYTHON_RPM_VENV}/bin --relocate=%{_sbindir}=${PYTHON_RPM_VENV}/sbin \
+done \
+install -d -m 0755 %{buildroot}${PYTHON_RPM_VENV}/bin \
+\
+# Clean files from dependencies \
+rm -rf %{buildroot}%{_datadir}/libalternatives %{buildroot}/tmp \
+rm -rf %{buildroot}/usr/share/doc/packages {buildroot}/usr/share/licenses \
+\
+# replace shebangs \
+for i in %{buildroot}%{_bindir}/* %{buildroot}%{_sbindir}/*; do \
+    sed -i -e "1 s,#!.*python.*,#!${PYTHON_RPM_VENV}/bin/python3," $i \
+done \
+\
+# add pyvenv.cfg \
+cat - > %{buildroot}/${PYTHON_RPM_VENV}/pyvenv.cfg <<EOF
+home = /usr/bin \
+include-system-site-packages = false \
+version = %{python3_version} \
+executable = %{__python3} \
+EOF
