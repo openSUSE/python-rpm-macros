@@ -133,11 +133,11 @@ myargs="%{**}" \
 for f in ${myargs}; do \
   if [ -f "$f" -a  -x "$f" -a -w "$f" ] \
   then \
-    # in i586 sed fails when following symlinks to long paths, so \
+    # in i586, sed fails when following symlinks to long paths, so \
     # changing to the target directory avoid this problem \
-    pushd $(dirname $f) \
-    sed -i --follow-symlinks "1s@#\\!.*python\\S*@#\\!$(realpath %__#FLAVOR#)@" "$(basename $f)" \
-    popd \
+    cd "$(dirname "$f")" \
+    sed -i --follow-symlinks "1s@#\\!.*python\\S*@#\\!$(realpath %__#FLAVOR#)@" "$(basename "$f")" \
+    cd - \
   fi \
 done
 
