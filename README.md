@@ -353,6 +353,17 @@ spec file:
   ```
   The argument *\<name\>* is the same used for calling *%python_uninstall_alternative*.
 
+* Man pages not related to a binary required an additional line in the
+  `%files` section to make sure to package all libalternative config
+  files:
+  ```spec
+  %python_alternative %{_mandir}/man5/bpython-config.5%{ext_man}
+  %python_alternative_conf %{_mandir}/man5/bpython-config
+  ```
+  In this example, there's no `bpython-config` binary, so we need to
+  add the `%python_alternative_conf` line to make sure that
+  alternatives for `bpython-config.5` man are packaged correctly.
+
 #### Building and testing with flavored alternatives
 
 * __`%python_flavored_alternatives`__: If a build tool or a test
