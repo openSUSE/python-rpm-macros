@@ -148,9 +148,7 @@ done
 local libalternatives = rpm.expand("%{with libalternatives}") \
 if libalternatives == "1" then \
   if not link:startswith(rpm.expand("%{_mandir}")) then \
-    local prio = alternative_prio("#FLAVOR#") \
-    print(rpm.expand("%dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
-    print(rpm.expand("%{_datadir}/libalternatives/" .. name .. "/" .. prio .. ".conf\\\n")) \
+    print(rpm.expand("%#FLAVOR#_alternative_conf " .. name .. "\\\n"))
     print(link .. "\\\n") \
   end \
   print(path .. "\\\n") \
@@ -158,6 +156,16 @@ else \
   print(rpm.expand("%ghost %{_sysconfdir}/alternatives/" .. name .. "\\\n")) \
   print(link .. "\\\n") \
   print(path .. "\\\n") \
+end \
+}
+
+%#FLAVOR#_alternative_conf() %{_python_macro_init} \
+%{lua:local link, name, path = python_alternative_names(rpm.expand("%1"), rpm.expand("%#FLAVOR#_bin_suffix")) \
+local libalternatives = rpm.expand("%{with libalternatives}") \
+if libalternatives == "1" then \
+  local prio = alternative_prio("#FLAVOR#") \
+  print(rpm.expand("%dir %{_datadir}/libalternatives/" .. name .. "\\\n")) \
+  print(rpm.expand("%{_datadir}/libalternatives/" .. name .. "/" .. prio .. ".conf\\\n")) \
 end \
 }
 
