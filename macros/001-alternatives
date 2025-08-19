@@ -64,6 +64,19 @@ if [ -d /usr/share/libalternatives/ ]; then \
   done \
 fi \
 mkdir -p build/flavorbin \
+# Get all libalternatives binaries in flavorbin \
+for bin in %{buildroot}%{_bindir}/*-%{$python_bin_suffix}; do \
+  if [ -x "${bin}" ]; then \
+    # four percent into 1 by rpm/python expansions \
+    mainbin="${bin%%%%-%{$python_bin_suffix}}" \
+    basemain="$(basename ${mainbin})" \
+    if [ "$(readlink ${mainbin})" = "alts" ]; then \
+      ln -sf "${bin}" "build/flavorbin/${basemain}" \
+      echo "Using libalternative $(basename ${bin}) for ${basemain} in ./build/flavorbin during Python %{$python_version} expansions." \
+    fi \
+  fi \
+done \
+# Get all update-alternatives binaries also in flavorbin \
 for bin in %{_bindir}/*-%{$python_bin_suffix} %{buildroot}%{_bindir}/*-%{$python_bin_suffix}; do \
   if [ -x "${bin}" ]; then \
     # four percent into 1 by rpm/python expansions \
