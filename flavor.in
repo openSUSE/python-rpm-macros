@@ -33,13 +33,13 @@ echo ${provides# }; \
 
 %#FLAVOR#_build \
 %{_python_use_flavor #FLAVOR#} \
-%__#FLAVOR# %{py_setup} %{?py_setup_args} build \\\
+%__#FLAVOR# %{py_setup} build \\\
     --executable="%__#FLAVOR# %#FLAVOR#_shbang_opts"
 
 %#FLAVOR#_install(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
 %{_python_use_flavor #FLAVOR#} \
 myargs="%{**}" \
-%__#FLAVOR# %{py_setup} %{?py_setup_args} install \\\
+%__#FLAVOR# %{py_setup} install \\\
     -O1 --skip-build --force --root %{buildroot} --prefix %{_prefix} $myargs \
 %#FLAVOR#_compile \
 %#FLAVOR#_fix_shebang
