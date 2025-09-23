@@ -23,7 +23,6 @@
 
 %pyproject_wheel_args \\\
   --verbose --progress-bar off --disable-pip-version-check \\\
-  %{?py_setup_args:--build-option %{py_setup_args}} \\\
   --use-pep517 --no-build-isolation \\\
   --no-deps \\\
   --wheel-dir %{_pyproject_wheeldir}
