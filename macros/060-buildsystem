@@ -1,0 +1,7 @@
+# Declarative buildsystem, requires RPM 4.20+ to work
+# https://rpm-software-management.github.io/rpm/manual/buildsystem.html
+%buildsystem_pyproject_conf() %nil
+%buildsystem_pyproject_build() %pyproject_wheel %*
+%buildsystem_pyproject_install() %pyproject_install %*
+%buildsystem_pyproject_check() %pytest %*
+%buildsystem_pyproject_generate_buildrequires() %{nil}

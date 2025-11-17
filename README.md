@@ -577,6 +577,45 @@ See also the Filelists section of the
 [openSUSE:Packaging Python](https://en.opensuse.org/openSUSE:Packaging_Python#Filelists)
 guidelines
 
+### Declarative build system
+
+The macros defines a new [buildsystem](https://rpm-software-management.github.io/rpm/manual/buildsystem.html)
+to use for python packaging.
+
+You can use the `pyproject` buildsystem in your spec file to simplify:
+
+```
+BuildSystem: pyproject
+```
+
+This buildsystem defines the `%build`, `%install` and `%check`
+sections with default calls to `%pyproject_wheel`,
+`%pyproject_install` and `%pytest`.
+
+These sections can be extended using `-a` to append or `-p` to prepend
+commands, or completely overwritten using the default tag.
+
+```
+# Extend prep
+%prep -a
+rm -rf not-needed-file
+
+# Extend build prepending commands
+%build -p
+export CFLAGS="$CFLAGS -g"
+
+# Extend install
+%install -a
+%python_clone -a %{buildroot}/%{_bindir}/cmd1
+%python_clone -a %{buildroot}/%{_binddir}/cmd2
+%python_clone -a %{buildroot}/%{_mandir}/man1/cmd1.1
+%python_group_libalternatives cmd1 cmd2
+
+# Replace default check
+%check
+%pytest_arch -k "network"
+```
+
 ### Files in Repository
 
 #### `macros` directory
