@@ -25,6 +25,9 @@ if [ -d build ]; then mv build _build.%1; fi \
 if [ -d _build.tmp ]; then mv _build.tmp build; fi \
 %{nil}
 
+### CUSTOM Macros to rewrite ###
+%python_requires_eq() %{nil}
+%python_requires_ge() %{nil}
 
 ### LUA-MACROS ###
 

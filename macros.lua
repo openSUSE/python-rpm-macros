@@ -102,6 +102,9 @@ function python_subpackages()
     local PROPERTY_COPY_DEFAULT_PROVIDER = lookup_table {
         "Conflicts:", "Obsoletes:", "Provides:", "Supplements:", "Enhances:",
     }
+    local PROPERTY_PYTHON_REWRITE = lookup_table {
+        "%python_requires_eq", "%python_requires_ge",
+    }
 
     local function process_package_line(line)
         -- This function processes package tags like requirements and capabilities.
@@ -109,8 +112,14 @@ function python_subpackages()
         -- "Requires: python-foo" -> "Requires: python3-foo"
         -- "Requires: %{name} = %{version}" -> "Requires: python3-modname = %{version}"
 
+
         -- first split Property: value
         local property, value = line:match("^([A-Z%%]%S+)%s*(.*)$")
+
+        -- Replace python custom macros
+        if PROPERTY_PYTHON_REWRITE[property] then
+            property = property:gsub("python_", "")
+        end
 
         -- split and rewrite every package value either plain or inside boolean dependencies and packageand() -- recursive
         local function replace_prefix(value, flavor)
