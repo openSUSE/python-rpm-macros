@@ -68,6 +68,9 @@ build set of Tumbleweed and SLE/Leap >= 15.4)
 Skip-macros are intended __for per-package use only__. Never define a skip-macro in prjconf or
 in any other sort of global config. Instead, redefine `%pythons`.
 
+You can define a custom prefix for your Python package by defining the __`%python_module_prefix`__
+macro.
+
 ### Macros
 
 The following macros are considered public API:
@@ -100,6 +103,11 @@ other files in non-flavor-specific locations. By default, set to `python3`.
   `%python` for expansion of the python-flavor within the requirement, e.g.
   `BuildRequires: %{python_module python-aiocontextvars >= 0.2.2 if %python-base < 3.7}`.
   (Don't define `%python` anywhere else.)
+
+* __`%{prefixed_python_module modname args}`__ expands to `(%{?python_module_prefix}<flavor>-modname args)`
+  for every flavor. Works in the same way as `%{python_module modname args}` but prepending a custom
+  package prefix via the `python_module_prefix` macro, which can be defined in the spec file or globally.
+  Intended as: `BuildRequires: %{prefixed_python_module foo >= version}`.
 
 * __`%{python_dist_name modname}`__. Given a standardized name (i.e. dist name, name on PyPI) of `modname`,
 it will convert it to a canonical format.
