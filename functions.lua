@@ -59,7 +59,7 @@ function package_name(flavor, modname, subpkg, append)
     if flavor == "python2" and old_python2 then
         flavor = "python"
     end
-    local name = flavor .. "-" .. modname
+    local name = rpm.expand("%{?python_module_prefix}") .. flavor .. "-" .. modname
     if subpkg and subpkg ~= "" then
         name = name .. "-" .. subpkg
     end
