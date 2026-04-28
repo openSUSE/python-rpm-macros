@@ -19,6 +19,11 @@
 # pseudo-undefine for obs: reset for the next expansion within the next call of python_module
 %python_module_iter_STOP %global python %%%%python
 %python_module() %{?!python_module_lua:%{expand:%%define args %{**}} %{expand:%%{python_module_iter -a %{pythons} STOP}}}%{?python_module_lua:%python_module_lua %{**}}
+# Define a similar method to 'python_module' which includes a prefix in the package name via the 'python_module_prefix' macro
+%prefixed_python_module_iter(a:) %{expand:%%define python %{-a*}} ( %{?python_module_prefix}%python-%args ) %{expand:%%{?!prefixed_python_module_iter_%1:%%{prefixed_python_module_iter -a%*}}%%{?prefixed_python_module_iter_%1}}
+# pseudo-undefine for obs: reset for the next expansion within the next call of python_module
+%prefixed_python_module_iter_STOP %global python %%%%python
+%prefixed_python_module() %{?!prefixed_python_module_lua:%{expand:%%define args %{**}} %{expand:%%{prefixed_python_module_iter -a %{pythons} STOP}}}%{?prefixed_python_module_lua:%prefixed_python_module_lua %{**}}
 # gh#openSUSE/python-rpm-macros#127 ... define our current primary Python interpreter
 %primary_python python313
 ## PYTHON MACROS END
