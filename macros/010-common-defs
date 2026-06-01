@@ -70,12 +70,14 @@
 
 %python_sitelib_module() %{lua:\
         name = rpm.expand("%{?1:%{1}}");\
-        print("%{python_sitelib}/" .. name .."\n" .. "%{python_sitelib}/" .. name .. "-%{version}*-info");\
+        meta_name = string.gsub(name, "[-_.]+", "_");\
+        print("%{python_sitelib}/" .. name .."\n" .. "%{python_sitelib}/" .. meta_name .. "-%{version}*-info");\
 }
 
 %python_sitearch_module() %{lua:\
         name = rpm.expand("%{?1:%{1}}");\
-        print("%{python_sitearch}/" .. name .."\n" .. "%{python_sitearch}/" .. name .. "-%{version}*-info");\
+        meta_name = string.gsub(name, "[-_.]+", "_");\
+        print("%{python_sitearch}/" .. name .."\n" .. "%{python_sitearch}/" .. meta_name .. "-%{version}*-info");\
 }
 
 
