@@ -15,15 +15,12 @@
 
 %#FLAVOR#_bin_suffix      %{?!_#FLAVOR#_bin_suffix:%#FLAVOR#_version}%{?_#FLAVOR#_bin_suffix}
 
-# Check if there is a major version symlink to our flavor in the current build system. If so, we are the primary provider.
-%#FLAVOR#_provides %(provides=""; \
-for flavorbin in %{_bindir}/python?; do \
-  if [ $flavorbin != %__#FLAVOR# -a $(realpath $flavorbin) = %__#FLAVOR# ]; then \
-    provides="$provides $(basename $flavorbin)"; \
-  fi; \
-done; \
-echo ${provides# }; \
-)
+# The primary Python flavor provides the unversioned python3 name.
+%#FLAVOR#_provides %{lua: \
+if "#FLAVOR#" == rpm.expand("%{primary_python}") then \
+    print("python3") \
+end \
+}
 
 %if#FLAVOR#      %if "%{python_flavor}" == "#FLAVOR#"
 
