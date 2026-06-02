@@ -76,6 +76,10 @@
                 name = rpm.expand("%{?name:%{name}}");\
             end\
         end\
+        if (name == nil or name == "") then\
+            rpm.expand("%{error:failed to determine module/dist name}");\
+            return;\
+        end\
         meta_name = string.gsub(string.lower(name), "[-_.]+", "_");\
         print(name .. " " .. meta_name);\
     }
