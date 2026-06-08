@@ -405,6 +405,18 @@ one applies for `uninstall_alternative`.
 
 Each of these has a flavor-specific spelling: `%python2_alternative` etc.
 
+#### %python_sitelib_module and %python_sitearch_module
+
+Generates paths for module and *-info directory in `%files` sections of
+SPEC files.
+
+Use `%python_sitearch_module` instead of
+
+```spec
+%{python_sitearch}/foo
+%{python_sitearch}/foo-%{version}*-info
+```
+
 
 ### Libalternatives-related:
 
