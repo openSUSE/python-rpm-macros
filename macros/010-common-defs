@@ -68,6 +68,41 @@
 # this is by convention hardcoded python2
 %py_ver  %(python -c "import sys; v=sys.version_info[:2]; print '%%d.%%d'%%v" 2>/dev/null || echo PYTHON-NOT-FOUND)
 
+%__python_sitedir_name() %{lua:\
+        name = rpm.expand("%{?1:%{1}}");\
+        if (name == nil or name == "") then\
+            name = rpm.expand("%{?mod_name:%{mod_name}}");\
+            if (name == nil or name == "") then\
+                name = rpm.expand("%{?name:%{name}}");\
+            end\
+        end\
+        if (name == nil or name == "") then\
+            rpm.expand("%{error:failed to determine module/dist name}");\
+            return;\
+        end\
+        meta_name = string.gsub(string.lower(name), "[-_.]+", "_");\
+        print(name .. " " .. meta_name);\
+    }
+
+%python_sitelib_module() %{lua:\
+        res = rpm.expand("%__python_sitedir_name %{?1}");\
+        name, meta_name = res:match("(%S+) (%S+)");\
+        sitedir = rpm.expand("%{python_sitelib}");\
+        version = rpm.expand("%{version}");\
+        print(sitedir .. "/" .. name .. string.char(10));\
+        print(sitedir .. "/" .. meta_name .. "-" .. version .. "*-info");\
+    }
+
+%python_sitearch_module() %{lua:\
+        res = rpm.expand("%__python_sitedir_name %{?1}");\
+        name, meta_name = res:match("(%S+) (%S+)");\
+        sitedir = rpm.expand("%{python_sitearch}");\
+        version = rpm.expand("%{version}");\
+        print(sitedir .. "/" .. name .. string.char(10));\
+        print(sitedir .. "/" .. meta_name .. "-" .. version .. "*-info");\
+    }
+
+
 ##### Python dependency generator macros #####
 
 # === Macros for Build/Requires tags using Python dist tags ===
