@@ -123,13 +123,21 @@ done
 
 %#FLAVOR#_fix_shebang_path(+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
 myargs="%{**}" \
+_pyexec="%__#FLAVOR#" \
+case "${_pyexec}" in \
+  */python3) \
+    _v="$(rpm -E '%{primary_python}')" \
+    _v="${_v#python}" \
+    _pyexec=$(printf "%{_bindir}/python%s.%s" "${_v%${_v#?}}" "${_v#?}") \
+    ;; \
+esac \
 for f in ${myargs}; do \
   if [ -f "$f" -a  -x "$f" -a -w "$f" ] \
   then \
     # in i586, sed fails when following symlinks to long paths, so \
     # changing to the target directory avoid this problem \
     cd "$(dirname "$f")" \
-    sed -i --follow-symlinks "1s@#\\!.*python\\S*@#\\!$(realpath %__#FLAVOR#)@" "$(basename "$f")" \
+    sed -i --follow-symlinks "1s@#\\!.*python\\S*@#\\!${_pyexec}@" "$(basename "$f")" \
     cd - \
   fi \
 done
