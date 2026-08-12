@@ -11,8 +11,12 @@
     rpm.define("_rec_macro_helper %{nil}")
     function expand_macro(name, args)
         local pflavor = rpm.expand("%python_flavor")
-        local args   = args and rpm.expand(args) or ""
-        print(rpm.expand("%{" .. pflavor .. "_" .. name .. " " .. args .."}"))
+        local arguments = args and rpm.expand(args) or ""
+        local macro = pflavor .. "_" .. name
+        if arguments ~= "" then
+            macro = macro .. " " .. arguments
+        end
+        print(rpm.expand("%{" .. macro .. "}"))
     end
 }
 
