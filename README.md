@@ -12,8 +12,9 @@ autogenerate subpackages for all the other flavors.
 
 __``<flavor>``__ is a kind of python interpreter. At this point, we recognize the following flavors:
 `python2`, `python3`, `python38`, `python39`, `python310`, `python311` and `pypy3`. `python3` points to the default of
-co-installable flavors `python3<M>` where `<M>` is the minor version number. The default is
-specified not by python-rpm-macros but by the obs project definition in `%primary_python`.
+co-installable flavors `python3<M>` where `<M>` is the minor version number. The OBS project
+normally selects the default through `%primary_python`. If it does not define the macro,
+python-rpm-macros falls back to the legacy unversioned `python3` flavor.
 
 The flavor is used as a prefix for all flavor-specific macros.
 Some macros are redefined with "short" flavor for compatibility
