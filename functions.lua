@@ -112,7 +112,7 @@ function alternative_prio(flavor)
     -- increase priority for primary python3 flavor
     local provides = rpm.expand("%" .. flavor .. "_provides") .. " "
     if provides:match("python3%s") then
-        prio = prio + 1000
+        prio = math.floor(prio + 1000)
     end
     return prio
 end
