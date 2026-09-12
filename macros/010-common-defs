@@ -210,6 +210,23 @@
     print(rpm.expand(intro .. args .. "}")) \
 }
 
+##### Generic python_test macro #####
+# It uses the value defined in %python_test_engine that the user can
+# override
+%python_test_engine pyunittest
+
+%python_test(abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-=) \
+%python_flavored_alternatives \
+%{lua:\
+    local test_module = rpm.expand("%python_test_engine"); \
+    local arch = rpm.expand("%_arch"); \
+    local args = rpm.expand("%**"); \
+    if (arch ~= "noarch") then \
+      test_module = test_module .. "_arch"; \
+    end \
+    print(rpm.expand("%" .. test_module .. " " .. args)) \
+}
+
 ##### Find language files #####
 
 %python_find_lang() \
