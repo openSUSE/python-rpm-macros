@@ -21,3 +21,9 @@
 %py3_dist() %{python3_dist %{?**}}
 
 %python2_prefix   %{?python2_package_prefix}%{?!python2_package_prefix:python}
+
+# alias for a macro from old SLE macros.python3, which used to
+# be part of every Python interpreter; it is an imperfect alias,
+# because it ignores the macros parameter and runs as if O was a
+# default (contary to the original, which was default off)
+%py3_compile() %python3_compile
