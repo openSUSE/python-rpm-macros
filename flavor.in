@@ -112,8 +112,11 @@ for f in sys.argv[1:]: \
   if sys.version[0] == "2": \
     py_compile.compile(f, dfile=fp) \
   else: \
+    compile_kwargs = {} \
+    if hasattr(py_compile, "PycInvalidationMode"): \
+      compile_kwargs["invalidation_mode"] = py_compile.PycInvalidationMode.CHECKED_HASH \
     for o in [0, 1]: \
-      py_compile.compile(f, dfile=fp, optimize=o) \
+      py_compile.compile(f, dfile=fp, optimize=o, **compile_kwargs) \
 ' \
   fi \
 done
