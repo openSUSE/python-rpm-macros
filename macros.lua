@@ -533,3 +533,25 @@ function python_module_lua()
         print(lpar .. python_prefix .. "-" .. string.gsub(params, "%%python", python_prefix) .. rpar .. " ")
     end
 end
+
+-- called by %prefixed_python_module, see buildset.in
+function prefixed_python_module_lua()
+    local python_module_prefix = rpm.expand("%{?python_module_prefix}")
+    rpm.expand("%_python_macro_init")
+    local params = rpm.expand("%**")
+    -- The Provides: tag does not support boolean dependencies, so only add parens if needed
+    local lpar = ""
+    local rpar = ""
+    local OPERATORS = lookup_table { 'and', 'or', 'if', 'with', 'without', 'unless'}
+    for p in string.gmatch(params, "%S+") do
+        if OPERATORS[p] then
+            lpar = "("
+            rpar = ")"
+            break
+        end
+    end
+    for _, python in ipairs(pythons) do
+        local python_prefix = rpm.expand("%" .. python .. "_prefix")
+        print(lpar .. python_module_prefix .. python_prefix .. "-" .. string.gsub(params, "%%python", python_prefix) .. rpar .. " ")
+    end
+end
