@@ -27,7 +27,9 @@ BuildRequires:  python-rpm-macros
 BuildRequires:  pytest
 BuildRequires:  alts
 Requires:       alts
-
+BuildArch:      noarch
+%global python_test_engine pytest
+BuildOption(check): -k "not test"
 BuildSystem:    pyproject
 
 %python_subpackages

@@ -351,6 +351,43 @@ It is the same as the above, except it sets ``$PYTHONPATH`` to
 It runs `$python -m unittest` on all flavors with
 appropriate environmental variables very similar to `%pytest` and `%pytest_arch`.
 
+#### `%python_test`
+
+Generic test macro, it runs the tool provided by the
+`%python_test_engine`, that's `%pyunittest` by default. to use
+`%pytest` you can set the `%python_test_engine` to "pytest".
+
+This macro adds the `_arch` suffix when `%_arch == "noarch"`
+automatically, so there's no need for `_arch` variants.
+
+For example:
+
+```
+%python_test -v tests/test_something.py
+```
+
+Will be transformed (in a package with BuildArch: noarch):
+
+```
+%pyunittest -v tests/test_something.py
+```
+
+or (with BuildArch: noarch):
+
+```
+%pyunittest_arch -v tests/test_something.py
+```
+
+And to get the same thing with pytest:
+
+```
+%global python_test_engine "pytest"
+%python_test tests/test_something.py -k "not test"
+```
+
+```
+%pytest tests/test_something.py -k "not test"
+```
 
 ### Alternative-related, general:
 
@@ -603,7 +640,7 @@ BuildSystem: pyproject
 
 This buildsystem defines the `%build`, `%install` and `%check`
 sections with default calls to `%pyproject_wheel`,
-`%pyproject_install` and `%pytest`.
+`%pyproject_install` and [`%python_test`](#python_test).
 
 These sections can be extended using `-a` to append or `-p` to prepend
 commands, or completely overwritten using the default tag.
@@ -628,6 +665,17 @@ export CFLAGS="$CFLAGS -g"
 %check
 %pytest_arch -k "network"
 ```
+
+Tests can be configured with BuildOptions, for example:
+```
+%global python_test_engine "pytest"
+BuildOption(check): -k "not test"
+```
+
+By default all BuildOptions for the check section will be forwarded to
+the `%pyunittest` macro. To use pytest just set the
+`%python_test_engine` macro and add the rest of the parameters for the
+`%pytest` macro in the BuildOption.
 
 ### Files in Repository
 
